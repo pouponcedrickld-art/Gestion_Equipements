@@ -4,63 +4,48 @@ namespace App\Policies;
 
 use App\Models\Panne;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class PannePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.view_all') 
+            || $user->hasPermissionTo('pannes.view_agence') 
+            || $user->hasPermissionTo('pannes.view_own');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Panne $panne): bool
     {
-        return false;
+        if ($user->hasPermissionTo('pannes.view_all')) return true;
+        if ($user->hasPermissionTo('pannes.view_agence')) {
+            return $user->agence_id === $panne->equipement?->agence_actuelle_id;
+        }
+        return $user->hasPermissionTo('pannes.view_own') && $user->id === $panne->agent?->user_id;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function declarer(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.declarer');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Panne $panne): bool
+    public function recevoir(User $user, Panne $panne): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.recevoir') 
+            && $user->agence_id === $panne->equipement?->agence_actuelle_id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Panne $panne): bool
+    public function transmettreMaintenance(User $user, Panne $panne): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.transmettre_maintenance');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Panne $panne): bool
+    public function diagnostiquer(User $user, Panne $panne): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.diagnostiquer');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Panne $panne): bool
+    public function resoudre(User $user, Panne $panne): bool
     {
-        return false;
+        return $user->hasPermissionTo('pannes.resoudre');
     }
 }
