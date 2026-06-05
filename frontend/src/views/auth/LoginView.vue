@@ -1,4 +1,4 @@
-<<template>
+<template>
   <div class="login-container">
     <div class="login-box">
       <h1>GESTPARK</h1>
