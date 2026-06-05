@@ -4,63 +4,40 @@ namespace App\Policies;
 
 use App\Models\Transfert;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TransfertPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('transferts.view_all') || $user->hasPermissionTo('transferts.view_agence');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Transfert $transfert): bool
     {
-        return false;
+        if ($user->hasPermissionTo('transferts.view_all')) return true;
+        return $user->hasPermissionTo('transferts.view_agence') 
+            && ($user->agence_id === $transfert->agence_source_id 
+                || $user->agence_id === $transfert->agence_destination_id);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function demander(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('transferts.demander');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Transfert $transfert): bool
+    public function approuver(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('transferts.approuver');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Transfert $transfert): bool
+    public function expedier(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('transferts.expedier');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Transfert $transfert): bool
+    public function recevoir(User $user, Transfert $transfert): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Transfert $transfert): bool
-    {
-        return false;
+        return $user->hasPermissionTo('transferts.recevoir') 
+            && $user->agence_id === $transfert->agence_destination_id;
     }
 }

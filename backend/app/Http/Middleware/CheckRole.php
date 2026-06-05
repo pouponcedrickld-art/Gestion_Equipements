@@ -8,13 +8,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $roles): Response
     {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Non authentifié'], 401);
+        }
+
+        $roleArray = explode('|', $roles);
+        
+        if (!$user->hasAnyRole($roleArray)) {
+            return response()->json([
+                'message' => 'Accès interdit. Rôles requis : ' . implode(', ', $roleArray)
+            ], 403);
+        }
+
         return $next($request);
     }
 }

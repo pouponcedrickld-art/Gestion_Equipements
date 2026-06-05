@@ -4,63 +4,32 @@ namespace App\Policies;
 
 use App\Models\DemandeMateriel;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DemandeMaterielPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('demandes.view_all') || $user->hasPermissionTo('demandes.view_agence');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, DemandeMateriel $demandeMateriel): bool
+    public function view(User $user, DemandeMateriel $demande): bool
     {
-        return false;
+        if ($user->hasPermissionTo('demandes.view_all')) return true;
+        return $user->hasPermissionTo('demandes.view_agence') && $user->agence_id === $demande->agence_id;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('demandes.creer');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, DemandeMateriel $demandeMateriel): bool
+    public function traiter(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('demandes.traiter');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, DemandeMateriel $demandeMateriel): bool
+    public function annuler(User $user, DemandeMateriel $demande): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, DemandeMateriel $demandeMateriel): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, DemandeMateriel $demandeMateriel): bool
-    {
-        return false;
+        return $user->hasPermissionTo('demandes.annuler') && $user->id === $demande->chef_agence_id;
     }
 }

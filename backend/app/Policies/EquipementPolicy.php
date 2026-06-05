@@ -4,63 +4,54 @@ namespace App\Policies;
 
 use App\Models\Equipement;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EquipementPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('equipements.view_global') 
+            || $user->hasPermissionTo('equipements.view_agence') 
+            || $user->hasPermissionTo('equipements.view_own');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Equipement $equipement): bool
     {
-        return false;
+        if ($user->hasPermissionTo('equipements.view_global')) return true;
+        if ($user->hasPermissionTo('equipements.view_agence')) {
+            return $user->agence_id === $equipement->agence_actuelle_id 
+                || $user->agence_id === $equipement->agence_proprietaire_id;
+        }
+        return $user->hasPermissionTo('equipements.view_own') && $user->id === $equipement->agent_id;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('equipements.create');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Equipement $equipement): bool
     {
+        if ($user->hasPermissionTo('equipements.edit')) {
+            if ($user->hasRole('super_admin') || $user->hasRole('gestionnaire_stock_general')) return true;
+            if ($user->hasRole('gestionnaire_stock')) {
+                return $user->agence_id === $equipement->agence_actuelle_id;
+            }
+        }
         return false;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Equipement $equipement): bool
     {
-        return false;
+        return $user->hasRole('super_admin') || $user->hasRole('gestionnaire_stock_general');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Equipement $equipement): bool
+    public function import(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('equipements.import');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Equipement $equipement): bool
+    public function genererQr(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('equipements.generer_qr');
     }
 }
