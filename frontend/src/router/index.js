@@ -45,6 +45,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'] }
   },
   {
+    path: '/demandes-materiel/nouveau',
+    name: 'NouvelleDemande',
+    component: () => import('@/views/demandes-materiel/DemandeFormView.vue'),
+    meta: { requiresAuth: true, roles: ['chef_agence'] }
+  },
+  {
     path: '/affectations',
     name: 'Affectations',
     component: () => import('@/views/affectations/AffectationsView.vue'),

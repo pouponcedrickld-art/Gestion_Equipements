@@ -48,7 +48,7 @@
       </header>
       
       <div class="content">
-        <router-view />
+        <slot />
       </div>
     </main>
   </div>

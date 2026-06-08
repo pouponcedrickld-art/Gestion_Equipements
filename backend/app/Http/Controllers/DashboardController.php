@@ -25,7 +25,7 @@ class DashboardController extends Controller
                 'en_panne' => Equipement::where('statut_global', 'en_panne')->count(),
                 'en_maintenance' => Equipement::where('statut_global', 'en_maintenance')->count(),
                 'transferts_en_cours' => Transfert::where('statut', 'expedie')->count(),
-                'demandes_en_attente' => DemandeMateriel::where('statut', 'en_attente')->count(),
+                'demandes_en_attente' => DemandeMateriel::where('statut', 'en attente')->count(),
                 'pannes_non_resolues' => Panne::whereIn('statut', ['declaree', 'transmise_maintenance', 'en_diagnostic'])->count(),
                 'maintenances_planifiees' => Maintenance::where('statut', 'planifiee')->count(),
                 'agences_count' => Agence::where('type', 'sous_agence')->count(),
@@ -48,6 +48,7 @@ class DashboardController extends Controller
                 'affectes' => Equipement::where('agence_actuelle_id', $aid)->where('statut_global', 'affecte')->count(),
                 'en_panne' => Equipement::where('agence_actuelle_id', $aid)->where('statut_global', 'en_panne')->count(),
                 'transferts_recus' => Transfert::where('agence_destination_id', $aid)->where('statut', 'expedie')->count(),
+                'demandes_en_attente' => DemandeMateriel::where('agence_id', $aid)->where('statut', 'en attente')->count(),
                 'pannes_a_traiter' => Panne::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->where('statut', 'declaree')->count(),
                 'agents_count' => \App\Models\User::where('agence_id', $aid)->where('actif', true)->count(),
             ];

@@ -12,7 +12,7 @@ class StoreDemandeMaterielRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; // À adapter selon les rôles si nécessaire
     }
 
     /**
@@ -23,7 +23,11 @@ class StoreDemandeMaterielRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'equipement_id' => 'required|exists:equipements,id',
+            'quantite' => 'required|integer|min:1',
+            'urgence' => 'required|in:Basse,Moyenne,Haute',
+            'motif' => 'required|string',
+            'date_souhaitee' => 'required|date|after_or_equal:today',
         ];
     }
 }
