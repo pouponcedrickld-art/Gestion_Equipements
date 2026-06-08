@@ -4,8 +4,8 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 
 import App from './App.vue'
-import router from './router'
-import { useAuthStore } from './stores/authStore'
+import router from './router/index.js'
+import { useAuthStore } from './stores/authStore.js'
 
 const app = createApp(App)
 const pinia = createPinia()

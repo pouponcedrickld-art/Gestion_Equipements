@@ -55,11 +55,16 @@ export const useAuthStore = defineStore('auth', () => {
     return roles.includes(userRole.value)
   }
 
+  const canViewAgence = (agenceId) => {
+    if (isSuperAdmin.value) return true
+    return userAgence.value === agenceId
+  }
+
   return {
     user, token, loading,
     isAuthenticated, userRole, userAgence,
     isSuperAdmin, isGestionnaireGeneral, isChefAgence,
     isGestionnaireStock, isTechnicien, isAgent,
-    login, logout, fetchUser, hasRole
+    login, logout, fetchUser, hasRole, canViewAgence
   }
 })
