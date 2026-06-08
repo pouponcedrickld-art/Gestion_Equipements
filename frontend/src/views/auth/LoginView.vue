@@ -2,35 +2,25 @@
   <div class="login-box">
     <h1>GESTPARK</h1>
     <p class="subtitle">Gestion du Parc Matériel</p>
-    
+
     <form @submit.prevent="handleLogin">
       <div class="form-group">
         <label>Email</label>
-        <input 
-          v-model="credentials.email" 
-          type="email" 
-          placeholder="admin@gestpark.local"
-          required
-        />
+        <input v-model="credentials.email" type="email" placeholder="admin@gestpark.local" required />
       </div>
-      
+
       <div class="form-group">
         <label>Mot de passe</label>
-        <input 
-          v-model="credentials.password" 
-          type="password" 
-          placeholder="••••••••"
-          required
-        />
+        <input v-model="credentials.password" type="password" placeholder="••••••••" required />
       </div>
-      
+
       <button type="submit" :disabled="loading">
         {{ loading ? 'Connexion...' : 'Se connecter' }}
       </button>
-      
+
       <p v-if="error" class="error">{{ error }}</p>
     </form>
-    
+
     <div class="demo-accounts">
       <p>Comptes de démo :</p>
       <small>admin@gestpark.local / password123</small>
@@ -57,10 +47,14 @@ const error = ref('')
 const handleLogin = async () => {
   loading.value = true
   error.value = ''
-  
+
   try {
-    await authStore.login(credentials.value)
-    router.push('/')
+    const result = await authStore.login(credentials.value)
+    if (result && result.requires2FA) {
+      router.push('/login/2fa')
+    } else {
+      router.push('/')
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Erreur de connexion'
   } finally {

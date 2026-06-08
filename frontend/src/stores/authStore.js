@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import authApi from '@/api/authApi'
+import authApi from '@/api/authApi.js'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(localStorage.getItem('token') || null)
   const loading = ref(false)
+  const requires2FA = ref(false)
+  const tempUserId = ref(null)
 
   const isAuthenticated = computed(() => !!token.value)
   const userRole = computed(() => user.value?.role || null)
@@ -19,12 +21,36 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (credentials) => {
     loading.value = true
+    requires2FA.value = false
+    tempUserId.value = null
     try {
       const response = await authApi.login(credentials)
+      if (response.data.requires_2fa) {
+        requires2FA.value = true
+        tempUserId.value = response.data.user_id
+        return { requires2FA: true }
+      }
       token.value = response.data.token
       localStorage.setItem('token', token.value)
       user.value = response.data.user
-      return response.data
+      return { requires2FA: false }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const verify2FA = async (code) => {
+    loading.value = true
+    try {
+      const response = await authApi.verify2FA({
+        user_id: tempUserId.value,
+        code: code
+      })
+      token.value = response.data.token
+      localStorage.setItem('token', token.value)
+      user.value = response.data.user
+      requires2FA.value = false
+      tempUserId.value = null
     } finally {
       loading.value = false
     }
@@ -38,6 +64,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
     token.value = null
     user.value = null
+    requires2FA.value = false
+    tempUserId.value = null
     localStorage.removeItem('token')
   }
 
@@ -61,10 +89,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    user, token, loading,
+    user, token, loading, requires2FA, tempUserId,
     isAuthenticated, userRole, userAgence,
     isSuperAdmin, isGestionnaireGeneral, isChefAgence,
     isGestionnaireStock, isTechnicien, isAgent,
-    login, logout, fetchUser, hasRole, canViewAgence
+    login, verify2FA, logout, fetchUser, hasRole, canViewAgence
   }
 })

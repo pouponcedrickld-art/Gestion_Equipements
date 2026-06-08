@@ -13,6 +13,12 @@ const routes = [
         name: 'Login',
         component: () => import('@/views/auth/LoginView.vue'),
         meta: { public: true }
+      },
+      {
+        path: '2fa',
+        name: 'TwoFactor',
+        component: () => import('@/views/auth/TwoFactorView.vue'),
+        meta: { public: true }
       }
     ]
   },
@@ -107,25 +113,20 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const authStore = useAuthStore()
 
   if (to.meta.public) {
-    next()
     return
   }
 
   if (!authStore.isAuthenticated) {
-    next('/login')
-    return
+    return '/login'
   }
 
   if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
-    next('/')
-    return
+    return '/'
   }
-
-  next()
 })
 
 export default router

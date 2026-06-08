@@ -27,8 +27,8 @@
           <label>Agence parente</label>
           <select v-model="formData.parent_id">
             <option value="">-- Choisir --</option>
-            <option v-for="a in agenceStore.agences" :key="a.id" :value="a.id" v-if="a.type === 'generale'">
-              {{ a.nom }}
+            <option v-if="agenceStore.agenceGenerale" :value="agenceStore.agenceGenerale.id">
+              {{ agenceStore.agenceGenerale.nom }}
             </option>
           </select>
         </div>
@@ -111,10 +111,16 @@ const handleSubmit = async () => {
   saving.value = true
   error.value = null
   try {
+    // Préparer les données : convertir parent_id vide en null
+    const payload = { ...formData }
+    if (payload.parent_id === '') {
+      payload.parent_id = null
+    }
+
     if (props.editData) {
-      await agenceStore.updateAgence(props.editData.id, formData)
+      await agenceStore.updateAgence(props.editData.id, payload)
     } else {
-      await agenceStore.createAgence(formData)
+      await agenceStore.createAgence(payload)
     }
     emit('saved')
   } catch (err) {
