@@ -23,7 +23,13 @@
           <label>Ville</label>
           <input v-model="formData.ville" placeholder="Ville" />
         </div>
-        <div class="form-group" v-if="formData.type === 'sous_agence'">
+        <div class="form-group">
+          <label>Code Postal</label>
+          <input v-model="formData.code_postal" placeholder="Code postal" />
+        </div>
+      </div>
+      <div class="form-row" v-if="formData.type === 'sous_agence'">
+        <div class="form-group">
           <label>Agence parente</label>
           <select v-model="formData.parent_id">
             <option value="">-- Choisir --</option>
@@ -47,6 +53,26 @@
           <input v-model="formData.email" type="email" placeholder="Email de l'agence" />
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Chef d'agence</label>
+          <select v-model="formData.responsable_id">
+            <option :value="null">-- Sélectionner --</option>
+            <option v-for="user in userStore.users" :key="user.id" :value="user.id">
+              {{ user.name }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gestionnaire Stock</label>
+          <select v-model="formData.gestionnaire_stock_id">
+            <option :value="null">-- Sélectionner --</option>
+            <option v-for="user in userStore.users" :key="user.id" :value="user.id">
+              {{ user.name }}
+            </option>
+          </select>
+        </div>
+      </div>
       <div class="form-actions">
         <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
         <button type="submit" class="btn-primary" :disabled="saving">
@@ -59,8 +85,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useAgenceStore } from '@/stores/agenceStore.js'
+import { useUserStore } from '@/stores/userStore.js'
 
 const props = defineProps({
   editData: Object,
@@ -69,6 +96,7 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const agenceStore = useAgenceStore()
+const userStore = useUserStore()
 const saving = ref(false)
 const error = ref(null)
 
@@ -77,6 +105,7 @@ const formData = reactive({
   nom: '',
   ville: '',
   adresse: '',
+  code_postal: '',
   telephone: '',
   email: '',
   parent_id: null,
@@ -84,13 +113,24 @@ const formData = reactive({
   gestionnaire_stock_id: null,
 })
 
+onMounted(() => userStore.fetchUsers())
+
 watch(() => props.editData, (val) => {
   if (val) {
-    Object.assign(formData, val)
+    formData.type = val.type || 'sous_agence'
+    formData.nom = val.nom || ''
+    formData.ville = val.ville || ''
+    formData.adresse = val.adresse || ''
+    formData.code_postal = val.code_postal || ''
+    formData.telephone = val.telephone || ''
+    formData.email = val.email || ''
+    formData.parent_id = val.parent_id || null
+    formData.responsable_id = val.responsable_id || null
+    formData.gestionnaire_stock_id = val.gestionnaire_stock_id || null
   } else {
     resetForm()
   }
-})
+}, { immediate: true, deep: true })
 
 const resetForm = () => {
   Object.assign(formData, {
@@ -98,6 +138,7 @@ const resetForm = () => {
     nom: '',
     ville: '',
     adresse: '',
+    code_postal: '',
     telephone: '',
     email: '',
     parent_id: null,

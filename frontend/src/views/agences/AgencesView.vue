@@ -25,9 +25,14 @@
         </div>
         <div class="card-footer">
           <span>{{ agenceStore.sousAgences.length }} sous-agences</span>
-          <button @click="editAgence(agenceStore.agenceGenerale)" class="btn-icon">
-            <i class="pi pi-pencil"></i>
-          </button>
+          <div class="actions">
+            <button @click="showAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Afficher">
+              <i class="pi pi-eye"></i>
+            </button>
+            <button @click="editAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Modifier">
+              <i class="pi pi-pencil"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -44,16 +49,28 @@
         <div class="card-footer">
           <span :class="a.statut">{{ a.statut }}</span>
           <div class="actions">
-            <button @click="editAgence(a)" class="btn-icon"><i class="pi pi-pencil"></i></button>
-            <button @click="deleteAgence(a.id)" class="btn-icon btn-danger"><i class="pi pi-trash"></i></button>
+            <button @click="showAgence(a)" class="btn-icon" title="Afficher">
+              <i class="pi pi-eye"></i>
+            </button>
+            <button @click="editAgence(a)" class="btn-icon" title="Modifier">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button @click="deleteAgence(a.id)" class="btn-icon btn-danger" title="Supprimer">
+              <i class="pi pi-trash"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal Formulaire -->
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <AgenceFormView :edit-data="editingAgence" @saved="onSaved" @cancel="showForm = false" />
+    </div>
+
+    <!-- Modal Détails -->
+    <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
+      <AgenceDetailView :agence="viewingAgence" @close="showDetail = false" />
     </div>
   </div>
 </template>
@@ -62,38 +79,155 @@
 import { ref, onMounted } from 'vue'
 import { useAgenceStore } from '@/stores/agenceStore.js'
 import AgenceFormView from './AgenceFormView.vue'
+import AgenceDetailView from './AgenceDetailView.vue'
 
 const agenceStore = useAgenceStore()
 const showForm = ref(false)
+const showDetail = ref(false)
 const editingAgence = ref(null)
+const viewingAgence = ref(null)
 
 onMounted(() => agenceStore.fetchAgences())
 
+const showAgence = (a) => { viewingAgence.value = a; showDetail.value = true }
 const editAgence = (a) => { editingAgence.value = { ...a }; showForm.value = true }
 const deleteAgence = async (id) => { if (!confirm('Supprimer ?')) return; await agenceStore.deleteAgence(id) }
 const onSaved = () => { showForm.value = false; editingAgence.value = null; agenceStore.fetchAgences() }
 </script>
 
 <style scoped>
-.agences-page { padding: 20px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-.header h2 { color: #e2e8f0; margin: 0; }
-.btn-primary { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.agences-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.agence-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; }
-.agence-card.generale { border-color: #3b82f6; }
-.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-.card-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
-.badge { padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-.badge-generale { background: #3b82f6; color: white; }
-.badge-sous { background: #10b981; color: white; }
-.card-body p { margin: 8px 0; color: #94a3b8; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
-.card-footer span.active { color: #10b981; }
-.card-footer span.inactive { color: #ef4444; }
-.actions { display: flex; gap: 8px; }
-.btn-icon { background: #334155; border: none; color: #e2e8f0; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
-.btn-danger:hover { background: #ef4444; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.loading { text-align: center; color: #94a3b8; padding: 40px; }
+.agences-page {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h2 {
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agences-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.agence-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.agence-card.generale {
+  border-color: #3b82f6;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.badge-generale {
+  background: #3b82f6;
+  color: white;
+}
+
+.badge-sous {
+  background: #10b981;
+  color: white;
+}
+
+.card-body p {
+  margin: 8px 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #334155;
+}
+
+.card-footer span.active {
+  color: #10b981;
+}
+
+.card-footer span.inactive {
+  color: #ef4444;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: #334155;
+  border: none;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #ef4444;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px;
+}
 </style>
