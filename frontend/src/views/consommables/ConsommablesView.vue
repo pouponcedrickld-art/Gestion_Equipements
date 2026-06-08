@@ -1,8 +1,10 @@
 <template>
-  <div class="page-placeholder">
-    <h2>{{ pageTitle }}</h2>
-    <p>Page en cours de développement...</p>
-  </div>
+  <MainLayout>
+    <div class="page-placeholder">
+      <h2>{{ pageTitle }}</h2>
+      <p>Page en cours de développement...</p>
+    </div>
+  </MainLayout>
 </template>
 
 <script setup>

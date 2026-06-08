@@ -12,10 +12,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('agence_id')->constrained('agences');
             $table->foreignId('chef_agence_id')->constrained('users');
-            $table->string('type_mission');
-            $table->json('equipements_demandes');
-            $table->date('date_besoin');
-            $table->enum('statut', ['en_attente', 'approuve_partiel', 'approuve_total', 'refuse', 'livre'])->default('en_attente');
+            $table->foreignId('equipement_id')->constrained('equipements'); // Type de matériel
+            $table->integer('quantite')->default(1);
+            $table->enum('urgence', ['Basse', 'Moyenne', 'Haute'])->default('Basse');
+            $table->text('motif');
+            $table->date('date_souhaitee');
+            $table->enum('statut', ['en attente', 'approuvé', 'rejeté'])->default('en attente');
             $table->foreignId('traite_par_id')->nullable()->constrained('users');
             $table->text('observations')->nullable();
             $table->timestamps();

@@ -1,4 +1,4 @@
-<<template>
+<template>
   <MainLayout>
     <div class="page-placeholder">
       <h2>{{ pageTitle }}</h2>

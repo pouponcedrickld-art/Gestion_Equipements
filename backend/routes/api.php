@@ -48,7 +48,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     });
 
     // Équipements
-    Route::apiResource('equipements', EquipementController::class);
+    Route::get('equipements', [EquipementController::class, 'index'])->withoutMiddleware(['agence.scope']);
+    Route::apiResource('equipements', EquipementController::class)->except(['index']);
     Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
 

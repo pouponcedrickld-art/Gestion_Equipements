@@ -11,6 +11,7 @@ class Equipement extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'nom',
         'reference',
         'numero_serie',
         'imei',
