@@ -11,85 +11,85 @@ const routes = [
   {
     path: '/',
     name: 'Dashboard',
-    component: () => import('@/views/dashboard/DashboardView.vue'),
+    component: () => import('@/views/agence/dashboard/DashboardView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/agences',
     name: 'Agences',
-    component: () => import('@/views/agences/AgencesView.vue'),
+    component: () => import('@/views/direction/agences/AgencesView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin'] }
   },
   {
     path: '/agents',
     name: 'Agents',
-    component: () => import('@/views/agents/AgentsView.vue'),
+    component: () => import('@/views/agence/agents/AgentsView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
   },
   {
     path: '/equipements',
     name: 'Equipements',
-    component: () => import('@/views/equipements/EquipementsView.vue'),
+    component: () => import('@/views/direction/equipements/EquipementsView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/transferts',
     name: 'Transferts',
-    component: () => import('@/views/transferts/TransfertsView.vue'),
+    component: () => import('@/views/direction/transferts/TransfertsView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'] }
   },
   {
     path: '/demandes-materiel',
     name: 'DemandesMateriel',
-    component: () => import('@/views/demandes-materiel/DemandesView.vue'),
+    component: () => import('@/views/agence/demandes-materiel/DemandesView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'] }
   },
   {
     path: '/demandes-materiel/nouveau',
     name: 'NouvelleDemande',
-    component: () => import('@/views/demandes-materiel/DemandeFormView.vue'),
+    component: () => import('@/views/agence/demandes-materiel/DemandeFormView.vue'),
     meta: { requiresAuth: true, roles: ['chef_agence'] }
   },
   {
     path: '/affectations',
     name: 'Affectations',
-    component: () => import('@/views/affectations/AffectationsView.vue'),
+    component: () => import('@/views/agence/affectations/AffectationsView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/pannes',
     name: 'Pannes',
-    component: () => import('@/views/pannes/PannesView.vue'),
+    component: () => import('@/views/agence/pannes/PannesView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/maintenances',
     name: 'Maintenances',
-    component: () => import('@/views/maintenances/MaintenancesView.vue'),
+    component: () => import('@/views/agence/maintenances/MaintenancesView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
   },
   {
     path: '/pertes',
     name: 'Pertes',
-    component: () => import('@/views/pertes/PertesView.vue'),
+    component: () => import('@/views/agence/pertes/PertesView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/notifications',
     name: 'Notifications',
-    component: () => import('@/views/notifications/NotificationsView.vue'),
+    component: () => import('@/views/direction/notifications/NotificationsView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/rapports',
     name: 'Rapports',
-    component: () => import('@/views/rapports/RapportsView.vue'),
+    component: () => import('@/views/agence/rapports/RapportsView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock', 'technicien_maintenance'] }
   },
   {
     path: '/users',
     name: 'Users',
-    component: () => import('@/views/users/UsersView.vue'),
+    component: () => import('@/views/direction/utilisateurs/UsersView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   }
 ]

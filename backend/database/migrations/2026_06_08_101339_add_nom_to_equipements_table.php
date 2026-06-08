@@ -10,16 +10,20 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('equipements', function (Blueprint $table) {
-        $table->string('nom')->after('id');
-    });
-}
+    {
+        if (!Schema::hasColumn('equipements', 'nom')) {
+            Schema::table('equipements', function (Blueprint $table) {
+                $table->string('nom')->after('id');
+            });
+        }
+    }
 
-public function down(): void
-{
-    Schema::table('equipements', function (Blueprint $table) {
-        $table->dropColumn('nom');
-    });
-}
+    public function down(): void
+    {
+        if (Schema::hasColumn('equipements', 'nom')) {
+            Schema::table('equipements', function (Blueprint $table) {
+                $table->dropColumn('nom');
+            });
+        }
+    }
 };
