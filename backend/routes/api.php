@@ -57,6 +57,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::apiResource('categories', CategorieController::class)->middleware('role:super_admin|gestionnaire_stock_general');
 
     // Transferts
+    Route::get('transferts-kanban', [TransfertController::class, 'index']);
+    Route::post('transferts-kanban/update-status', [TransfertController::class, 'updateStatus']);
     Route::apiResource('transferts', TransfertController::class);
     Route::post('transferts/{id}/approuver', [TransfertController::class, 'approuver'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');

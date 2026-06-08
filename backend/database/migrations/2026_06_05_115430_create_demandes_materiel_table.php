@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('urgence', ['Basse', 'Moyenne', 'Haute'])->default('Basse');
             $table->text('motif');
             $table->date('date_souhaitee');
-            $table->enum('statut', ['en attente', 'approuvé', 'rejeté'])->default('en attente');
+            $table->enum('statut', ['en attente', 'approuvé', 'rejeté', 'expédié'])->default('en attente');
             $table->foreignId('traite_par_id')->nullable()->constrained('users');
             $table->text('observations')->nullable();
             $table->timestamps();
