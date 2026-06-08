@@ -1,16 +1,13 @@
-<<template>
-  <MainLayout>
-    <div class="page-placeholder">
-      <h2>{{ pageTitle }}</h2>
-      <p>Page en cours de développement...</p>
-    </div>
-  </MainLayout>
+<template>
+  <div class="page-placeholder">
+    <h2>{{ pageTitle }}</h2>
+    <p>Page en cours de développement...</p>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import MainLayout from '@/layouts/MainLayout.vue'
 
 const route = useRoute()
 const pageTitle = computed(() => route.name || 'Page')

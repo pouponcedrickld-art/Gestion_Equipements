@@ -1,71 +1,68 @@
 <template>
-  <MainLayout>
-    <div class="users-page">
-      <div class="header">
-        <h2><i class="pi pi-users"></i> Utilisateurs</h2>
-        <button @click="showForm = true" class="btn-primary">
-          <i class="pi pi-plus"></i> Nouveau
-        </button>
-      </div>
-
-      <div class="filters">
-        <input v-model="search" placeholder="Rechercher..." class="search-input" />
-        <select v-model="filterRole" class="filter-select">
-          <option value="">Tous les rôles</option>
-          <option value="super_admin">Super Admin</option>
-          <option value="gestionnaire_stock_general">G. Stock Général</option>
-          <option value="chef_agence">Chef d'Agence</option>
-          <option value="gestionnaire_stock">G. Stock Local</option>
-          <option value="technicien_maintenance">Technicien</option>
-          <option value="agent">Agent</option>
-        </select>
-      </div>
-
-      <div v-if="userStore.loading" class="loading">
-        <i class="pi pi-spin pi-spinner"></i> Chargement...
-      </div>
-
-      <table v-else class="data-table">
-        <thead>
-          <tr>
-            <th>Nom</th><th>Email</th><th>Rôle</th><th>Agence</th><th>Statut</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id" :class="{ inactive: !user.actif }">
-            <td>
-              <div class="user-cell">
-                <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
-                <div><strong>{{ user.name }}</strong><small v-if="user.poste">{{ user.poste }}</small></div>
-              </div>
-            </td>
-            <td>{{ user.email }}</td>
-            <td><span class="role-badge" :class="user.roles?.[0]?.name">{{ user.roles?.[0]?.name }}</span></td>
-            <td>{{ user.agence?.nom || '—' }}</td>
-            <td><span class="status-badge" :class="user.actif ? 'active' : 'inactive'">{{ user.actif ? 'Actif' : 'Inactif' }}</span></td>
-            <td>
-              <div class="actions">
-                <button @click="editUser(user)" class="btn-icon"><i class="pi pi-pencil"></i></button>
-                <button @click="toggleUser(user)" class="btn-icon" :class="user.actif ? 'btn-warn' : 'btn-success'"><i :class="user.actif ? 'pi pi-pause' : 'pi pi-play'"></i></button>
-                <button @click="deleteUser(user.id)" class="btn-icon btn-danger"><i class="pi pi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
-        <UserFormView :edit-data="editingUser" :agences="agenceStore.agences" @saved="onSaved" @cancel="showForm = false" />
-      </div>
+  <div class="users-page">
+    <div class="header">
+      <h2><i class="pi pi-users"></i> Utilisateurs</h2>
+      <button @click="showForm = true" class="btn-primary">
+        <i class="pi pi-plus"></i> Nouveau
+      </button>
     </div>
-  </MainLayout>
+
+    <div class="filters">
+      <input v-model="search" placeholder="Rechercher..." class="search-input" />
+      <select v-model="filterRole" class="filter-select">
+        <option value="">Tous les rôles</option>
+        <option value="super_admin">Super Admin</option>
+        <option value="gestionnaire_stock_general">G. Stock Général</option>
+        <option value="chef_agence">Chef d'Agence</option>
+        <option value="gestionnaire_stock">G. Stock Local</option>
+        <option value="technicien_maintenance">Technicien</option>
+        <option value="agent">Agent</option>
+      </select>
+    </div>
+
+    <div v-if="userStore.loading" class="loading">
+      <i class="pi pi-spin pi-spinner"></i> Chargement...
+    </div>
+
+    <table v-else class="data-table">
+      <thead>
+        <tr>
+          <th>Nom</th><th>Email</th><th>Rôle</th><th>Agence</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in filteredUsers" :key="user.id" :class="{ inactive: !user.actif }">
+          <td>
+            <div class="user-cell">
+              <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+              <div><strong>{{ user.name }}</strong><small v-if="user.poste">{{ user.poste }}</small></div>
+            </div>
+          </td>
+          <td>{{ user.email }}</td>
+          <td><span class="role-badge" :class="user.roles?.[0]?.name">{{ user.roles?.[0]?.name }}</span></td>
+          <td>{{ user.agence?.nom || '—' }}</td>
+          <td><span class="status-badge" :class="user.actif ? 'active' : 'inactive'">{{ user.actif ? 'Actif' : 'Inactif' }}</span></td>
+          <td>
+            <div class="actions">
+              <button @click="editUser(user)" class="btn-icon"><i class="pi pi-pencil"></i></button>
+              <button @click="toggleUser(user)" class="btn-icon" :class="user.actif ? 'btn-warn' : 'btn-success'"><i :class="user.actif ? 'pi pi-pause' : 'pi pi-play'"></i></button>
+              <button @click="deleteUser(user.id)" class="btn-icon btn-danger"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
+      <UserFormView :edit-data="editingUser" :agences="agenceStore.agences" @saved="onSaved" @cancel="showForm = false" />
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore'
-import { useAgenceStore } from '@/stores/agenceStore'
-import MainLayout from '@/layouts/MainLayout.vue'
+import { useUserStore } from '@/stores/userStore.js'
+import { useAgenceStore } from '@/stores/agenceStore.js'
 import UserFormView from './UserFormView.vue'
 
 const userStore = useUserStore()

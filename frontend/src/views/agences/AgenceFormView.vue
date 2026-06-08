@@ -49,17 +49,18 @@
       </div>
       <div class="form-actions">
         <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary">
-          {{ editData ? 'Mettre à jour' : 'Créer' }}
+        <button type="submit" class="btn-primary" :disabled="saving">
+          {{ saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer') }}
         </button>
       </div>
+      <p v-if="error" class="error">{{ error }}</p>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
-import { useAgenceStore } from '@/stores/agenceStore'
+import { ref, reactive, watch } from 'vue'
+import { useAgenceStore } from '@/stores/agenceStore.js'
 
 const props = defineProps({
   editData: Object,
@@ -68,6 +69,8 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const agenceStore = useAgenceStore()
+const saving = ref(false)
+const error = ref(null)
 
 const formData = reactive({
   type: 'sous_agence',
@@ -101,30 +104,122 @@ const resetForm = () => {
     responsable_id: null,
     gestionnaire_stock_id: null,
   })
+  error.value = null
 }
 
-onMounted(() => agenceStore.fetchAgences())
-
 const handleSubmit = async () => {
-  if (props.editData) {
-    await agenceStore.updateAgence(props.editData.id, formData)
-  } else {
-    await agenceStore.createAgence(formData)
+  saving.value = true
+  error.value = null
+  try {
+    if (props.editData) {
+      await agenceStore.updateAgence(props.editData.id, formData)
+    } else {
+      await agenceStore.createAgence(formData)
+    }
+    emit('saved')
+  } catch (err) {
+    console.error(err)
+    error.value = err.response?.data?.message || 'Erreur lors de l\'enregistrement'
+  } finally {
+    saving.value = false
   }
-  emit('saved')
 }
 </script>
 
 <style scoped>
-.modal-form { background: #1e293b; border-radius: 12px; width: 100%; max-width: 550px; padding: 25px; }
-.form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.form-header h2 { color: #e2e8f0; margin: 0; font-size: 1.3rem; }
-.close-btn { background: none; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-.form-group label { color: #cbd5e1; font-size: 0.9rem; }
-.form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #334155; border-radius: 6px; background: #0f172a; color: #e2e8f0; }
-.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-.btn-primary { background: #3b82f6; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-.btn-secondary { background: #334155; color: #e2e8f0; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+.modal-form {
+  background: #1e293b;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 550px;
+  padding: 25px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-header h2 {
+  color: #e2e8f0;
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #334155;
+  color: #e2e8f0;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.error {
+  color: #ef4444;
+  margin-top: 10px;
+  text-align: center;
+}
 </style>
