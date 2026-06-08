@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('mouvements', function (Blueprint $table) {
             $table->id();
-            $table->enum('type_mouvement', ['affectation', 'retour', 'changement_etat', 'maintenance', 'reforme', 'perte', 'creation', 'modification', 'transfert']);
+            $table->enum('type_mouvement', ['affectation', 'retour', 'changement_etat', 'maintenance', 'reforme', 'perte', 'creation', 'modification', 'transfert', 'acquisition']);
             $table->foreignId('equipement_id')->constrained('equipements');
             $table->foreignId('agent_id')->nullable()->constrained('agents');
             $table->foreignId('user_id')->constrained('users');

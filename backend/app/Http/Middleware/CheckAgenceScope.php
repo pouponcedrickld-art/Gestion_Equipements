@@ -17,7 +17,7 @@ class CheckAgenceScope
         }
 
         // Super Admin et Gestionnaire Général = accès total
-        if ($user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+        if ($user->hasAnyRole(['super_admin', 'gestionnaire_stock_general'], 'api')) {
             return $next($request);
         }
 
