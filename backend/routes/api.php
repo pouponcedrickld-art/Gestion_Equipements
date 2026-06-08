@@ -8,6 +8,7 @@ use App\Http\Controllers\AgenceController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\EquipementController;
 use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\ConsommableController;
 use App\Http\Controllers\TransfertController;
 use App\Http\Controllers\DemandeMaterielController;
 use App\Http\Controllers\AffectationController;
@@ -50,14 +51,35 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Équipements
     Route::apiResource('equipements', EquipementController::class);
     Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('equipements/search/advanced', [EquipementController::class, 'search']);
 
     // Catégories
-    Route::apiResource('categories', CategorieController::class)->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('categories', [CategorieController::class, 'index']);
+    Route::get('categories/list', [CategorieController::class, 'list']);
+    Route::get('categories/{categorie}', [CategorieController::class, 'show']);
+    
+    Route::middleware('role:super_admin|gestionnaire_stock_general')->group(function () {
+        Route::post('categories', [CategorieController::class, 'store']);
+        Route::put('categories/{categorie}', [CategorieController::class, 'update']);
+        Route::delete('categories/{categorie}', [CategorieController::class, 'destroy']);
+    });
+
+    // Consommables  
+    Route::apiResource('consommables', ConsommableController::class);
+    Route::post('consommables/{consommable}/ajuster-stock', [ConsommableController::class, 'ajusterStock']);
+    Route::get('consommables-types', [ConsommableController::class, 'getTypes']);
+    Route::get('consommables/statistiques', [ConsommableController::class, 'statistiques']);
 
     // Transferts
     Route::apiResource('transferts', TransfertController::class);
     Route::post('transferts/{id}/approuver', [TransfertController::class, 'approuver'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
+    Route::get('transferts/statistiques', [TransfertController::class, 'statistiques']);
+    Route::get('transferts/options', [TransfertController::class, 'getOptions']);
     Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
 

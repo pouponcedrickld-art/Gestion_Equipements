@@ -27,9 +27,45 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
   },
   {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('@/views/categories/CategoriesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/equipements',
     name: 'Equipements',
     component: () => import('@/views/equipements/EquipementsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/nouveau',
+    name: 'NouvelEquipement',
+    component: () => import('@/views/equipements/EquipementFormView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/:id',
+    name: 'EquipementDetail',
+    component: () => import('@/views/equipements/EquipementDetailView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/:id/modifier',
+    name: 'ModifierEquipement',
+    component: () => import('@/views/equipements/EquipementFormView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/scan',
+    name: 'ScanQR',
+    component: () => import('@/views/equipements/ScanQRView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/consommables',
+    name: 'Consommables',
+    component: () => import('@/views/consommables/ConsommablesView.vue'),
     meta: { requiresAuth: true }
   },
   {

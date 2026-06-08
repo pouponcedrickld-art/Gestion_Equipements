@@ -2,6 +2,13 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
+import Tooltip from 'primevue/tooltip'
+
+// Import styles
+import './assets/main.css'
+import 'primeicons/primeicons.css'
 
 import App from './App.vue'
 import router from './router/index.js'
@@ -14,9 +21,15 @@ app.use(pinia)
 app.use(router)
 app.use(PrimeVue, {
   theme: {
-    preset: Aura
+    preset: Aura,
+    options: {
+      darkModeSelector: '.p-dark'
+    }
   }
 })
+app.use(ToastService)
+app.use(ConfirmationService)
+app.directive('tooltip', Tooltip)
 
 // Fetch user on app startup if token exists
 const authStore = useAuthStore()
