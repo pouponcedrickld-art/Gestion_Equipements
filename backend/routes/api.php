@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AgenceController;
 use App\Http\Controllers\AgentController;
@@ -17,37 +18,36 @@ use App\Http\Controllers\PerteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RapportController;
 
-// Auth (public)
+// ROUTES PUBLIQUES
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/2fa/verify', [AuthController::class, 'verify2FA']);
 
-// Routes protégées
+// ROUTES PROTÉGÉES
 Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
-    // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
-    // Dashboard
-    Route::get('/dashboard', [AuthController::class, 'dashboard']);
+    // Dashboard (Cedric)
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    // Agences (Super Admin uniquement)
+    // Agences
     Route::middleware('role:super_admin')->group(function () {
         Route::apiResource('agences', AgenceController::class);
+        Route::get('agences/{agence}/stats', [AgenceController::class, 'stats']);
     });
 
-    // Utilisateurs (Admin + Gestionnaire Général)
-    Route::middleware('role:super_admin|gestionnaire_stock_general')->group(function () {
-        Route::apiResource('users', UserController::class);
-    });
+    // Utilisateurs
+    Route::apiResource('users', UserController::class);
+    Route::post('users/{user}/toggle-actif', [UserController::class, 'toggleActif']);
 
-    // Agents (Admin, Gestionnaire Général, Chef Agence, Gestionnaire Stock)
+    // Agents
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock')->group(function () {
         Route::apiResource('agents', AgentController::class);
     });
 
-    // Équipements (tous les rôles authentifiés, scopé par agence)
+    // Équipements
     Route::apiResource('equipements', EquipementController::class);
     Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
@@ -69,7 +69,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::apiResource('affectations', AffectationController::class);
     Route::post('affectations/{id}/retour', [AffectationController::class, 'retour']);
 
-    // Mouvements (lecture seule)
+    // Mouvements
     Route::get('mouvements', [MouvementController::class, 'index']);
 
     // Pannes

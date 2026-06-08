@@ -1,4 +1,4 @@
-import api from './axiosConfig'
+import api from './axiosConfig.js'
 
 export default {
     login: (credentials) => api.post('/login', credentials),
