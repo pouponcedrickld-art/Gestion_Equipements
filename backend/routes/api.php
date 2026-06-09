@@ -1,36 +1,39 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AgenceController;
-use App\Http\Controllers\AgentController;
-use App\Http\Controllers\EquipementController;
-use App\Http\Controllers\CategorieController;
-use App\Http\Controllers\TransfertController;
-use App\Http\Controllers\DemandeMaterielController;
-use App\Http\Controllers\AffectationController;
-use App\Http\Controllers\MouvementController;
-use App\Http\Controllers\PanneController;
-use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\PerteController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RapportController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Agence\DashboardAgenceController;
+use App\Http\Controllers\Direction\UserController;
+use App\Http\Controllers\Direction\AgenceController;
+use App\Http\Controllers\Agence\AgentController;
+use App\Http\Controllers\Direction\EquipementController;
+use App\Http\Controllers\Direction\CategorieController;
+use App\Http\Controllers\Direction\TransfertController;
+use App\Http\Controllers\Agence\DemandeMaterielController;
+use App\Http\Controllers\Direction\DemandeAgenceController;
+use App\Http\Controllers\Agence\AffectationController;
+use App\Http\Controllers\Agence\MouvementController;
+use App\Http\Controllers\Agence\PanneController;
+use App\Http\Controllers\Agence\MaintenanceController;
+use App\Http\Controllers\Agence\PerteController;
+use App\Http\Controllers\Direction\NotificationController;
+use App\Http\Controllers\Direction\RapportGlobalController;
 
 // ROUTES PUBLIQUES
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/2fa/verify', [AuthController::class, 'verify2FA']);
 
-// ROUTES PROTÉGÉES
-Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
-
+// ROUTES PROTÉGÉES (Auth simple)
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
+});
 
+// ROUTES PROTÉGÉES (Auth + Scope Agence)
+Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Dashboard (Cedric)
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard', [DashboardAgenceController::class, 'index']);
 
     // Agences
     Route::middleware('role:super_admin')->group(function () {
@@ -48,22 +51,48 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     });
 
     // Équipements
-    Route::apiResource('equipements', EquipementController::class);
+    Route::get('equipements', [EquipementController::class, 'index'])->withoutMiddleware(['agence.scope']);
+    Route::apiResource('equipements', EquipementController::class)->except(['index']);
     Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('equipements/search/advanced', [EquipementController::class, 'search']);
 
     // Catégories
-    Route::apiResource('categories', CategorieController::class)->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::get('categories', [CategorieController::class, 'index']);
+    Route::get('categories/list', [CategorieController::class, 'list']);
+    Route::get('categories/{categorie}', [CategorieController::class, 'show']);
+    
+    Route::middleware('role:super_admin|gestionnaire_stock_general')->group(function () {
+        Route::post('categories', [CategorieController::class, 'store']);
+        Route::put('categories/{categorie}', [CategorieController::class, 'update']);
+        Route::delete('categories/{categorie}', [CategorieController::class, 'destroy']);
+    });
+
+    // Consommables  
+    Route::apiResource('consommables', ConsommableController::class);
+    Route::post('consommables/{consommable}/ajuster-stock', [ConsommableController::class, 'ajusterStock']);
+    Route::get('consommables-types', [ConsommableController::class, 'getTypes']);
+    Route::get('consommables/statistiques', [ConsommableController::class, 'statistiques']);
 
     // Transferts
+    Route::get('transferts-kanban', [TransfertController::class, 'index']);
+    Route::post('transferts-kanban/update-status', [TransfertController::class, 'updateStatus']);
     Route::apiResource('transferts', TransfertController::class);
     Route::post('transferts/{id}/approuver', [TransfertController::class, 'approuver'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
+    Route::get('transferts/statistiques', [TransfertController::class, 'statistiques']);
+    Route::get('transferts/options', [TransfertController::class, 'getOptions']);
     Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
 
-    // Demandes Matériel
+    // Demandes Matériel (Agence)
     Route::apiResource('demandes-materiel', DemandeMaterielController::class);
-    Route::post('demandes-materiel/{id}/traiter', [DemandeMaterielController::class, 'traiter'])->middleware('role:super_admin|gestionnaire_stock_general');
+    
+    // Traitement Demandes (Direction)
+    Route::post('demandes-materiel/{id}/traiter', [DemandeAgenceController::class, 'traiter'])->middleware('role:super_admin|gestionnaire_stock_general');
 
     // Affectations
     Route::apiResource('affectations', AffectationController::class);
@@ -89,8 +118,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
     // Rapports
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock|technicien_maintenance')->group(function () {
-        Route::get('rapports/inventaire', [RapportController::class, 'inventaire']);
-        Route::get('rapports/pannes', [RapportController::class, 'pannes']);
-        Route::get('rapports/export/{type}', [RapportController::class, 'export']);
+        Route::get('rapports/inventaire', [RapportGlobalController::class, 'inventaire']);
+        Route::get('rapports/pannes', [RapportGlobalController::class, 'pannes']);
+        Route::get('rapports/export/{type}', [RapportGlobalController::class, 'export']);
     });
 });

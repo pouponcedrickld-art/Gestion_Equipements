@@ -48,7 +48,7 @@
       </header>
       
       <div class="content">
-        <router-view />
+        <slot />
       </div>
     </main>
   </div>
@@ -190,16 +190,27 @@ const logout = async () => {
 
 .main-content {
   flex: 1;
-  background: #f1f5f9;
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .top-bar {
-  background: white;
+  background-color: white !important;
+  color: #1e293b !important;
   padding: 15px 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.content {
+  padding: 25px;
+  flex: 1;
+  background-color: #f8fafc !important;
 }
 
 .toggle-btn {
@@ -231,5 +242,6 @@ const logout = async () => {
 
 .content {
   padding: 25px;
+  flex: 1;
 }
 </style>

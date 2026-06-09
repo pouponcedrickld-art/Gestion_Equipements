@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('agences', function (Blueprint $table) {
-            $table->string('code_postal')->nullable()->after('ville');
-            $table->string('telephone')->nullable()->after('code_postal');
-            $table->string('email')->nullable()->after('telephone');
+            if (!Schema::hasColumn('agences', 'code_postal')) {
+                $table->string('code_postal')->nullable();
+            }
+            if (!Schema::hasColumn('agences', 'telephone')) {
+                $table->string('telephone')->nullable();
+            }
+            if (!Schema::hasColumn('agences', 'email')) {
+                $table->string('email')->nullable();
+            }
         });
     }
 
