@@ -14,10 +14,12 @@ class Consommable extends Model
         'type',
         'equipement_id',
         'quantite',
+        'seuil_alerte',
     ];
 
     protected $casts = [
         'quantite' => 'integer',
+        'seuil_alerte' => 'integer',
     ];
 
     // ===== RELATIONS =====
@@ -95,9 +97,9 @@ class Consommable extends Model
     /**
      * Vérifier si le stock est faible
      */
-    public function isStockFaible($seuil = 1)
+    public function isStockFaible()
     {
-        return $this->quantite <= $seuil;
+        return $this->quantite <= $this->seuil_alerte;
     }
 
     /**

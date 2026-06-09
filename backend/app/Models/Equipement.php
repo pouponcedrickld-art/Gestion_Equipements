@@ -30,12 +30,17 @@ class Equipement extends Model
         'statut_global',
         'photo',
         'qr_code',
+        'responsable_id',
+        'documents',
+        'specifications',
     ];
 
     protected $casts = [
         'date_acquisition' => 'date',
         'garantie_date_fin' => 'date',
         'prix_achat' => 'decimal:2',
+        'documents' => 'array',
+        'specifications' => 'array',
     ];
 
     // ===== RELATIONS =====
@@ -62,6 +67,14 @@ class Equipement extends Model
     public function agenceActuelle()
     {
         return $this->belongsTo(Agence::class, 'agence_actuelle_id');
+    }
+
+    /**
+     * Relation : Responsable de l'équipement
+     */
+    public function responsable()
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     /**
