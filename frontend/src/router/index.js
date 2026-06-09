@@ -147,7 +147,19 @@ const routes = [
     name: 'Users',
     component: () => import('@/views/direction/utilisateurs/UsersView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
-  }
+  },
+  {
+    path: '/maintenances/calendrier',
+    name: 'MaintenanceCalendar',
+    component: () => import('@/views/agence/maintenances/MaintenanceCalendarView.vue'),
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
+  },
+// {
+//   path: '/maintenances/details/:id',
+//   name: 'MaintenanceDetails',
+//   component: () => import('@/views/maintenances/MaintenanceDetailsView.vue'),
+//   meta: { requiresAuth: true, roles: ['super_admin', 'technicien_maintenance', 'gestionnaire_stock'] }
+// }
 ]
 
 const router = createRouter({
