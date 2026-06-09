@@ -14,7 +14,7 @@
           </router-link>
         </div>
         
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-black mb-2 flex items-center gap-3">
           <i class="pi pi-calendar text-blue-500"></i>
           Calendrier de Maintenance
         </h1>
@@ -35,7 +35,7 @@
             <i class="pi pi-chevron-left"></i>
           </button>
 
-          <div class="text-xl font-bold text-gray-900 dark:text-white min-w-[200px] text-center">
+          <div class="text-xl font-bold text-gray-900 dark:text-black min-w-[200px] text-center">
             {{ currentMonthName }} {{ currentYear }}
           </div>
 

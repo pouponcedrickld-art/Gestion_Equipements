@@ -3,7 +3,7 @@
     <div class="maintenances-hub p-6">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-black mb-2 flex items-center gap-3">
           <i class="pi pi-wrench text-blue-500"></i>
           Gestion des Maintenances
         </h1>
