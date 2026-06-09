@@ -156,6 +156,12 @@
 
           <Column field="numero_serie" header="N° Série Fabricant" sortable></Column>
 
+          <Column field="quantite" header="Qté" sortable>
+            <template #body="{ data }">
+              <span class="font-bold">{{ data.quantite }}</span>
+            </template>
+          </Column>
+
           <Column field="localisation" header="Emplacement" sortable>
             <template #body="{ data }">
               <div class="flex align-items-center gap-2">

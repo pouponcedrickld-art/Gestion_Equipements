@@ -18,6 +18,7 @@ class Equipement extends Model
         'code_inventaire',
         'marque',
         'modele',
+        'quantite',
         'categorie_id',
         'fournisseur',
         'date_acquisition',
@@ -162,11 +163,27 @@ class Equipement extends Model
     }
 
     /**
-     * Scope : Filtrer par statut (pastille couleur)
+     * Scope : Filtrer par statut global
+     */
+    public function scopeByStatutGlobal($query, $statut)
+    {
+        return $query->where('statut_global', $statut);
+    }
+
+    /**
+     * Scope : Filtrer par état (neuf, en service, etc.)
+     */
+    public function scopeByEtat($query, $etat)
+    {
+        return $query->where('etat', $etat);
+    }
+
+    /**
+     * Scope : Filtrer par statut (alias pour byEtat pour compatibilité)
      */
     public function scopeByStatut($query, $statut)
     {
-        return $query->where('etat', $statut);
+        return $this->scopeByEtat($query, $statut);
     }
 
     /**
