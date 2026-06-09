@@ -11,11 +11,40 @@ class Categorie extends Model
 
     protected $fillable = [
         'nom',
+        'slug',
         'description',
+        'statut',
+        'code',
+        'parent_id',
+        'frequence_maintenance',
+        'duree_vie',
+        'attributs_personnalises',
+    ];
+
+    protected $casts = [
+        'attributs_personnalises' => 'array',
+        'frequence_maintenance' => 'integer',
+        'duree_vie' => 'integer',
     ];
 
     // ===== RELATIONS =====
     
+    /**
+     * Relation : Catégorie parente
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Categorie::class, 'parent_id');
+    }
+
+    /**
+     * Relation : Sous-catégories
+     */
+    public function enfants()
+    {
+        return $this->hasMany(Categorie::class, 'parent_id');
+    }
+
     /**
      * Relation : Une catégorie a plusieurs équipements
      */
@@ -27,12 +56,24 @@ class Categorie extends Model
     // ===== SCOPES =====
     
     /**
-     * Scope : Recherche par nom ou description
+     * Scope : Filtrer par statut
+     */
+    public function scopeByStatut($query, $statut)
+    {
+        return $query->where('statut', $statut);
+    }
+
+    /**
+     * Scope : Recherche par nom, description ou code
      */
     public function scopeSearch($query, $term)
     {
-        return $query->where('nom', 'like', '%' . $term . '%')
-                    ->orWhere('description', 'like', '%' . $term . '%');
+        return $query->where(function($q) use ($term) {
+            $q->where('nom', 'like', '%' . $term . '%')
+              ->orWhere('description', 'like', '%' . $term . '%')
+              ->orWhere('code', 'like', '%' . $term . '%')
+              ->orWhere('slug', 'like', '%' . $term . '%');
+        });
     }
 
     /**

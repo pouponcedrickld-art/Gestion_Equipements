@@ -79,17 +79,225 @@ export const useEquipementStore = defineStore('equipement', {
       this.loading = true
       this.error = null
 
-      try {
-        const response = await equipementApi.getById(id)
-        
-        // Mettre à jour dans la liste si existant
-        const index = this.equipements.findIndex(e => e.id === id)
-        if (index > -1) {
-          this.equipements[index] = response.data
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+          } else if (key === 'specifications' && typeof value === 'object') {
+            formData.append(key, JSON.stringify(value))
+          } else {
+            formData.append(key, value)
+          }
+        }
+      })
+
+      const response = await equipementApi.store(formData)
+      
+      if (response.data.success) {
+        const newEquipement = response.data.data
+        if (Array.isArray(newEquipement)) {
+          // Si création multiple, on rafraîchit la liste
+          await fetchEquipements()
         } else {
-          this.equipements.push(response.data)
+          equipements.value.unshift(newEquipement)
+        }
+        return newEquipement
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur createEquipement:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Mettre à jour un équipement
+   */
+  async function updateEquipement(id, data) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const formData = new FormData()
+      formData.append('_method', 'PUT')
+      
+      Object.keys(data).forEach(key => {
+        const value = data[key]
+        if (value !== null && value !== undefined) {
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+          } else if (key === 'specifications' && typeof value === 'object') {
+            formData.append(key, JSON.stringify(value))
+          } else if (key === 'photo' && !(value instanceof File)) {
+            // Ne pas ajouter la photo si ce n'est pas un nouveau fichier
+          } else {
+            formData.append(key, value)
+          }
+        }
+      })
+
+      const response = await equipementApi.update(id, formData)
+      
+      if (response.data.success) {
+        const updatedEquipement = response.data.data
+        const index = equipements.value.findIndex(eq => eq.id === id)
+        if (index !== -1) {
+          equipements.value[index] = updatedEquipement
+        }
+        if (currentEquipement.value && currentEquipement.value.id === id) {
+          currentEquipement.value = updatedEquipement
+        }
+        return updatedEquipement
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur updateEquipement:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Supprimer un équipement
+   */
+  async function deleteEquipement(id) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await equipementApi.destroy(id)
+      
+      if (response.data.success) {
+        // Retirer de la liste locale
+        equipements.value = equipements.value.filter(eq => eq.id !== id)
+        
+        if (currentEquipement.value && currentEquipement.value.id === id) {
+          currentEquipement.value = null
         }
         
+        return true
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur deleteEquipement:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Recherche avancée d'équipements
+   */
+  async function searchEquipements(searchParams) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await equipementApi.search(searchParams)
+      
+      if (response.data.success) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur searchEquipements:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Générer un QR code pour un équipement
+   */
+  async function generateQRCode(id) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await equipementApi.generateQr(id)
+      
+      if (response.data.success) {
+        // Mettre à jour l'équipement avec le QR code
+        const index = equipements.value.findIndex(eq => eq.id === id)
+        if (index !== -1) {
+          equipements.value[index].qr_code = response.data.data.qr_code
+        }
+        
+        if (currentEquipement.value && currentEquipement.value.id === id) {
+          currentEquipement.value.qr_code = response.data.data.qr_code
+        }
+        
+        return response.data.data
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur generateQRCode:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Prévisualiser un import
+   */
+  async function previewImport(file) {
+    importState.value.previewing = true
+    importState.value.error = null
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await equipementApi.previewImport(formData)
+      
+      if (response.data.success) {
+        importState.value.preview = response.data.data
+        return response.data.data
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      importState.value.error = err.response?.data?.message || err.message
+      console.error('Erreur previewImport:', err)
+      throw err
+    } finally {
+      importState.value.previewing = false
+    }
+  }
+
+  /**
+   * Importer des équipements
+   */
+  async function importEquipements(file, agenceId = null) {
+    importState.value.uploading = true
+    importState.value.error = null
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      if (agenceId) {
+        formData.append('agence_id', agenceId)
+      }
+      
+      const response = await equipementApi.import(formData)
+      
+      if (response.data.success) {
+        // Recharger la liste après import
+        await fetchEquipements()
         return response.data
       } catch (error) {
         this.error = error.response?.data?.message || 'Erreur lors du chargement de l\'équipement'
@@ -103,7 +311,6 @@ export const useEquipementStore = defineStore('equipement', {
     /**
      * Efface le cache
      */
-    clearCache() {
       this.cache.clear()
     },
 

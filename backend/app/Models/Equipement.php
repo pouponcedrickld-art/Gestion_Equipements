@@ -30,12 +30,17 @@ class Equipement extends Model
         'statut_global',
         'photo',
         'qr_code',
+        'responsable_id',
+        'documents',
+        'specifications',
     ];
 
     protected $casts = [
         'date_acquisition' => 'date',
         'garantie_date_fin' => 'date',
         'prix_achat' => 'decimal:2',
+        'documents' => 'array',
+        'specifications' => 'array',
     ];
 
     // ===== RELATIONS =====
@@ -62,6 +67,14 @@ class Equipement extends Model
     public function agenceActuelle()
     {
         return $this->belongsTo(Agence::class, 'agence_actuelle_id');
+    }
+
+    /**
+     * Relation : Responsable de l'équipement
+     */
+    public function responsable()
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     /**
@@ -138,20 +151,22 @@ class Equipement extends Model
         return $query->where('agence_actuelle_id', $agenceId);
     }
 
-    /**
-     * Scope : Filtrer par statut global
-     */
-    public function scopeByStatut($query, $statut)
+    public function scopeSearch($query, $term)
     {
-        return $query->where('statut_global', $statut);
+        return $query->where(function($q) use ($term) {
+            $q->where('nom', 'like', '%' . $term . '%')
+              ->orWhere('numero_serie', 'like', '%' . $term . '%')
+              ->orWhere('code_inventaire', 'like', '%' . $term . '%')
+              ->orWhere('reference', 'like', '%' . $term . '%');
+        });
     }
 
     /**
-     * Scope : Filtrer par état
+     * Scope : Filtrer par statut (pastille couleur)
      */
-    public function scopeByEtat($query, $etat)
+    public function scopeByStatut($query, $statut)
     {
-        return $query->where('etat', $etat);
+        return $query->where('etat', $statut);
     }
 
     /**
@@ -160,21 +175,6 @@ class Equipement extends Model
     public function scopeByCategorie($query, $categorieId)
     {
         return $query->where('categorie_id', $categorieId);
-    }
-
-    /**
-     * Scope : Recherche multi-critères
-     */
-    public function scopeSearch($query, $term)
-    {
-        return $query->where(function($q) use ($term) {
-            $q->where('reference', 'like', '%' . $term . '%')
-              ->orWhere('numero_serie', 'like', '%' . $term . '%')
-              ->orWhere('imei', 'like', '%' . $term . '%')
-              ->orWhere('code_inventaire', 'like', '%' . $term . '%')
-              ->orWhere('marque', 'like', '%' . $term . '%')
-              ->orWhere('modele', 'like', '%' . $term . '%');
-        });
     }
 
     /**

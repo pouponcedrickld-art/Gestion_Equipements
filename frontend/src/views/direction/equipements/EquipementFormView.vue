@@ -1,179 +1,283 @@
 <template>
   <DirectionLayout>
     <div class="equipement-form-container" ref="pageContainer">
+ 
+      <!-- Header -->
       <div class="form-header animate-header">
-        <Button 
-          icon="pi pi-arrow-left" 
-          class="p-button-text p-button-rounded back-btn" 
-          @click="$router.back()" 
+        <Button
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-rounded back-btn"
+          @click="$router.back()"
         />
-        <div class="title-section">
-          <h1>{{ isEditing ? 'Mise à jour de l\'unité' : 'Nouvel Équipement' }}</h1>
-          <p>{{ isEditing ? 'Modifier les spécifications de cet équipement' : 'Enregistrement d\'un nouveau matériel dans le parc' }}</p>
-        </div>
+        <h1 class="page-title">{{ isEditing ? 'Mise à jour' : 'Nouvel Équipement' }}</h1>
       </div>
-
-      <div class="form-content-wrapper">
-        <Card class="modern-form-card animate-card">
-          <template #content>
-            <form @submit.prevent="handleSubmit">
-              <div v-show="currentStep === 1" class="step-content step-1">
-                <div class="section-info">
-                  <i class="pi pi-id-card"></i>
-                  <h3>Identification de l'équipement</h3>
-                </div>
-                
-                <div class="grid p-fluid">
-                  <div class="field col-12 md:col-6">
-                    <label>Référence Interne *</label>
-                    <div class="input-wrapper">
-                      <i class="pi pi-bookmark"></i>
-                      <InputText v-model="form.reference" :class="{ 'p-invalid': errors.reference }" placeholder="EQ-2026-XXXX" />
-                    </div>
-                    <small class="p-error" v-if="errors.reference">{{ errors.reference[0] }}</small>
-                  </div>
-
-                  <div class="field col-12 md:col-6">
-                    <label>Code Inventaire *</label>
-                    <div class="input-wrapper">
-                      <i class="pi pi-barcode"></i>
-                      <InputText v-model="form.code_inventaire" :class="{ 'p-invalid': errors.code_inventaire }" placeholder="INV-XXXX" />
-                    </div>
-                    <small class="p-error" v-if="errors.code_inventaire">{{ errors.code_inventaire[0] }}</small>
-                  </div>
-
-                  <div class="field col-12 md:col-6">
-                    <label>Numéro de Série *</label>
-                    <div class="input-wrapper">
-                      <i class="pi pi-hashtag"></i>
-                      <InputText v-model="form.numero_serie" :class="{ 'p-invalid': errors.numero_serie }" />
-                    </div>
-                    <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
-                  </div>
-
-                  <div class="field col-12 md:col-6">
-                    <label>IMEI (Optionnel)</label>
-                    <div class="input-wrapper">
-                      <i class="pi pi-mobile"></i>
-                      <InputText v-model="form.imei" :class="{ 'p-invalid': errors.imei }" />
-                    </div>
-                  </div>
-                </div>
+ 
+      <!-- Layout deux colonnes -->
+      <div class="two-col-layout animate-card">
+ 
+        <!-- ─── SIDEBAR GAUCHE ─── -->
+        <aside class="sidebar">
+ 
+          <!-- Photo -->
+          <div class="sidebar-card">
+            <div class="card-section-label">
+              <i class="pi pi-camera"></i> Photo
+            </div>
+            <div
+              v-if="photoPreview"
+              class="photo-preview-wrapper"
+            >
+              <img :src="photoPreview" alt="Aperçu" class="photo-preview-img" />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger p-button-sm photo-delete-btn"
+                @click="removePhoto"
+              />
+            </div>
+            <div
+              v-else
+              class="photo-upload-placeholder"
+              @click="$refs.photoInput.click()"
+            >
+              <i class="pi pi-camera text-3xl"></i>
+              <span class="text-xs font-bold">Cliquer pour ajouter</span>
+            </div>
+            <input type="file" ref="photoInput" @change="handleFileChange" accept="image/*" class="hidden" />
+          </div>
+ 
+          <!-- Identification -->
+          <div class="sidebar-card">
+            <div class="card-section-label">
+              <i class="pi pi-tag"></i> Identification
+            </div>
+ 
+            <div class="field mb-3">
+              <label class="font-bold text-sm">Catégorie *</label>
+              <Dropdown
+                v-model="form.categorie_id"
+                :options="categories"
+                optionLabel="nom"
+                optionValue="id"
+                placeholder="Sélectionner"
+                :class="{ 'p-invalid': errors.categorie_id }"
+                filter
+                class="w-full p-inputtext-sm"
+              />
+              <small class="p-error" v-if="errors.categorie_id">{{ errors.categorie_id[0] }}</small>
+            </div>
+ 
+            <div class="field mb-3">
+              <label class="font-bold text-sm">Statut</label>
+              <div class="status-badges">
+                <span
+                  v-for="opt in etatOptions"
+                  :key="opt.value"
+                  class="status-badge"
+                  :class="{ 'status-badge--active': form.etat === opt.value }"
+                  @click="form.etat = opt.value"
+                >
+                  {{ opt.label }}
+                </span>
               </div>
-
-              <div v-show="currentStep === 2" class="step-content step-2">
-                <div class="section-info">
-                  <i class="pi pi-cog"></i>
-                  <h3>Détails techniques & Visuel</h3>
+            </div>
+ 
+            <div class="field">
+              <label class="font-bold text-sm text-blue-700">Quantité à créer</label>
+              <InputNumber
+                v-model="form.quantite_a_creer"
+                :min="1"
+                :max="100"
+                showButtons
+                class="w-full p-inputtext-sm"
+              />
+            </div>
+          </div>
+ 
+          <!-- Attribution -->
+          <div class="sidebar-card">
+            <div class="card-section-label">
+              <i class="pi pi-user"></i> Attribution
+            </div>
+ 
+            <div class="field mb-3">
+              <label class="font-bold text-sm">Responsable</label>
+              <Dropdown
+                v-model="form.responsable_id"
+                :options="users"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Attribuer à..."
+                filter
+                showClear
+                class="w-full p-inputtext-sm"
+              />
+            </div>
+ 
+            <div class="field">
+              <label class="font-bold text-sm">Localisation</label>
+              <InputText
+                v-model="form.localisation"
+                placeholder="Bureau / Site"
+                class="w-full p-inputtext-sm"
+              />
+            </div>
+          </div>
+ 
+        </aside>
+ 
+        <!-- ─── CONTENU PRINCIPAL ─── -->
+        <div class="main-content">
+          <form @submit.prevent="handleSubmit" class="p-fluid">
+ 
+            <!-- Informations générales -->
+            <div class="main-card">
+              <div class="card-section-label">
+                <i class="pi pi-desktop"></i> Informations générales
+              </div>
+ 
+              <div class="field mb-3">
+                <label class="font-bold text-sm">Désignation *</label>
+                <InputText
+                  v-model="form.nom"
+                  :class="{ 'p-invalid': errors.nom }"
+                  placeholder="Nom du matériel"
+                  class="p-inputtext-sm"
+                />
+                <small class="p-error" v-if="errors.nom">{{ errors.nom[0] }}</small>
+              </div>
+ 
+              <div class="grid grid-tight">
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Marque</label>
+                    <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" />
+                  </div>
                 </div>
-
-                <div class="grid p-fluid">
-                  <div class="field col-12 md:col-6">
-                    <label>Catégorie *</label>
-                    <Dropdown 
-                      v-model="form.categorie_id" 
-                      :options="categories" 
-                      optionLabel="nom" 
-                      optionValue="id" 
-                      placeholder="Choisir une catégorie"
-                      :class="{ 'p-invalid': errors.categorie_id }"
-                      filter
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Modèle</label>
+                    <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" />
+                  </div>
+                </div>
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Numéro de série</label>
+                    <InputText
+                      v-model="form.numero_serie"
+                      :class="{ 'p-invalid': errors.numero_serie }"
+                      :placeholder="form.quantite_a_creer > 1 ? 'Auto' : 'S/N'"
+                      class="p-inputtext-sm"
                     />
                   </div>
-                  <div class="field col-12 md:col-3">
-                    <label>Marque</label>
-                    <InputText v-model="form.marque" placeholder="Ex: Dell, Apple" />
+                </div>
+              </div>
+            </div>
+ 
+            <!-- Inventaire & Acquisition -->
+            <div class="main-card">
+              <div class="card-section-label">
+                <i class="pi pi-clipboard"></i> Inventaire &amp; acquisition
+              </div>
+ 
+              <div class="grid grid-tight">
+                <div class="col-12 md:col-6">
+                  <div class="field mb-3">
+                    <label class="font-bold text-sm">Code inventaire</label>
+                    <InputText v-model="form.code_inventaire" placeholder="Ex : INV-2024" class="p-inputtext-sm" />
                   </div>
-                  <div class="field col-12 md:col-3">
-                    <label>Modèle</label>
-                    <InputText v-model="form.modele" placeholder="Ex: Latitude 5420" />
+                </div>
+                <div class="col-12 md:col-6">
+                  <div class="field mb-3">
+                    <label class="font-bold text-sm">Date d'acquisition</label>
+                    <Calendar
+                      v-model="form.date_acquisition"
+                      dateFormat="dd/mm/yy"
+                      showIcon
+                      class="p-inputtext-sm"
+                    />
                   </div>
-
-                  <div class="field col-12">
-                    <label>Image de l'équipement</label>
-                    <div class="modern-upload-zone" :class="{ 'has-preview': photoPreview }">
-                      <input type="file" @change="handleFileChange" accept="image/*" class="hidden-input" id="photo-upload" />
-                      <label for="photo-upload" class="upload-label" v-if="!photoPreview">
-                        <i class="pi pi-cloud-upload"></i>
-                        <span>Cliquez ou déposez une photo ici</span>
-                        <small>PNG, JPG (Max. 2Mo)</small>
-                      </label>
-                      <div v-else class="preview-container">
-                        <img :src="photoPreview" alt="Aperçu" />
-                        <div class="preview-actions">
-                          <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="removePhoto" />
-                          <label for="photo-upload" class="change-photo-btn">Changer</label>
-                        </div>
-                      </div>
-                    </div>
+                </div>
+                <div class="col-12">
+                  <div class="field">
+                    <label class="font-bold text-sm">Prix d'achat</label>
+                    <InputNumber
+                      v-model="form.prix_achat"
+                      mode="currency"
+                      currency="XOF"
+                      locale="fr-FR"
+                      class="p-inputtext-sm"
+                    />
                   </div>
                 </div>
               </div>
-
-              <div v-show="currentStep === 3" class="step-content step-3">
-                <div class="section-info">
-                  <i class="pi pi-map-marker"></i>
-                  <h3>Acquisition & Localisation</h3>
-                </div>
-
-                <div class="grid p-fluid">
-                  <div class="field col-12 md:col-4">
-                    <label>Date d'acquisition</label>
-                    <Calendar v-model="form.date_acquisition" dateFormat="dd/mm/yy" showIcon />
-                  </div>
-                  <div class="field col-12 md:col-4">
-                    <label>Prix d'achat</label>
-                    <InputNumber v-model="form.prix_achat" mode="currency" currency="XOF" locale="fr-FR" />
-                  </div>
-                  <div class="field col-12 md:col-4">
-                    <label>Fin de garantie</label>
-                    <Calendar v-model="form.garantie_date_fin" dateFormat="dd/mm/yy" showIcon />
-                  </div>
-
-                  <div class="field col-12 md:col-6">
-                    <label>État de l'unité *</label>
-                    <Dropdown v-model="form.etat" :options="etatOptions" optionLabel="label" optionValue="value" />
-                  </div>
-                  <div class="field col-12 md:col-6">
-                    <label>Localisation précise</label>
-                    <InputText v-model="form.localisation" placeholder="Bureau, Étage, Rack..." />
-                  </div>
+            </div>
+ 
+            <!-- Spécifications techniques -->
+            <div class="main-card">
+              <div class="card-section-label">
+                <i class="pi pi-sliders-h"></i> Spécifications techniques
+                <span v-if="selectedCategoryName" class="category-badge">
+                  {{ selectedCategoryName }}
+                </span>
+              </div>
+ 
+              <div v-if="selectedCategoryAttributes.length > 0" class="specs-grid">
+                <div
+                  v-for="attr in selectedCategoryAttributes"
+                  :key="attr.nom"
+                  class="field"
+                >
+                  <label class="font-bold text-xs">{{ attr.nom }}</label>
+                  <InputText
+                    v-if="attr.type === 'texte'"
+                    v-model="form.specifications[attr.nom]"
+                    class="p-inputtext-sm w-full"
+                  />
+                  <InputNumber
+                    v-else-if="attr.type === 'nombre'"
+                    v-model="form.specifications[attr.nom]"
+                    class="p-inputtext-sm w-full"
+                  />
+                  <Calendar
+                    v-else-if="attr.type === 'date'"
+                    v-model="form.specifications[attr.nom]"
+                    dateFormat="dd/mm/yy"
+                    showIcon
+                    class="p-inputtext-sm w-full"
+                  />
                 </div>
               </div>
-
-              <div class="form-actions-footer">
-                <Button 
-                  v-if="currentStep > 1" 
-                  label="Précédent" 
-                  icon="pi pi-chevron-left" 
-                  class="p-button-text p-button-secondary" 
-                  @click="prevStep" 
-                />
-                <div class="spacer"></div>
-                <Button 
-                  v-if="currentStep < 3" 
-                  label="Suivant" 
-                  icon="pi pi-chevron-right" 
-                  iconPos="right" 
-                  @click="nextStep" 
-                />
-                <Button 
-                  v-else 
-                  type="submit" 
-                  :label="isEditing ? 'Mettre à jour' : 'Enregistrer'" 
-                  icon="pi pi-check" 
-                  class="p-button-success p-button-raised"
-                  :loading="loading"
-                />
+ 
+              <div v-else class="specs-empty">
+                <i class="pi pi-info-circle"></i>
+                <span>Aucune spécification technique pour cette catégorie</span>
               </div>
-            </form>
-          </template>
-        </Card>
+            </div>
+ 
+            <!-- Footer actions -->
+            <div class="form-footer">
+              <Button
+                label="Annuler"
+                class="p-button-text p-button-secondary p-button-sm"
+                @click="$router.back()"
+              />
+              <Button
+                type="submit"
+                :label="isEditing ? 'Mettre à jour' : 'Enregistrer'"
+                icon="pi pi-check"
+                class="p-button-primary p-button-sm"
+                :loading="loading"
+              />
+            </div>
+ 
+          </form>
+        </div>
+ 
       </div>
     </div>
   </DirectionLayout>
 </template>
-
+ 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -181,60 +285,68 @@ import { useToast } from 'primevue/usetoast'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import { useEquipementStore } from '@/stores/equipementStore'
 import { useCategorieStore } from '@/stores/categorieStore'
-
+import { useUserStore } from '@/stores/userStore'
+import gsap from 'gsap'
+ 
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
+import Card from 'primevue/card'
+import Calendar from 'primevue/calendar'
+import InputNumber from 'primevue/inputnumber'
+import Divider from 'primevue/divider'
+ 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const equipementStore = useEquipementStore()
 const categorieStore = useCategorieStore()
-
-const currentStep = ref(1)
-const stepLabels = ['Identification', 'Spécifications', 'Logistique']
+const userStore = useUserStore()
+ 
 const isEditing = computed(() => route.params.id !== undefined)
 const loading = ref(false)
 const errors = ref({})
-
+ 
 const form = ref({
-  reference: '',
+  nom: '',
   numero_serie: '',
-  imei: '',
-  code_inventaire: '',
   marque: '',
   modele: '',
+  code_inventaire: '',
   categorie_id: null,
-  fournisseur: '',
+  etat: 'nouveau',
+  localisation: '',
+  responsable_id: null,
   date_acquisition: null,
   prix_achat: null,
-  garantie_date_fin: null,
-  etat: 'neuf',
-  localisation: '',
-  photo: null
+  photo: null,
+  specifications: {},
+  quantite_a_creer: 1
+})
+
+const selectedCategoryAttributes = computed(() => {
+  if (!form.value.categorie_id) return []
+  const cat = categories.value.find(c => c.id === form.value.categorie_id)
+  return cat?.attributs_personnalises || []
+})
+
+const selectedCategoryName = computed(() => {
+  const cat = categories.value.find(c => c.id === form.value.categorie_id)
+  return cat?.nom || ''
 })
 
 const photoPreview = ref(null)
 
 const etatOptions = [
-  { label: 'Neuf', value: 'neuf' },
-  { label: 'En service', value: 'en_service' },
-  { label: 'En panne', value: 'en_panne' },
-  { label: 'En maintenance', value: 'en_maintenance' },
-  { label: 'Réformé', value: 'reforme' },
-  { label: 'Perdu', value: 'perdu' }
+  { label: 'Nouveau', value: 'nouveau' },
+  { label: 'Actif', value: 'actif' },
+  { label: 'Maintenance', value: 'en_maintenance' },
+  { label: 'Hors service', value: 'hors_service' },
+  { label: 'Archivé', value: 'archive' }
 ]
 
 const categories = computed(() => categorieStore.categories)
-
-const nextStep = () => {
-  if (currentStep.value < 3) {
-    currentStep.value++
-  }
-}
-
-const prevStep = () => {
-  if (currentStep.value > 1) {
-    currentStep.value--
-  }
-}
+const users = computed(() => userStore.users)
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]
@@ -256,264 +368,318 @@ const handleSubmit = async () => {
   errors.value = {}
 
   try {
-    const payload = { ...form.value }
-    if (payload.date_acquisition instanceof Date) payload.date_acquisition = payload.date_acquisition.toISOString().split('T')[0]
-    if (payload.garantie_date_fin instanceof Date) payload.garantie_date_fin = payload.garantie_date_fin.toISOString().split('T')[0]
-
+    // On passe directement l'objet réactif form.value
+    // Le store s'occupera de la conversion FormData
     if (isEditing.value) {
-      await equipementStore.updateEquipement(route.params.id, payload)
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Unité mise à jour', life: 3000 })
+      await equipementStore.updateEquipement(route.params.id, form.value)
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 })
     } else {
-      await equipementStore.createEquipement(payload)
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Unité créée avec succès', life: 3000 })
+      await equipementStore.createEquipement(form.value)
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement enregistré', life: 3000 })
     }
+
     router.push('/equipements')
-  } catch (error) {
-    if (error.response?.data?.errors) {
-      errors.value = error.response.data.errors
-      if (errors.value.reference || errors.value.numero_serie || errors.value.code_inventaire) {
-        currentStep.value = 1
-      }
+  } catch (err) {
+    if (err.response?.data?.errors) {
+      errors.value = err.response.data.errors
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les champs', life: 3000 })
     } else {
-      toast.add({ severity: 'error', summary: 'Erreur', detail: error.message || 'Une erreur est survenue', life: 5000 })
+      toast.add({ severity: 'error', summary: 'Erreur', detail: err.message || 'Une erreur est survenue', life: 3000 })
     }
   } finally {
     loading.value = false
   }
 }
-
+ 
 onMounted(async () => {
-  await categorieStore.fetchCategories({ per_page: 100 })
-
+  await Promise.all([
+    categorieStore.fetchCategories(),
+    userStore.fetchUsers()
+  ])
+ 
+  if (route.query.categorie_id) {
+    form.value.categorie_id = parseInt(route.query.categorie_id)
+  }
+ 
   if (isEditing.value) {
     loading.value = true
     try {
       const equipement = await equipementStore.fetchEquipement(route.params.id)
       form.value = {
-        reference: equipement.reference,
-        numero_serie: equipement.numero_serie,
+        nom: equipement.nom || '',
+        reference: equipement.reference || '',
+        numero_serie: equipement.numero_serie || '',
         imei: equipement.imei || '',
-        code_inventaire: equipement.code_inventaire,
+        code_inventaire: equipement.code_inventaire || '',
         marque: equipement.marque || '',
         modele: equipement.modele || '',
         categorie_id: equipement.categorie_id,
         fournisseur: equipement.fournisseur || '',
         date_acquisition: equipement.date_acquisition ? new Date(equipement.date_acquisition) : null,
-        prix_achat: equipement.prix_achat ? parseFloat(equipement.prix_achat) : null,
+        prix_achat: equipement.prix_achat,
         garantie_date_fin: equipement.garantie_date_fin ? new Date(equipement.garantie_date_fin) : null,
-        etat: equipement.etat,
+        etat: equipement.etat || 'actif',
         localisation: equipement.localisation || '',
-        photo: null
+        responsable_id: equipement.responsable_id,
+        photo: null,
+        specifications: equipement.specifications || {},
+        quantite_a_creer: 1
       }
       if (equipement.photo) {
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-        photoPreview.value = `${apiBaseUrl}/storage/${equipement.photo}`
+        photoPreview.value = equipement.photo_url
       }
-    } catch (error) {
-      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les données', life: 3000 })
-      router.push('/equipements')
+    } catch (err) {
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger l\'équipement', life: 3000 })
     } finally {
       loading.value = false
     }
   }
+ 
+  gsap.from('.animate-header', { opacity: 0, x: -30, duration: 0.6 })
+  gsap.from('.animate-card', { opacity: 0, y: 30, duration: 0.8, delay: 0.2 })
 })
 </script>
-
+ 
 <style scoped lang="scss">
 .equipement-form-container {
-  padding: 2.5rem;
-  max-width: 1000px;
+  padding: 1.25rem;
+  max-width: 1100px;
   margin: 0 auto;
 }
-
+ 
+/* ── Header ── */
 .form-header {
-  margin-bottom: 3rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
-
-.form-header .title-section h1 {
-  font-size: 2.25rem;
+ 
+.page-title {
+  font-size: 1.4rem;
   font-weight: 800;
-  color: #e2e8f0;
-  margin: 0 0 0.5rem 0;
-}
-
-.form-header .title-section p {
-  color: #94a3b8;
+  color: #1e293b;
   margin: 0;
-  font-size: 1.1rem;
 }
-
-.modern-form-card {
-  background: #1e293b;
-  border-radius: 30px;
-  border: 1px solid #334155;
+ 
+.back-btn {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
 }
-
-.section-info {
-  display: flex;
-  align-items: center;
+ 
+/* ── Layout deux colonnes ── */
+.two-col-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
   gap: 1rem;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #334155;
+  align-items: start;
 }
-
-.section-info i {
-  font-size: 1.5rem;
-  color: #3b82f6;
-}
-
-.section-info h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #e2e8f0;
-  margin: 0;
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-wrapper i {
-  position: absolute;
-  left: 1rem;
-  color: #94a3b8;
-  z-index: 1;
-}
-
-.input-wrapper :deep(.p-inputtext) {
-  padding-left: 2.75rem;
-  border-radius: 12px;
-  background: #0f172a;
-  border-color: #334155;
-  height: 3rem;
-}
-
-.input-wrapper :deep(.p-inputtext:focus) {
-  border-color: #3b82f6;
-  background: #0f172a;
-}
-
-.field label {
-  display: block;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-}
-
-.modern-upload-zone {
-  border: 2px dashed #334155;
-  border-radius: 20px;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0f172a;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.modern-upload-zone:hover {
-  border-color: #3b82f6;
-  background: #0f172a;
-}
-
-.modern-upload-zone .hidden-input {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-}
-
-.modern-upload-zone .upload-label {
+ 
+/* ── Sidebar ── */
+.sidebar {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 1rem;
+}
+ 
+.sidebar-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+ 
+/* ── Cartes principale ── */
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+ 
+.main-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+ 
+/* ── Label de section ── */
+.card-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.85rem;
+ 
+  i {
+    color: #3b82f6;
+    font-size: 0.85rem;
+  }
+}
+ 
+/* ── Photo ── */
+.photo-upload-placeholder {
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  border: 2px dashed #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  transition: border-color 0.2s;
+ 
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+}
+ 
+.photo-preview-wrapper {
+  height: 160px;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+ 
+  .photo-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+ 
+  .photo-delete-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+ 
+/* ── Badges de statut ── */
+.status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+ 
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  transition: all 0.15s;
+  user-select: none;
+ 
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+ 
+  &--active {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+  }
+}
+ 
+/* ── Badge catégorie dans specs ── */
+.category-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+ 
+/* ── Spécifications ── */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+ 
+.specs-empty {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #94a3b8;
-}
-
-.modern-upload-zone .upload-label i {
-  font-size: 2.5rem;
-  color: #3b82f6;
-}
-
-.modern-upload-zone .upload-label span {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.modern-upload-zone .preview-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
   padding: 1rem;
-  display: flex;
-  justify-content: center;
-}
-
-.modern-upload-zone .preview-container img {
-  max-height: 300px;
-  border-radius: 15px;
-  object-fit: contain;
-}
-
-.modern-upload-zone .preview-container .preview-actions {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.modern-upload-zone .preview-container .preview-actions .change-photo-btn {
-  background: #1e293b;
-  color: #e2e8f0;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+  color: #94a3b8;
   font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
 }
-
-.form-actions-footer {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid #334155;
+ 
+/* ── Grid tight ── */
+.grid-tight {
+  margin: -0.4rem;
+ 
+  > [class*="col"] {
+    padding: 0.4rem;
+  }
+}
+ 
+/* ── Footer ── */
+.form-footer {
   display: flex;
-  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 0.25rem;
 }
-
-.form-actions-footer .spacer {
-  flex: 1;
+ 
+/* ── PrimeVue overrides ── */
+:deep(.p-inputtext-sm) {
+  padding: 0.45rem 0.75rem;
 }
-
+ 
 :deep(.p-dropdown),
-:deep(.p-calendar-w-btn .p-inputtext),
-:deep(.p-inputnumber-input) {
-  border-radius: 12px;
-  background: #0f172a;
-  border-color: #334155;
-  height: 3rem;
-  color: #e2e8f0;
+:deep(.p-inputnumber-input),
+:deep(.p-calendar .p-inputtext) {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+ 
+  &:enabled:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
 }
-
-:deep(.p-dropdown-item) {
-  color: #1e293b;
+ 
+.hidden {
+  display: none;
 }
-
+ 
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .equipement-form-container {
-    padding: 1.5rem;
+  .two-col-layout {
+    grid-template-columns: 1fr;
+  }
+ 
+  .sidebar {
+    position: static;
+  }
+ 
+  .specs-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

@@ -10,6 +10,7 @@ use App\Http\Controllers\Direction\EquipementController;
 use App\Http\Controllers\Direction\CategorieController;
 use App\Http\Controllers\Direction\ConsommableController;
 use App\Http\Controllers\Direction\TransfertController;
+use App\Http\Controllers\Direction\ConsommableController;
 use App\Http\Controllers\Agence\DemandeMaterielController;
 use App\Http\Controllers\Direction\DemandeAgenceController;
 use App\Http\Controllers\Agence\AffectationController;
@@ -86,8 +87,6 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
     Route::get('transferts/statistiques', [TransfertController::class, 'statistiques']);
     Route::get('transferts/options', [TransfertController::class, 'getOptions']);
-    Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
 
     // Demandes Matériel (Agence)
     Route::apiResource('demandes-materiel', DemandeMaterielController::class);
@@ -119,6 +118,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
     // Rapports
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock|technicien_maintenance')->group(function () {
+        Route::get('rapports/global', [RapportGlobalController::class, 'index']);
         Route::get('rapports/inventaire', [RapportGlobalController::class, 'inventaire']);
         Route::get('rapports/pannes', [RapportGlobalController::class, 'pannes']);
         Route::get('rapports/export/{type}', [RapportGlobalController::class, 'export']);
