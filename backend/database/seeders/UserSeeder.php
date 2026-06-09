@@ -9,51 +9,66 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Récupérer les agences pour l'assignation
+        $agenceLome = \App\Models\Agence::where('nom', 'Agence Lomé-Centre')->first();
+
         // Gestionnaire Stock Général
-        $gestionnaireGeneral = User::create([
-            'name' => 'Gestionnaire Stock Général',
-            'email' => 'gestionnaire@gestpark.local',
-            'password' => bcrypt('password123'),
-            'email_verified_at' => now(),
-        ]);
-        $gestionnaireGeneral->assignRole('gestionnaire_stock_general');
+        $gestionnaireGeneral = User::updateOrCreate(
+            ['email' => 'gestionnaire@gestpark.local'],
+            [
+                'name' => 'Gestionnaire Stock Général',
+                'password' => bcrypt('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $gestionnaireGeneral->syncRoles(['gestionnaire_stock_general']);
 
         // Chef d'Agence Lomé
-        $chefLome = User::create([
-            'name' => 'Chef Agence Lomé',
-            'email' => 'cheflome@gestpark.local',
-            'password' => bcrypt('password123'),
-            'email_verified_at' => now(),
-        ]);
-        $chefLome->assignRole('chef_agence');
+        $chefLome = User::updateOrCreate(
+            ['email' => 'cheflome@gestpark.local'],
+            [
+                'name' => 'Chef Agence Lomé',
+                'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
+                'email_verified_at' => now(),
+            ]
+        );
+        $chefLome->syncRoles(['chef_agence']);
 
         // Gestionnaire Stock Lomé
-        $gestionnaireLome = User::create([
-            'name' => 'Gestionnaire Stock Lomé',
-            'email' => 'stocklome@gestpark.local',
-            'password' => bcrypt('password123'),
-            'email_verified_at' => now(),
-        ]);
-        $gestionnaireLome->assignRole('gestionnaire_stock');
+        $gestionnaireLome = User::updateOrCreate(
+            ['email' => 'stocklome@gestpark.local'],
+            [
+                'name' => 'Gestionnaire Stock Lomé',
+                'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
+                'email_verified_at' => now(),
+            ]
+        );
+        $gestionnaireLome->syncRoles(['gestionnaire_stock']);
 
         // Technicien
-        $technicien = User::create([
-            'name' => 'Technicien Maintenance',
-            'email' => 'technicien@gestpark.local',
-            'password' => bcrypt('password123'),
-            'email_verified_at' => now(),
-        ]);
-        $technicien->assignRole('technicien_maintenance');
+        $technicien = User::updateOrCreate(
+            ['email' => 'technicien@gestpark.local'],
+            [
+                'name' => 'Technicien Maintenance',
+                'password' => bcrypt('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $technicien->syncRoles(['technicien_maintenance']);
 
         // Agent
-        $agent = User::create([
-            'name' => 'Agent Terrain',
-            'email' => 'agent@gestpark.local',
-            'password' => bcrypt('password123'),
-            'email_verified_at' => now(),
-        ]);
-        $agent->assignRole('agent');
+        $agent = User::updateOrCreate(
+            ['email' => 'agent@gestpark.local'],
+            [
+                'name' => 'Agent Terrain',
+                'password' => bcrypt('password123'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $agent->syncRoles(['agent']);
 
-        echo "✅ Utilisateurs de test créés avec succès !\n";
+        echo "✅ Utilisateurs de test créés ou mis à jour avec succès !\n";
     }
 }
