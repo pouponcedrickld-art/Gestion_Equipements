@@ -8,6 +8,7 @@ use App\Http\Controllers\Direction\AgenceController;
 use App\Http\Controllers\Agence\AgentController;
 use App\Http\Controllers\Direction\EquipementController;
 use App\Http\Controllers\Direction\CategorieController;
+use App\Http\Controllers\Direction\ConsommableController;
 use App\Http\Controllers\Direction\TransfertController;
 use App\Http\Controllers\Agence\DemandeMaterielController;
 use App\Http\Controllers\Direction\DemandeAgenceController;
