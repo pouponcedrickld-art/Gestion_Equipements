@@ -13,7 +13,10 @@ class DatabaseSeeder extends Seeder
             AgenceSeeder::class,
             UserSeeder::class,
             CategorieSeeder::class,
+            EquipementSeeder::class,
+            TransfertSeeder::class,
         ]);
+
 
         echo "\n🎉 Tous les seeders ont été exécutés avec succès !\n";
     }

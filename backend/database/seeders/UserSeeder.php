@@ -9,12 +9,18 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Gestionnaire Stock Général
+        $agences = \App\Models\Agence::orderBy('id')->get();
+        $agence1 = $agences[0] ?? null;
+        $agence2 = $agences[1] ?? $agence1;
+
+        // Gestionnaire Stock Général (peut ne pas avoir agence_id)
         $gestionnaireGeneral = User::create([
             'name' => 'Gestionnaire Stock Général',
             'email' => 'gestionnaire@gestpark.local',
             'password' => bcrypt('password123'),
             'email_verified_at' => now(),
+            'agence_id' => $agence1?->id,
+            'actif' => true,
         ]);
         $gestionnaireGeneral->assignRole('gestionnaire_stock_general');
 
@@ -24,6 +30,8 @@ class UserSeeder extends Seeder
             'email' => 'cheflome@gestpark.local',
             'password' => bcrypt('password123'),
             'email_verified_at' => now(),
+            'agence_id' => $agence1?->id,
+            'actif' => true,
         ]);
         $chefLome->assignRole('chef_agence');
 
@@ -33,6 +41,8 @@ class UserSeeder extends Seeder
             'email' => 'stocklome@gestpark.local',
             'password' => bcrypt('password123'),
             'email_verified_at' => now(),
+            'agence_id' => $agence1?->id,
+            'actif' => true,
         ]);
         $gestionnaireLome->assignRole('gestionnaire_stock');
 
@@ -42,6 +52,8 @@ class UserSeeder extends Seeder
             'email' => 'technicien@gestpark.local',
             'password' => bcrypt('password123'),
             'email_verified_at' => now(),
+            'agence_id' => $agence2?->id,
+            'actif' => true,
         ]);
         $technicien->assignRole('technicien_maintenance');
 
@@ -51,8 +63,11 @@ class UserSeeder extends Seeder
             'email' => 'agent@gestpark.local',
             'password' => bcrypt('password123'),
             'email_verified_at' => now(),
+            'agence_id' => $agence2?->id,
+            'actif' => true,
         ]);
         $agent->assignRole('agent');
+
 
         echo "✅ Utilisateurs de test créés avec succès !\n";
     }

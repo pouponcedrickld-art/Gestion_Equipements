@@ -51,15 +51,24 @@ class AuthController extends Controller
 
         $user = User::findOrFail($request->user_id);
 
-        // TODO: Vérifier le code 2FA (Google2FA ou TOTP)
-        // Pour l'instant, on accepte n'importe quel code à 6 chiffres en dev
-        $token = $user->createToken('auth-token')->plainTextToken;
+        // Mode DEV : neutraliser 2FA pour que le site soit fonctionnel rapidement.
+        // Active si APP_ENV=local ou si DISABLE_2FA=true dans .env.
+        if (app()->environment('local') || env('DISABLE_2FA', false)) {
+            $token = $user->createToken('auth-token')->plainTextToken;
 
+            return response()->json([
+                'token' => $token,
+                'user' => $this->formatUser($user),
+            ]);
+        }
+
+        // PROD : 2FA réel non encore implémenté dans ce projet.
+        // Pour éviter un faux-positif dangereux, on bloque l’accès.
         return response()->json([
-            'token' => $token,
-            'user' => $this->formatUser($user),
-        ]);
+            'message' => '2FA non implémenté en production. Active DISABLE_2FA=true en dev/local.'
+        ], 501);
     }
+
 
     public function logout(Request $request)
     {
