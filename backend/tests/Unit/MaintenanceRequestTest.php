@@ -57,13 +57,13 @@ class MaintenanceRequestTest extends TestCase
             'equipement_id' => 1,
             'date_prevue' => now()->addDays(5)->format('Y-m-d'),
             'responsable' => 'Jean Dupont',
-            'type_maintenance' => 'préventif',
+            'type_maintenance' => 'preventive',
             'cout' => 250.50,
             'observations' => 'Maintenance trimestrielle',
         ];
 
         $validator = Validator::make($data, $request->rules(), $request->messages());
-        
+
         // Note: Ce test ne vérifie pas exists:equipements,id car il faudrait une base de données
         // C'est un test de structure de règles
         $this->assertArrayHasKey('equipement_id', $validator->getRules());
@@ -85,7 +85,7 @@ class MaintenanceRequestTest extends TestCase
         ];
 
         $validator = Validator::make($data, $request->rules(), $request->messages());
-        
+
         $this->assertTrue($validator->fails());
         $this->assertTrue($validator->errors()->has('equipement_id'));
         $this->assertTrue($validator->errors()->has('date_prevue'));
@@ -119,13 +119,13 @@ class MaintenanceRequestTest extends TestCase
     }
 
     /**
-     * Test que type_maintenance accepte seulement préventif ou correctif.
+     * Test que type_maintenance accepte seulement preventive ou corrective.
      */
     public function test_type_maintenance_accepts_only_valid_values(): void
     {
         $request = new MaintenanceRequest();
         $rules = $request->rules();
 
-        $this->assertStringContainsString('in:préventif,correctif', $rules['type_maintenance']);
+        $this->assertStringContainsString('in:preventive,corrective', $rules['type_maintenance']);
     }
 }

@@ -26,7 +26,7 @@ class MaintenanceRequest extends FormRequest
             'equipement_id' => 'required|exists:equipements,id',
             'date_prevue' => 'required|date|after_or_equal:today',
             'responsable' => 'required|string|max:255',
-            'type_maintenance' => 'required|in:préventif,correctif',
+            'type_maintenance' => 'required|in:preventive,corrective',
             'cout' => 'nullable|numeric|min:0',
             'observations' => 'nullable|string|max:1000',
         ];
@@ -49,7 +49,7 @@ class MaintenanceRequest extends FormRequest
             'responsable.string' => 'Le responsable doit être une chaîne de caractères.',
             'responsable.max' => 'Le responsable ne peut pas dépasser 255 caractères.',
             'type_maintenance.required' => 'Le champ type de maintenance est requis.',
-            'type_maintenance.in' => 'Le type de maintenance doit être "préventif" ou "correctif".',
+            'type_maintenance.in' => 'Le type de maintenance doit être "preventive" ou "corrective".',
             'cout.numeric' => 'Le coût doit être un nombre.',
             'cout.min' => 'Le coût doit être supérieur ou égal à 0.',
             'observations.string' => 'Les observations doivent être une chaîne de caractères.',

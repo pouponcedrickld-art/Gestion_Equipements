@@ -16,7 +16,7 @@ class MaintenanceSeeder extends Seeder
     {
         // Récupérer quelques équipements existants
         $equipements = Equipement::limit(10)->get();
-        
+
         if ($equipements->isEmpty()) {
             $this->command->warn('Aucun équipement trouvé. Veuillez d\'abord exécuter le seeder des équipements.');
             return;
@@ -31,7 +31,7 @@ class MaintenanceSeeder extends Seeder
         $maintenances = [
             [
                 'equipement_id' => $equipements[0]->id,
-                'type_maintenance' => 'préventif',
+                'type_maintenance' => 'preventive',
                 'date_prevue' => '2026-06-08 09:00:00',
                 'responsable' => 'Sophie Lambert',
                 'statut' => 'terminee',
@@ -43,7 +43,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements[1]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'préventif',
+                'type_maintenance' => 'preventive',
                 'date_prevue' => '2026-06-10 14:00:00',
                 'responsable' => 'Jean Dupont',
                 'statut' => 'planifiee',
@@ -52,7 +52,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements[2]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'correctif',
+                'type_maintenance' => 'corrective',
                 'date_prevue' => '2026-06-12 10:30:00',
                 'responsable' => 'Marie Martin',
                 'statut' => 'en_cours',
@@ -63,7 +63,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements[3]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'préventif',
+                'type_maintenance' => 'preventive',
                 'date_prevue' => '2026-06-15 08:30:00',
                 'responsable' => 'Pierre Dubois',
                 'statut' => 'planifiee',
@@ -72,7 +72,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements[4]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'correctif',
+                'type_maintenance' => 'corrective',
                 'date_prevue' => '2026-06-15 15:00:00',
                 'responsable' => 'Luc Bernard',
                 'statut' => 'planifiee',
