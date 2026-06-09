@@ -3,44 +3,78 @@
 namespace App\Http\Controllers\Direction;
 
 use App\Http\Controllers\Controller;
+use App\Services\RapportService;
 use Illuminate\Http\Request;
-use App\Models\Equipement;
-use App\Models\Panne;
+use Illuminate\Http\JsonResponse;
 
 class RapportGlobalController extends Controller
 {
-    public function inventaire(Request $request)
-    {
-        $equipements = Equipement::with(['categorie', 'agenceActuelle', 'agenceProprietaire'])
-            ->when($request->agence_id, fn($q) => $q->where('agence_actuelle_id', $request->agence_id))
-            ->when($request->statut, fn($q) => $q->where('statut_global', $request->statut))
-            ->get();
+    protected $rapportService;
 
+    public function __construct(RapportService $rapportService)
+    {
+        $this->rapportService = $rapportService;
+    }
+
+    /**
+     * Statistiques globales pour le dashboard ou rapports généraux
+     */
+    public function index(): JsonResponse
+    {
         return response()->json([
-            'data' => $equipements,
-            'total' => $equipements->count()
+            'success' => true,
+            'data' => $this->rapportService->getGlobalStats()
         ]);
     }
 
-    public function pannes(Request $request)
+    /**
+     * Rapport d'inventaire filtré
+     */
+    public function inventaire(Request $request): JsonResponse
     {
-        $pannes = Panne::with(['equipement', 'agence'])
-            ->when($request->agence_id, fn($q) => $q->where('agence_id', $request->agence_id))
-            ->when($request->gravite, fn($q) => $q->where('gravite', $request->gravite))
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        $filters = $request->only(['agence_id', 'categorie_id', 'statut']);
         return response()->json([
-            'data' => $pannes,
-            'total' => $pannes->count()
+            'success' => true,
+            'data' => $this->rapportService->getEquipementsReport($filters)
+        ]);
+   
+
+    /**
+     * Statistiques des pannes
+     */
+    public function pannes(Request $request): JsonResponse
+    {
+        $filters = $request->only(['statut']);
+        return response()->json([
+            'success' => true,
+            'data' => $this->rapportService->getPannesStats($filters)
         ]);
     }
 
-    public function export(Request $request, $type)
+    /**
+     * Statistiques des mouvements
+     */
+    public function mouvements(Request $request): JsonResponse
     {
-        // TODO: Implémenter l'export (PDF, Excel, etc.)
+        $period = $request->get('period', 'month');
         return response()->json([
-            'message' => 'Export ' . $type . ' en cours de développement'
+            'success' => true,
+            'data' => $this->rapportService->getMouvementsStats($period)
+        ]);
+    }
+
+    /**
+     * Exportation des rapports
+     */
+    public function export(Request $request, $type): JsonResponse
+    {
+        $filters = $request->only(['agence_id', 'categorie_id', 'statut']);
+        $data = $this->rapportService->getEquipementsReport($filters);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'type' => $type
         ]);
     }
 }

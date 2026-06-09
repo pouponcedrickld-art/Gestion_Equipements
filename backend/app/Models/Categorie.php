@@ -12,10 +12,37 @@ class Categorie extends Model
     protected $fillable = [
         'nom',
         'description',
+        'code',
+        'parent_id',
+        'frequence_maintenance',
+        'duree_vie',
+        'attributs_personnalises',
+    ];
+
+    protected $casts = [
+        'attributs_personnalises' => 'array',
+        'frequence_maintenance' => 'integer',
+        'duree_vie' => 'integer',
     ];
 
     // ===== RELATIONS =====
     
+    /**
+     * Relation : Catégorie parente
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Categorie::class, 'parent_id');
+    }
+
+    /**
+     * Relation : Sous-catégories
+     */
+    public function enfants()
+    {
+        return $this->hasMany(Categorie::class, 'parent_id');
+    }
+
     /**
      * Relation : Une catégorie a plusieurs équipements
      */
