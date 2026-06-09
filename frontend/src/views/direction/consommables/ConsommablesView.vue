@@ -1,6 +1,5 @@
 <template>
-<<<<<<< HEAD:frontend/src/views/consommables/ConsommablesView.vue
-  <MainLayout>
+  <DirectionLayout>
     <div class="consommables-page">
       <!-- En-tête avec titre et actions -->
       <div class="page-header">
@@ -13,21 +12,13 @@
             Gérez les consommables et accessoires de vos équipements
           </p>
         </div>
-        
+
         <div class="page-actions">
-          <Button 
-            label="Nouveau Consommable" 
-            icon="pi pi-plus"
-            @click="showCreateDialog = true"
-            class="p-button-success"
-          />
-          <Button 
-            label="Alertes Stock" 
-            icon="pi pi-exclamation-triangle"
-            @click="showStockAlertes"
+          <Button label="Nouveau Consommable" icon="pi pi-plus" @click="showCreateDialog = true"
+            class="p-button-success" />
+          <Button label="Alertes Stock" icon="pi pi-exclamation-triangle" @click="showStockAlertes"
             class="p-button-warning"
-            :badge="consommableStore.consommablesStockFaible.length > 0 ? consommableStore.consommablesStockFaible.length.toString() : null"
-          />
+            :badge="consommableStore.consommablesStockFaible.length > 0 ? consommableStore.consommablesStockFaible.length.toString() : null" />
         </div>
       </div>
 
@@ -42,7 +33,7 @@
             <div class="stat-label">Total Consommables</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
           <div class="stat-icon">
             <i class="pi pi-shopping-cart"></i>
@@ -52,7 +43,7 @@
             <div class="stat-label">Stock Total</div>
           </div>
         </div>
-        
+
         <div class="stat-card warning" v-if="statistiques.stock_faible > 0">
           <div class="stat-icon">
             <i class="pi pi-exclamation-triangle"></i>
@@ -62,7 +53,7 @@
             <div class="stat-label">Stock Faible</div>
           </div>
         </div>
-        
+
         <div class="stat-card danger" v-if="statistiques.rupture_stock > 0">
           <div class="stat-icon">
             <i class="pi pi-times-circle"></i>
@@ -76,73 +67,34 @@
       <!-- Barre de recherche et filtres -->
       <div class="filters-section">
         <div class="p-inputgroup search-input">
-          <InputText
-            v-model="searchTerm"
-            placeholder="Rechercher un consommable..."
-            @input="handleSearch"
-          />
+          <InputText v-model="searchTerm" placeholder="Rechercher un consommable..." @input="handleSearch" />
           <Button icon="pi pi-search" class="p-button-outlined" />
         </div>
-        
+
         <div class="filter-controls">
-          <Dropdown
-            v-model="selectedType"
-            :options="typeOptions"
-            placeholder="Tous types"
-            optionLabel="label"
-            optionValue="value"
-            showClear
-            @change="handleTypeFilter"
-          />
-          
-          <Dropdown
-            v-model="selectedEquipement"
-            :options="equipementOptions"
-            placeholder="Tous équipements"
-            optionLabel="label"
-            optionValue="value"
-            showClear
-            filter
-            @change="handleEquipementFilter"
-          />
-          
+          <Dropdown v-model="selectedType" :options="typeOptions" placeholder="Tous types" optionLabel="label"
+            optionValue="value" showClear @change="handleTypeFilter" />
+
+          <Dropdown v-model="selectedEquipement" :options="equipementOptions" placeholder="Tous équipements"
+            optionLabel="label" optionValue="value" showClear filter @change="handleEquipementFilter" />
+
           <div class="filter-buttons">
-            <Button
-              :label="`Tous (${consommableStore.pagination.total})`"
-              :class="{ 'p-button-outlined': activeFilter !== 'tous' }"
-              @click="setFilter('tous')"
-            />
-            <Button
-              label="Stock Faible"
-              :class="{ 'p-button-outlined': activeFilter !== 'stock_faible' }"
-              @click="setFilter('stock_faible')"
-              severity="warning"
-            />
-            <Button
-              label="Rupture"
-              :class="{ 'p-button-outlined': activeFilter !== 'rupture' }"
-              @click="setFilter('rupture')"
-              severity="danger"
-            />
+            <Button :label="`Tous (${consommableStore.pagination.total})`"
+              :class="{ 'p-button-outlined': activeFilter !== 'tous' }" @click="setFilter('tous')" />
+            <Button label="Stock Faible" :class="{ 'p-button-outlined': activeFilter !== 'stock_faible' }"
+              @click="setFilter('stock_faible')" severity="warning" />
+            <Button label="Rupture" :class="{ 'p-button-outlined': activeFilter !== 'rupture' }"
+              @click="setFilter('rupture')" severity="danger" />
           </div>
         </div>
       </div>
 
       <!-- Tableau des consommables -->
       <div class="consommables-table">
-        <DataTable
-          :value="consommableStore.consommables"
-          :loading="consommableStore.loading"
-          paginator
-          :rows="consommableStore.pagination.per_page"
-          :totalRecords="consommableStore.pagination.total"
-          :lazy="true"
-          @page="onPageChange"
-          dataKey="id"
-          class="p-datatable-striped"
-          responsiveLayout="scroll"
-          :emptyMessage="consommableStore.consommables.length === 0 ? 'Aucun consommable trouvé' : 'Chargement...'"
-        >
+        <DataTable :value="consommableStore.consommables" :loading="consommableStore.loading" paginator
+          :rows="consommableStore.pagination.per_page" :totalRecords="consommableStore.pagination.total" :lazy="true"
+          @page="onPageChange" dataKey="id" class="p-datatable-striped" responsiveLayout="scroll"
+          :emptyMessage="consommableStore.consommables.length === 0 ? 'Aucun consommable trouvé' : 'Chargement...'">
           <!-- Colonne Nom -->
           <Column field="nom" header="Nom" sortable>
             <template #body="{ data }">
@@ -176,18 +128,12 @@
             <template #body="{ data }">
               <div class="stock-info">
                 <div class="stock-quantity">
-                  <span 
-                    :class="getStockClass(data.quantite, data.is_stock_faible)"
-                    class="stock-value"
-                  >
+                  <span :class="getStockClass(data.quantite, data.is_stock_faible)" class="stock-value">
                     {{ data.quantite }}
                   </span>
                 </div>
                 <div class="stock-status">
-                  <Tag 
-                    :value="getStockStatusLabel(data)" 
-                    :severity="getStockStatusSeverity(data)"
-                  />
+                  <Tag :value="getStockStatusLabel(data)" :severity="getStockStatusSeverity(data)" />
                 </div>
               </div>
             </template>
@@ -197,123 +143,64 @@
           <Column header="Actions" class="text-center" :exportable="false">
             <template #body="{ data }">
               <div class="action-buttons">
-                <Button
-                  icon="pi pi-eye"
-                  class="p-button-rounded p-button-text p-button-info"
-                  @click="viewConsommable(data)"
-                  v-tooltip.top="'Voir détails'"
-                />
-                <Button
-                  icon="pi pi-pencil"
-                  class="p-button-rounded p-button-text p-button-warning"
-                  @click="editConsommable(data)"
-                  v-tooltip.top="'Modifier'"
-                />
-                <SplitButton
-                  icon="pi pi-cog"
-                  class="p-button-rounded p-button-text p-button-secondary"
-                  :model="getStockActions(data)"
-                  v-tooltip.top="'Gérer le stock'"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  class="p-button-rounded p-button-text p-button-danger"
-                  @click="confirmDelete(data)"
-                  v-tooltip.top="'Supprimer'"
-                />
+                <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-info"
+                  @click="viewConsommable(data)" v-tooltip.top="'Voir détails'" />
+                <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+                  @click="editConsommable(data)" v-tooltip.top="'Modifier'" />
+                <SplitButton icon="pi pi-cog" class="p-button-rounded p-button-text p-button-secondary"
+                  :model="getStockActions(data)" v-tooltip.top="'Gérer le stock'" />
+                <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                  @click="confirmDelete(data)" v-tooltip.top="'Supprimer'" />
               </div>
             </template>
           </Column>
         </DataTable>
       </div>
       <!-- Dialog de création/modification -->
-      <Dialog
-        :header="editingConsommable ? 'Modifier le Consommable' : 'Nouveau Consommable'"
-        v-model:visible="showCreateDialog"
-        :style="{ width: '600px' }"
-        :modal="true"
-        class="consommable-dialog"
-      >
+      <Dialog :header="editingConsommable ? 'Modifier le Consommable' : 'Nouveau Consommable'"
+        v-model:visible="showCreateDialog" :style="{ width: '600px' }" :modal="true" class="consommable-dialog">
         <form @submit.prevent="saveConsommable" class="consommable-form">
           <div class="form-grid">
             <div class="p-field">
               <label for="nom" class="p-field-label">Nom *</label>
-              <InputText
-                id="nom"
-                v-model="consommableForm.nom"
-                :class="{ 'p-invalid': formErrors.nom }"
-                placeholder="Ex: Batterie Li-ion, Chargeur USB-C..."
-                autofocus
-              />
+              <InputText id="nom" v-model="consommableForm.nom" :class="{ 'p-invalid': formErrors.nom }"
+                placeholder="Ex: Batterie Li-ion, Chargeur USB-C..." autofocus />
               <small class="p-error" v-if="formErrors.nom">{{ formErrors.nom }}</small>
             </div>
 
             <div class="p-field">
               <label for="type" class="p-field-label">Type *</label>
-              <Dropdown
-                id="type"
-                v-model="consommableForm.type"
-                :options="typeOptions"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Sélectionner un type"
-                :class="{ 'p-invalid': formErrors.type }"
-              />
+              <Dropdown id="type" v-model="consommableForm.type" :options="typeOptions" optionLabel="label"
+                optionValue="value" placeholder="Sélectionner un type" :class="{ 'p-invalid': formErrors.type }" />
               <small class="p-error" v-if="formErrors.type">{{ formErrors.type }}</small>
             </div>
 
             <div class="p-field">
               <label for="equipement_id" class="p-field-label">Équipement *</label>
-              <Dropdown
-                id="equipement_id"
-                v-model="consommableForm.equipement_id"
-                :options="equipementOptions"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Sélectionner un équipement"
-                filter
-                :class="{ 'p-invalid': formErrors.equipement_id }"
-              />
+              <Dropdown id="equipement_id" v-model="consommableForm.equipement_id" :options="equipementOptions"
+                optionLabel="label" optionValue="value" placeholder="Sélectionner un équipement" filter
+                :class="{ 'p-invalid': formErrors.equipement_id }" />
               <small class="p-error" v-if="formErrors.equipement_id">{{ formErrors.equipement_id }}</small>
             </div>
 
             <div class="p-field">
               <label for="quantite" class="p-field-label">Quantité initiale *</label>
-              <InputNumber
-                id="quantite"
-                v-model="consommableForm.quantite"
-                :min="0"
-                :class="{ 'p-invalid': formErrors.quantite }"
-                placeholder="0"
-              />
+              <InputNumber id="quantite" v-model="consommableForm.quantite" :min="0"
+                :class="{ 'p-invalid': formErrors.quantite }" placeholder="0" />
               <small class="p-error" v-if="formErrors.quantite">{{ formErrors.quantite }}</small>
             </div>
           </div>
 
           <div class="form-actions">
-            <Button
-              type="button"
-              label="Annuler"
-              class="p-button-text"
-              @click="cancelEdit"
-            />
-            <Button
-              type="submit"
-              :label="editingConsommable ? 'Modifier' : 'Créer'"
-              :loading="consommableStore.loading"
-              :disabled="!canSubmit"
-            />
+            <Button type="button" label="Annuler" class="p-button-text" @click="cancelEdit" />
+            <Button type="submit" :label="editingConsommable ? 'Modifier' : 'Créer'" :loading="consommableStore.loading"
+              :disabled="!canSubmit" />
           </div>
         </form>
       </Dialog>
       <!-- Dialog d'ajustement de stock -->
-      <Dialog
-        header="Ajustement de Stock"
-        v-model:visible="showStockDialog"
-        :style="{ width: '500px' }"
-        :modal="true"
-        class="stock-dialog"
-      >
+      <Dialog header="Ajustement de Stock" v-model:visible="showStockDialog" :style="{ width: '500px' }" :modal="true"
+        class="stock-dialog">
         <form @submit.prevent="ajusterStock" class="stock-form" v-if="selectedConsommable">
           <div class="current-stock">
             <h4>Stock actuel: {{ selectedConsommable.quantite }} unités</h4>
@@ -323,21 +210,11 @@
             <label class="p-field-label">Action *</label>
             <div class="p-formgrid p-grid">
               <div class="p-field-radiobutton p-col-6">
-                <RadioButton 
-                  id="ajouter" 
-                  name="action" 
-                  value="ajouter" 
-                  v-model="stockForm.action" 
-                />
+                <RadioButton id="ajouter" name="action" value="ajouter" v-model="stockForm.action" />
                 <label for="ajouter">Ajouter au stock</label>
               </div>
               <div class="p-field-radiobutton p-col-6">
-                <RadioButton 
-                  id="retirer" 
-                  name="action" 
-                  value="retirer" 
-                  v-model="stockForm.action" 
-                />
+                <RadioButton id="retirer" name="action" value="retirer" v-model="stockForm.action" />
                 <label for="retirer">Retirer du stock</label>
               </div>
             </div>
@@ -345,85 +222,51 @@
 
           <div class="p-field">
             <label for="quantite_ajust" class="p-field-label">Quantité *</label>
-            <InputNumber
-              id="quantite_ajust"
-              v-model="stockForm.quantite"
-              :min="1"
-              :max="stockForm.action === 'retirer' ? selectedConsommable.quantite : null"
-              placeholder="Nombre d'unités"
-              :class="{ 'p-invalid': stockErrors.quantite }"
-            />
+            <InputNumber id="quantite_ajust" v-model="stockForm.quantite" :min="1"
+              :max="stockForm.action === 'retirer' ? selectedConsommable.quantite : null" placeholder="Nombre d'unités"
+              :class="{ 'p-invalid': stockErrors.quantite }" />
             <small class="p-error" v-if="stockErrors.quantite">{{ stockErrors.quantite }}</small>
           </div>
 
           <div class="p-field">
             <label for="description_ajust" class="p-field-label">Description</label>
-            <Textarea
-              id="description_ajust"
-              v-model="stockForm.description"
-              rows="3"
-              placeholder="Motif de l'ajustement (optionnel)"
-            />
+            <Textarea id="description_ajust" v-model="stockForm.description" rows="3"
+              placeholder="Motif de l'ajustement (optionnel)" />
           </div>
 
           <div class="stock-preview" v-if="stockForm.quantite > 0">
-            <p><strong>Nouveau stock :</strong> 
+            <p><strong>Nouveau stock:</strong>
               {{ calculerNouveauStock() }} unités
             </p>
           </div>
 
           <div class="form-actions">
-            <Button
-              type="button"
-              label="Annuler"
-              class="p-button-text"
-              @click="showStockDialog = false"
-            />
-            <Button
-              type="submit"
-              :label="`${stockForm.action === 'ajouter' ? 'Ajouter' : 'Retirer'} Stock`"
-              :loading="consommableStore.loading"
-              :disabled="!stockForm.quantite || stockForm.quantite <= 0"
-            />
+            <Button type="button" label="Annuler" class="p-button-text" @click="showStockDialog = false" />
+            <Button type="submit" :label="`${stockForm.action === 'ajouter' ? 'Ajouter' : 'Retirer'} Stock`"
+              :loading="consommableStore.loading" :disabled="!stockForm.quantite || stockForm.quantite <= 0" />
           </div>
         </form>
       </Dialog>
       <!-- Dialog de confirmation de suppression -->
-      <Dialog
-        header="Confirmer la suppression"
-        v-model:visible="showDeleteDialog"
-        :style="{ width: '400px' }"
-        :modal="true"
-      >
+      <Dialog header="Confirmer la suppression" v-model:visible="showDeleteDialog" :style="{ width: '400px' }"
+        :modal="true">
         <div class="confirmation-content">
           <i class="pi pi-exclamation-triangle confirmation-icon"></i>
           <span>
-            Êtes-vous sûr de vouloir supprimer le consommable 
+            Êtes-vous sûr de vouloir supprimer le consommable
             <strong>{{ consommableToDelete?.nom }}</strong> ?
           </span>
         </div>
         <template #footer>
-          <Button
-            label="Annuler"
-            class="p-button-text"
-            @click="showDeleteDialog = false"
-          />
-          <Button
-            label="Supprimer"
-            class="p-button-danger"
-            @click="deleteConsommable"
-            :loading="consommableStore.loading"
-          />
+          <Button label="Annuler" class="p-button-text" @click="showDeleteDialog = false" />
+          <Button label="Supprimer" class="p-button-danger" @click="deleteConsommable"
+            :loading="consommableStore.loading" />
         </template>
       </Dialog>
 
       <!-- Dialog de détails -->
-      <Dialog
-        header="Détails du Consommable"
-        v-model:visible="showDetailsDialog"
-        :style="{ width: '700px' }"
-        :modal="true"
-      >
+      <Dialog header="Détails du Consommable" v-model:visible="showDetailsDialog" :style="{ width: '700px' }"
+        :modal="true">
         <div v-if="selectedConsommable" class="consommable-details">
           <div class="detail-header">
             <div class="detail-title">
@@ -438,21 +281,19 @@
               <h4>Informations générales</h4>
               <div class="info-grid">
                 <div class="info-item">
-                  <label>Type :</label>
+                  <label>Type:</label>
                   <span>{{ getTypeLabel(selectedConsommable.type) }}</span>
                 </div>
                 <div class="info-item">
-                  <label>Stock actuel :</label>
+                  <label>Stock actuel:</label>
                   <span :class="getStockClass(selectedConsommable.quantite, selectedConsommable.is_stock_faible)">
                     {{ selectedConsommable.quantite }} unités
                   </span>
                 </div>
                 <div class="info-item">
-                  <label>Statut :</label>
-                  <Tag 
-                    :value="getStockStatusLabel(selectedConsommable)" 
-                    :severity="getStockStatusSeverity(selectedConsommable)"
-                  />
+                  <label>Statut:</label>
+                  <Tag :value="getStockStatusLabel(selectedConsommable)"
+                    :severity="getStockStatusSeverity(selectedConsommable)" />
                 </div>
               </div>
             </div>
@@ -471,24 +312,15 @@
       </Dialog>
 
       <!-- Dialog d'alertes stock -->
-      <Dialog
-        header="Alertes Stock Faible"
-        v-model:visible="showAlertsDialog"
-        :style="{ width: '800px' }"
-        :modal="true"
-        class="alerts-dialog"
-      >
+      <Dialog header="Alertes Stock Faible" v-model:visible="showAlertsDialog" :style="{ width: '800px' }" :modal="true"
+        class="alerts-dialog">
         <div class="alerts-content" v-if="consommableStore.consommablesStockFaible.length > 0">
           <p class="alerts-info">
             <i class="pi pi-exclamation-triangle"></i>
             {{ consommableStore.consommablesStockFaible.length }} consommables nécessitent votre attention
           </p>
-          
-          <DataTable 
-            :value="consommableStore.consommablesStockFaible" 
-            class="alerts-table"
-            responsiveLayout="scroll"
-          >
+
+          <DataTable :value="consommableStore.consommablesStockFaible" class="alerts-table" responsiveLayout="scroll">
             <Column field="nom" header="Consommable" />
             <Column header="Stock">
               <template #body="{ data }">
@@ -497,19 +329,13 @@
             </Column>
             <Column header="Statut">
               <template #body="{ data }">
-                <Tag 
-                  :value="data.quantite === 0 ? 'Rupture' : 'Stock faible'" 
-                  :severity="data.quantite === 0 ? 'danger' : 'warning'"
-                />
+                <Tag :value="data.quantite === 0 ? 'Rupture' : 'Stock faible'"
+                  :severity="data.quantite === 0 ? 'danger' : 'warning'" />
               </template>
             </Column>
             <Column header="Action">
               <template #body="{ data }">
-                <Button 
-                  label="Ajuster Stock" 
-                  class="p-button-sm"
-                  @click="ajusterStockFromAlert(data)"
-                />
+                <Button label="Ajuster Stock" class="p-button-sm" @click="ajusterStockFromAlert(data)" />
               </template>
             </Column>
           </DataTable>
@@ -519,28 +345,16 @@
           <p>Aucune alerte de stock en cours</p>
         </div>
       </Dialog>
-=======
-  <DirectionLayout>
-    <div class="page-placeholder">
-      <h2>{{ pageTitle }}</h2>
-      <p>Page en cours de développement...</p>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/consommables/ConsommablesView.vue
     </div>
   </DirectionLayout>
 </template>
 
 <script setup>
-<<<<<<< HEAD:frontend/src/views/consommables/ConsommablesView.vue
 import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConsommableStore } from '@/stores/consommableStore'
 import { useEquipementStore } from '@/stores/equipementStore'
-import MainLayout from '@/layouts/MainLayout.vue'
-=======
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/consommables/ConsommablesView.vue
 
 // Services et stores
 const toast = useToast()
@@ -600,9 +414,9 @@ const equipementOptions = computed(() => {
 
 const canSubmit = computed(() => {
   return consommableForm.value.nom &&
-         consommableForm.value.type &&
-         consommableForm.value.equipement_id &&
-         consommableForm.value.quantite >= 0
+    consommableForm.value.type &&
+    consommableForm.value.equipement_id &&
+    consommableForm.value.quantite >= 0
 })
 
 const statistiques = computed(() => consommableStore.statistiques)
@@ -657,7 +471,7 @@ const getStockActions = (consommable) => [
 
 // Gestion des filtres et recherche
 const handleSearch = () => {
-  consommableStore.setFilters({ 
+  consommableStore.setFilters({
     search: searchTerm.value,
     type: selectedType.value,
     equipement_id: selectedEquipement.value
@@ -687,7 +501,7 @@ const setFilter = (filter) => {
     type: selectedType.value,
     equipement_id: selectedEquipement.value
   }
-  
+
   switch (filter) {
     case 'stock_faible':
       filterParams.stock_faible = true
@@ -699,7 +513,7 @@ const setFilter = (filter) => {
       // 'tous' - pas de filtre supplémentaire
       break
   }
-  
+
   consommableStore.setFilters(filterParams)
 }
 
@@ -735,7 +549,7 @@ const saveConsommable = async () => {
   try {
     // Réinitialiser les erreurs
     formErrors.value = {}
-    
+
     if (editingConsommable.value) {
       await consommableStore.updateConsommable(
         editingConsommable.value.id,
@@ -756,7 +570,7 @@ const saveConsommable = async () => {
         life: 3000
       })
     }
-    
+
     cancelEdit()
   } catch (error) {
     if (error.response?.data?.errors) {
@@ -822,20 +636,20 @@ const ajusterStockDialog = (consommable, action = 'ajouter') => {
 const ajusterStock = async () => {
   try {
     stockErrors.value = {}
-    
+
     await consommableStore.ajusterStock(selectedConsommable.value.id, {
       action: stockForm.value.action,
       quantite: stockForm.value.quantite,
       description: stockForm.value.description
     })
-    
+
     toast.add({
       severity: 'success',
       summary: 'Succès',
       detail: `Stock ${stockForm.value.action === 'ajouter' ? 'ajouté' : 'retiré'} avec succès`,
       life: 3000
     })
-    
+
     showStockDialog.value = false
     selectedConsommable.value = null
   } catch (error) {
@@ -854,11 +668,11 @@ const ajusterStock = async () => {
 
 const calculerNouveauStock = () => {
   if (!selectedConsommable.value || !stockForm.value.quantite) return 0
-  
+
   const stockActuel = selectedConsommable.value.quantite
   const quantiteAjust = stockForm.value.quantite
-  
-  return stockForm.value.action === 'ajouter' 
+
+  return stockForm.value.action === 'ajouter'
     ? stockActuel + quantiteAjust
     : stockActuel - quantiteAjust
 }
@@ -879,7 +693,7 @@ const voirHistoriqueStock = (consommable) => {
   toast.add({
     severity: 'info',
     summary: 'Information',
-    detail: 'Fonctionnalité à venir : Historique des mouvements de stock',
+    detail: 'Fonctionnalité à venir: Historique des mouvements de stock',
     life: 3000
   })
 }
@@ -900,24 +714,24 @@ watch(searchTerm, () => {
   const timeoutId = setTimeout(() => {
     handleSearch()
   }, 300)
-  
+
   return () => clearTimeout(timeoutId)
 })
 </script>
 
-<style scoped>
-/* ===================== */
-/* LAYOUT GÉNÉRAL        */
-/* ===================== */
+<style scoped lang="scss">
+/* ==================== */
+/* LAYOUT GÉNÉRAL       */
+/* ==================== */
 .consommables-page {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* ===================== */
-/* EN-TÊTE DE PAGE       */
-/* ===================== */
+/* ==================== */
+/* EN-TÊTE DE PAGE      */
+/* ==================== */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -931,17 +745,17 @@ watch(searchTerm, () => {
   align-items: center;
   gap: 0.75rem;
   font-size: 2rem;
-  font-weight: 600;
-  color: var(--text-color);
+  font-weight: 800;
+  color: #e2e8f0;
   margin: 0 0 0.5rem 0;
 }
 
 .page-title h1 i {
-  color: var(--primary-color);
+  color: #3b82f6;
 }
 
 .page-subtitle {
-  color: var(--text-color-secondary);
+  color: #94a3b8;
   margin: 0;
   font-size: 1rem;
 }
@@ -952,9 +766,9 @@ watch(searchTerm, () => {
   flex-shrink: 0;
 }
 
-/* ===================== */
-/* STATISTIQUES RAPIDES  */
-/* ===================== */
+/* ==================== */
+/* STATISTIQUES RAPIDES */
+/* ==================== */
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -963,9 +777,9 @@ watch(searchTerm, () => {
 }
 
 .stat-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius);
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 1rem;
   padding: 1.5rem;
   display: flex;
   align-items: center;
@@ -974,60 +788,47 @@ watch(searchTerm, () => {
 }
 
 .stat-card:hover {
-  box-shadow: var(--card-shadow);
   transform: translateY(-2px);
-}
-
-.stat-card.warning {
-  border-left: 4px solid var(--orange-500);
-}
-
-.stat-card.danger {
-  border-left: 4px solid var(--red-500);
 }
 
 .stat-icon {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(--primary-color-text);
+  background: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-color);
   font-size: 1.5rem;
 }
 
 .stat-card.warning .stat-icon {
-  background: var(--orange-50);
-  color: var(--orange-500);
+  color: #f59e0b;
 }
 
 .stat-card.danger .stat-icon {
-  background: var(--red-50);
-  color: var(--red-500);
+  color: #ef4444;
 }
 
 .stat-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: #e2e8f0;
   line-height: 1;
 }
 
 .stat-label {
-  color: var(--text-color-secondary);
+  color: #94a3b8;
   font-size: 0.875rem;
-  margin-top: 0.25rem;
 }
 
-/* ===================== */
-/* SECTION FILTRES       */
-/* ===================== */
+/* ==================== */
+/* SECTION FILTRES      */
+/* ==================== */
 .filters-section {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius);
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -1050,14 +851,14 @@ watch(searchTerm, () => {
   margin-left: auto;
 }
 
-/* ===================== */
-/* TABLEAU CONSOMMABLES  */
-/* ===================== */
+/* ==================== */
+/* TABLEAU CONSOMMABLES */
+/* ==================== */
 .consommables-table {
-  background: var(--surface-card);
-  border-radius: var(--border-radius);
+  background: #1e293b;
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: var(--card-shadow);
+  border: 1px solid #334155;
 }
 
 .consommable-name {
@@ -1067,7 +868,7 @@ watch(searchTerm, () => {
 }
 
 .type-icon {
-  color: var(--primary-color);
+  color: #3b82f6;
   font-size: 1.25rem;
 }
 
@@ -1082,16 +883,16 @@ watch(searchTerm, () => {
 
 .equipement-ref {
   font-weight: 600;
-  color: var(--text-color);
+  color: #e2e8f0;
 }
 
 .equipement-details {
-  color: var(--text-color-secondary);
+  color: #94a3b8;
   font-size: 0.875rem;
 }
 
 .no-equipement {
-  color: var(--text-color-secondary);
+  color: #94a3b8;
   font-style: italic;
 }
 
@@ -1105,15 +906,15 @@ watch(searchTerm, () => {
 }
 
 .stock-normal {
-  color: var(--green-600);
+  color: #10b981;
 }
 
 .stock-faible {
-  color: var(--orange-600);
+  color: #f59e0b;
 }
 
 .stock-rupture {
-  color: var(--red-600);
+  color: #ef4444;
 }
 
 .stock-status {
@@ -1126,9 +927,9 @@ watch(searchTerm, () => {
   justify-content: center;
 }
 
-/* ===================== */
-/* DIALOGS FORMULAIRES   */
-/* ===================== */
+/* ==================== */
+/* DIALOGS FORMULAIRES  */
+/* ==================== */
 .consommable-dialog .consommable-form {
   padding: 1rem 0;
 }
@@ -1142,6 +943,7 @@ watch(searchTerm, () => {
   font-weight: 600;
   margin-bottom: 0.5rem;
   display: block;
+  color: #e2e8f0;
 }
 
 .form-actions {
@@ -1150,41 +952,41 @@ watch(searchTerm, () => {
   gap: 1rem;
   margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--surface-border);
+  border-top: 1px solid #334155;
 }
 
-/* ===================== */
-/* DIALOG STOCK          */
-/* ===================== */
+/* ==================== */
+/* DIALOG STOCK         */
+/* ==================== */
 .stock-dialog .stock-form {
   padding: 1rem 0;
 }
 
 .current-stock {
-  background: var(--surface-ground);
+  background: #0f172a;
   padding: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: 0.5rem;
   margin-bottom: 1.5rem;
   text-align: center;
+  color: #e2e8f0;
 }
 
 .current-stock h4 {
   margin: 0;
-  color: var(--text-color);
 }
 
 .stock-preview {
-  background: var(--primary-50);
-  color: var(--primary-700);
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
   padding: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: 0.5rem;
   margin-top: 1rem;
   text-align: center;
 }
 
-/* ===================== */
-/* DIALOG DÉTAILS        */
-/* ===================== */
+/* ==================== */
+/* DIALOG DÉTAILS       */
+/* ==================== */
 .consommable-details {
   padding: 1rem 0;
 }
@@ -1195,7 +997,7 @@ watch(searchTerm, () => {
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--surface-border);
+  border-bottom: 1px solid #334155;
 }
 
 .detail-title {
@@ -1206,12 +1008,12 @@ watch(searchTerm, () => {
 
 .detail-title h3 {
   margin: 0;
-  color: var(--text-color);
+  color: #e2e8f0;
 }
 
 .detail-icon {
   font-size: 2rem;
-  color: var(--primary-color);
+  color: #3b82f6;
 }
 
 .detail-grid {
@@ -1220,7 +1022,7 @@ watch(searchTerm, () => {
 }
 
 .detail-section h4 {
-  color: var(--text-color);
+  color: #e2e8f0;
   margin-bottom: 1rem;
   font-size: 1.125rem;
   font-weight: 600;
@@ -1236,40 +1038,40 @@ watch(searchTerm, () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  background: var(--surface-ground);
-  border-radius: var(--border-radius);
+  background: #0f172a;
+  border-radius: 0.5rem;
 }
 
 .info-item label {
   font-weight: 600;
-  color: var(--text-color-secondary);
+  color: #94a3b8;
 }
 
 .info-item span {
   font-weight: 500;
-  color: var(--text-color);
+  color: #e2e8f0;
 }
 
 .equipement-detail {
   padding: 1rem;
-  background: var(--surface-ground);
-  border-radius: var(--border-radius);
+  background: #0f172a;
+  border-radius: 0.5rem;
 }
 
 .equipement-detail .equipement-ref {
   font-weight: 600;
   font-size: 1.125rem;
-  color: var(--primary-color);
+  color: #3b82f6;
   margin-bottom: 0.5rem;
 }
 
 .equipement-detail .equipement-info {
-  color: var(--text-color-secondary);
+  color: #94a3b8;
 }
 
-/* ===================== */
-/* DIALOG ALERTES        */
-/* ===================== */
+/* ==================== */
+/* DIALOG ALERTES       */
+/* ==================== */
 .alerts-dialog .alerts-content {
   padding: 1rem 0;
 }
@@ -1278,10 +1080,10 @@ watch(searchTerm, () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: var(--orange-50);
-  color: var(--orange-700);
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
   padding: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
@@ -1291,24 +1093,24 @@ watch(searchTerm, () => {
 
 .alerts-table .stock-alert {
   font-weight: 600;
-  color: var(--orange-600);
+  color: #f59e0b;
 }
 
 .no-alerts {
   text-align: center;
   padding: 2rem;
-  color: var(--text-color-secondary);
+  color: #94a3b8;
 }
 
 .no-alerts i {
   font-size: 3rem;
-  color: var(--green-500);
+  color: #10b981;
   margin-bottom: 1rem;
 }
 
-/* ===================== */
-/* DIALOG CONFIRMATION   */
-/* ===================== */
+/* ==================== */
+/* DIALOG CONFIRMATION  */
+/* ==================== */
 .confirmation-content {
   display: flex;
   align-items: center;
@@ -1316,51 +1118,51 @@ watch(searchTerm, () => {
 }
 
 .confirmation-icon {
-  color: var(--orange-500);
+  color: #f59e0b;
   font-size: 2rem;
   flex-shrink: 0;
 }
 
-/* ===================== */
-/* RESPONSIVE            */
-/* ===================== */
+/* ==================== */
+/* RESPONSIVE           */
+/* ==================== */
 @media (max-width: 768px) {
   .consommables-page {
     padding: 1rem;
   }
-  
+
   .page-header {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .page-actions {
     width: 100%;
     justify-content: stretch;
   }
-  
+
   .page-actions .p-button {
     flex: 1;
   }
-  
+
   .stats-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .filter-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filter-buttons {
     margin-left: 0;
     flex-wrap: wrap;
   }
-  
+
   .action-buttons {
     flex-wrap: wrap;
   }
-  
+
   .consommable-dialog,
   .stock-dialog {
     width: 95vw !important;
@@ -1372,17 +1174,17 @@ watch(searchTerm, () => {
   .page-title h1 {
     font-size: 1.5rem;
   }
-  
+
   .stat-card {
     padding: 1rem;
   }
-  
+
   .stat-icon {
     width: 40px;
     height: 40px;
     font-size: 1.25rem;
   }
-  
+
   .stat-value {
     font-size: 1.5rem;
   }

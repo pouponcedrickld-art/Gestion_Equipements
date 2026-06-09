@@ -1,13 +1,4 @@
 <template>
-<<<<<<< HEAD:frontend/src/views/agences/AgencesView.vue
-  <div class="agences-page">
-    <div class="header">
-      <h2><i class="pi pi-building"></i> Agences</h2>
-      <button @click="showForm = true" class="btn-primary">
-        <i class="pi pi-plus"></i> Nouvelle
-      </button>
-    </div>
-=======
   <DirectionLayout>
     <div class="agences-page">
       <div class="header">
@@ -16,7 +7,6 @@
           <i class="pi pi-plus"></i> Nouvelle
         </button>
       </div>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/agences/AgencesView.vue
 
     <div v-if="agenceStore.loading" class="loading">
       <i class="pi pi-spin pi-spinner"></i> Chargement...
@@ -73,7 +63,6 @@
         </div>
       </div>
     </div>
-<<<<<<< HEAD:frontend/src/views/agences/AgencesView.vue
 
     <!-- Modal Formulaire -->
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
@@ -84,20 +73,14 @@
     <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
       <AgenceDetailView :agence="viewingAgence" @close="showDetail = false" />
     </div>
-  </div>
-=======
+    </div>
   </DirectionLayout>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/agences/AgencesView.vue
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-<<<<<<< HEAD:frontend/src/views/agences/AgencesView.vue
-import { useAgenceStore } from '@/stores/agenceStore.js'
-=======
 import { useAgenceStore } from '@/stores/agenceStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/agences/AgencesView.vue
 import AgenceFormView from './AgenceFormView.vue'
 import AgenceDetailView from './AgenceDetailView.vue'
 

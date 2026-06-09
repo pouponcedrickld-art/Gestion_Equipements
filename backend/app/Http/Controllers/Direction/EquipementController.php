@@ -5,11 +5,8 @@ namespace App\Http\Controllers\Direction;
 use App\Http\Controllers\Controller;
 use App\Models\Equipement;
 use App\Models\Categorie;
-<<<<<<< HEAD:backend/app/Http/Controllers/EquipementController.php
 use App\Models\Agence;
-=======
 use App\Http\Requests\Direction\StoreEquipementRequest;
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:backend/app/Http/Controllers/Direction/EquipementController.php
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;

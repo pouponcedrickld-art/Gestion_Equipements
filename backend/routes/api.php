@@ -1,25 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AgenceController;
-use App\Http\Controllers\AgentController;
-use App\Http\Controllers\EquipementController;
-use App\Http\Controllers\CategorieController;
-use App\Http\Controllers\ConsommableController;
-use App\Http\Controllers\TransfertController;
-use App\Http\Controllers\DemandeMaterielController;
-use App\Http\Controllers\AffectationController;
-use App\Http\Controllers\MouvementController;
-use App\Http\Controllers\PanneController;
-use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\PerteController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RapportController;
-=======
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Agence\DashboardAgenceController;
 use App\Http\Controllers\Direction\UserController;
@@ -37,7 +18,6 @@ use App\Http\Controllers\Agence\MaintenanceController;
 use App\Http\Controllers\Agence\PerteController;
 use App\Http\Controllers\Direction\NotificationController;
 use App\Http\Controllers\Direction\RapportGlobalController;
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d
 
 // ROUTES PUBLIQUES
 Route::post('/login', [AuthController::class, 'login']);

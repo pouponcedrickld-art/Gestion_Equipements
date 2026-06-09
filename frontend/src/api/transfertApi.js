@@ -1,7 +1,6 @@
 import api from './axiosConfig'
 
 export default {
-<<<<<<< HEAD
     // CRUD de base
     index: (params = {}) => api.get('/transferts', { params }),
     show: (id) => api.get(`/transferts/${id}`),
@@ -47,15 +46,11 @@ export default {
     getByPeriode: (dateFrom, dateTo, params = {}) => 
         api.get('/transferts', { params: { date_from: dateFrom, date_to: dateTo, ...params } }),
 
+    // Vue Kanban
+    getKanban: () => api.get('/transferts-kanban'),
+    updateStatus: (id, newStatus) => api.post('/transferts-kanban/update-status', { id, newStatus }),
+
     // Utilitaires
     getStatistiques: () => api.get('/transferts/statistiques'),
     getOptions: () => api.get('/transferts/options')
-=======
-  getKanban() {
-    return api.get('/transferts-kanban')
-  },
-  updateStatus(id, newStatus) {
-    return api.post('/transferts-kanban/update-status', { id, newStatus })
-  }
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d
 }

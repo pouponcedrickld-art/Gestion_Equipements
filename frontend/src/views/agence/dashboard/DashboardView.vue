@@ -1,11 +1,4 @@
 <template>
-<<<<<<< HEAD:frontend/src/views/dashboard/DashboardView.vue
-  <div class="dashboard">
-    <div class="welcome-bar">
-      <div>
-        <h2>Tableau de bord</h2>
-        <p>Bienvenue, <strong>{{ authStore.user?.name }}</strong></p>
-=======
   <AgenceLayout>
     <div class="dashboard">
       <div class="welcome-bar">
@@ -14,10 +7,7 @@
           <p>Bienvenue, <strong>{{ authStore.user?.name }}</strong></p>
         </div>
         <span class="role-badge" :class="authStore.userRole">{{ roleLabel }}</span>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/agence/dashboard/DashboardView.vue
       </div>
-      <span class="role-badge" :class="authStore.userRole">{{ roleLabel }}</span>
-    </div>
 
     <div v-if="loading" class="loading">
       <i class="pi pi-spin pi-spinner"></i> Chargement...
@@ -75,28 +65,19 @@
           <div class="mini-card"><span class="big">{{ stats.agences_count || 0 }}</span><span>Sous-agences</span></div>
           <div class="mini-card"><span class="big">{{ stats.agents_actifs || 0 }}</span><span>Agents</span></div>
           <div class="mini-card"><span class="big">{{ stats.pannes_non_resolues || 0 }}</span><span>Pannes</span></div>
-          <div class="mini-card"><span class="big">{{ stats.maintenances_planifiees || 0
-              }}</span><span>Maintenances</span></div>
+          <div class="mini-card"><span class="big">{{ stats.maintenances_planifiees || 0 }}</span><span>Maintenances</span></div>
         </div>
       </div>
     </div>
-<<<<<<< HEAD:frontend/src/views/dashboard/DashboardView.vue
-  </div>
-=======
+    </div>
   </AgenceLayout>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/agence/dashboard/DashboardView.vue
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-<<<<<<< HEAD:frontend/src/views/dashboard/DashboardView.vue
-import { useAuthStore } from '@/stores/authStore.js'
-import api from '@/api/axiosConfig.js'
-=======
 import { useAuthStore } from '@/stores/authStore'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import api from '@/api/axiosConfig'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/agence/dashboard/DashboardView.vue
 
 const authStore = useAuthStore()
 const stats = ref({})

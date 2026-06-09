@@ -1,30 +1,15 @@
 <template>
-<<<<<<< HEAD:frontend/src/views/equipements/EquipementFormView.vue
-  <MainLayout>
+  <DirectionLayout>
     <div class="equipement-form-container" ref="pageContainer">
-      <!-- En-tête Moderne -->
       <div class="form-header animate-header">
-        <div class="header-content">
-          <Button 
-            icon="pi pi-arrow-left" 
-            class="p-button-text p-button-rounded back-btn" 
-            @click="$router.back()" 
-          />
-          <div class="title-section">
-            <h1>{{ isEditing ? 'Mise à jour de l\'unité' : 'Nouvel Équipement' }}</h1>
-            <p>{{ isEditing ? 'Modifier les spécifications de cet équipement' : 'Enregistrement d\'un nouveau matériel dans le parc' }}</p>
-          </div>
-        </div>
-        
-        <!-- Stepper Progress -->
-        <div class="stepper-progress">
-          <div v-for="step in 3" :key="step" class="step-item" :class="{ active: currentStep >= step, current: currentStep === step }">
-            <div class="step-number">{{ step }}</div>
-            <span class="step-label">{{ stepLabels[step-1] }}</span>
-          </div>
-          <div class="progress-line">
-            <div class="line-fill" :style="{ width: `${(currentStep - 1) * 50}%` }"></div>
-          </div>
+        <Button 
+          icon="pi pi-arrow-left" 
+          class="p-button-text p-button-rounded back-btn" 
+          @click="$router.back()" 
+        />
+        <div class="title-section">
+          <h1>{{ isEditing ? 'Mise à jour de l\'unité' : 'Nouvel Équipement' }}</h1>
+          <p>{{ isEditing ? 'Modifier les spécifications de cet équipement' : 'Enregistrement d\'un nouveau matériel dans le parc' }}</p>
         </div>
       </div>
 
@@ -32,8 +17,6 @@
         <Card class="modern-form-card animate-card">
           <template #content>
             <form @submit.prevent="handleSubmit">
-              
-              <!-- Étape 1: Identification -->
               <div v-show="currentStep === 1" class="step-content step-1">
                 <div class="section-info">
                   <i class="pi pi-id-card"></i>
@@ -78,7 +61,6 @@
                 </div>
               </div>
 
-              <!-- Étape 2: Détails Techniques & Photo -->
               <div v-show="currentStep === 2" class="step-content step-2">
                 <div class="section-info">
                   <i class="pi pi-cog"></i>
@@ -128,7 +110,6 @@
                 </div>
               </div>
 
-              <!-- Étape 3: Acquisition & Localisation -->
               <div v-show="currentStep === 3" class="step-content step-3">
                 <div class="section-info">
                   <i class="pi pi-map-marker"></i>
@@ -160,7 +141,6 @@
                 </div>
               </div>
 
-              <!-- Actions de navigation -->
               <div class="form-actions-footer">
                 <Button 
                   v-if="currentStep > 1" 
@@ -186,43 +166,21 @@
                   :loading="loading"
                 />
               </div>
-
             </form>
           </template>
         </Card>
       </div>
-=======
-  <DirectionLayout>
-    <div class="page-placeholder">
-      <h2>{{ pageTitle }}</h2>
-      <p>Page en cours de développement...</p>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/equipements/EquipementFormView.vue
     </div>
   </DirectionLayout>
 </template>
 
 <script setup>
-<<<<<<< HEAD:frontend/src/views/equipements/EquipementFormView.vue
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import MainLayout from '@/layouts/MainLayout.vue'
+import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import { useEquipementStore } from '@/stores/equipementStore'
 import { useCategorieStore } from '@/stores/categorieStore'
-import gsap from 'gsap'
-
-// PrimeVue Components
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
-=======
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import DirectionLayout from '@/layouts/DirectionLayout.vue'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/equipements/EquipementFormView.vue
 
 const route = useRoute()
 const router = useRouter()
@@ -266,22 +224,15 @@ const etatOptions = [
 
 const categories = computed(() => categorieStore.categories)
 
-// Navigation Stepper avec GSAP
 const nextStep = () => {
   if (currentStep.value < 3) {
-    gsap.to(`.step-${currentStep.value}`, { opacity: 0, x: -20, duration: 0.3, onComplete: () => {
-      currentStep.value++
-      gsap.fromTo(`.step-${currentStep.value}`, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4 })
-    }})
+    currentStep.value++
   }
 }
 
 const prevStep = () => {
   if (currentStep.value > 1) {
-    gsap.to(`.step-${currentStep.value}`, { opacity: 0, x: 20, duration: 0.3, onComplete: () => {
-      currentStep.value--
-      gsap.fromTo(`.step-${currentStep.value}`, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4 })
-    }})
+    currentStep.value--
   }
 }
 
@@ -320,7 +271,6 @@ const handleSubmit = async () => {
   } catch (error) {
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors
-      // Retourner à l'étape 1 s'il y a des erreurs d'identification
       if (errors.value.reference || errors.value.numero_serie || errors.value.code_inventaire) {
         currentStep.value = 1
       }
@@ -334,10 +284,6 @@ const handleSubmit = async () => {
 
 onMounted(async () => {
   await categorieStore.fetchCategories({ per_page: 100 })
-  
-  // Animations initiales
-  gsap.from('.animate-header', { opacity: 0, y: -30, duration: 0.8, ease: 'power3.out' })
-  gsap.from('.animate-card', { opacity: 0, scale: 0.95, duration: 0.6, delay: 0.2, ease: 'back.out(1.7)' })
 
   if (isEditing.value) {
     loading.value = true
@@ -360,7 +306,8 @@ onMounted(async () => {
         photo: null
       }
       if (equipement.photo) {
-        photoPreview.value = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/${equipement.photo}`
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+        photoPreview.value = `${apiBaseUrl}/storage/${equipement.photo}`
       }
     } catch (error) {
       toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les données', life: 3000 })
@@ -381,100 +328,28 @@ onMounted(async () => {
 
 .form-header {
   margin-bottom: 3rem;
-  
-  .header-content {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-    
-    .back-btn {
-      width: 45px;
-      height: 45px;
-      background: white;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      color: #64748b;
-      &:hover { color: #3b82f6; transform: translateX(-3px); }
-    }
-    
-    .title-section {
-      h1 { font-size: 2.25rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.02em; }
-      p { color: #64748b; margin: 0.25rem 0 0 0; font-size: 1.1rem; }
-    }
-  }
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-/* Stepper Modern */
-.stepper-progress {
-  display: flex;
-  justify-content: space-between;
-  position: relative;
-  padding: 0 1rem;
-  
-  .step-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 2;
-    gap: 0.75rem;
-    
-    .step-number {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: white;
-      border: 2px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: #94a3b8;
-      transition: all 0.4s ease;
-    }
-    
-    .step-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #94a3b8;
-      transition: all 0.4s ease;
-    }
-    
-    &.active {
-      .step-number { border-color: #3b82f6; color: #3b82f6; }
-      .step-label { color: #3b82f6; }
-    }
-    
-    &.current {
-      .step-number { background: #3b82f6; color: white; box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.15); }
-      .step-label { color: #1e293b; font-weight: 700; }
-    }
-  }
-  
-  .progress-line {
-    position: absolute;
-    top: 20px;
-    left: 45px;
-    right: 45px;
-    height: 2px;
-    background: #e2e8f0;
-    z-index: 1;
-    
-    .line-fill {
-      height: 100%;
-      background: #3b82f6;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-  }
+.form-header .title-section h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin: 0 0 0.5rem 0;
+}
+
+.form-header .title-section p {
+  color: #94a3b8;
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 .modern-form-card {
-  background: white;
+  background: #1e293b;
   border-radius: 30px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  
-  :deep(.p-card-body) { padding: 2.5rem; }
+  border: 1px solid #334155;
 }
 
 .section-info {
@@ -483,121 +358,162 @@ onMounted(async () => {
   gap: 1rem;
   margin-bottom: 2.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  
-  i { font-size: 1.5rem; color: #3b82f6; }
-  h3 { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+  border-bottom: 1px solid #334155;
+}
+
+.section-info i {
+  font-size: 1.5rem;
+  color: #3b82f6;
+}
+
+.section-info h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0;
 }
 
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  
-  i { position: absolute; left: 1rem; color: #94a3b8; z-index: 1; }
-  
-  :deep(.p-inputtext) {
-    padding-left: 2.75rem;
-    border-radius: 12px;
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    height: 3rem;
-    
-    &:focus { border-color: #3b82f6; background: white; }
-  }
+}
+
+.input-wrapper i {
+  position: absolute;
+  left: 1rem;
+  color: #94a3b8;
+  z-index: 1;
+}
+
+.input-wrapper :deep(.p-inputtext) {
+  padding-left: 2.75rem;
+  border-radius: 12px;
+  background: #0f172a;
+  border-color: #334155;
+  height: 3rem;
+}
+
+.input-wrapper :deep(.p-inputtext:focus) {
+  border-color: #3b82f6;
+  background: #0f172a;
 }
 
 .field label {
   display: block;
   font-weight: 600;
-  color: #475569;
+  color: #e2e8f0;
   margin-bottom: 0.75rem;
   font-size: 0.95rem;
 }
 
-/* Upload Zone Modern */
 .modern-upload-zone {
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed #334155;
   border-radius: 20px;
   min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: #0f172a;
   transition: all 0.3s ease;
   position: relative;
-  
-  &:hover { border-color: #3b82f6; background: #f0f7ff; }
-  
-  .hidden-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-  
-  .upload-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    color: #64748b;
-    
-    i { font-size: 2.5rem; color: #3b82f6; }
-    span { font-weight: 600; font-size: 1.1rem; }
-    small { color: #94a3b8; }
-  }
-  
-  .preview-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    padding: 1rem;
-    display: flex;
-    justify-content: center;
-    
-    img { max-height: 300px; border-radius: 15px; object-fit: contain; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    
-    .preview-actions {
-      position: absolute;
-      top: 2rem;
-      right: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      
-      .change-photo-btn {
-        background: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
-        &:hover { background: #f8fafc; }
-      }
-    }
-  }
+}
+
+.modern-upload-zone:hover {
+  border-color: #3b82f6;
+  background: #0f172a;
+}
+
+.modern-upload-zone .hidden-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.modern-upload-zone .upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+}
+
+.modern-upload-zone .upload-label i {
+  font-size: 2.5rem;
+  color: #3b82f6;
+}
+
+.modern-upload-zone .upload-label span {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.modern-upload-zone .preview-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.modern-upload-zone .preview-container img {
+  max-height: 300px;
+  border-radius: 15px;
+  object-fit: contain;
+}
+
+.modern-upload-zone .preview-container .preview-actions {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modern-upload-zone .preview-container .preview-actions .change-photo-btn {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
 }
 
 .form-actions-footer {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #334155;
   display: flex;
   align-items: center;
-  
-  .spacer { flex: 1; }
-  
-  :deep(.p-button) { border-radius: 12px; padding: 0.75rem 2rem; font-weight: 700; }
 }
 
-:deep(.p-dropdown), :deep(.p-calendar-w-btn .p-inputtext), :deep(.p-inputnumber-input) {
+.form-actions-footer .spacer {
+  flex: 1;
+}
+
+:deep(.p-dropdown),
+:deep(.p-calendar-w-btn .p-inputtext),
+:deep(.p-inputnumber-input) {
   border-radius: 12px;
-  background: #f8fafc;
-  border-color: #e2e8f0;
+  background: #0f172a;
+  border-color: #334155;
   height: 3rem;
+  color: #e2e8f0;
+}
+
+:deep(.p-dropdown-item) {
+  color: #1e293b;
 }
 
 @media (max-width: 768px) {
-  .equipement-form-container { padding: 1.5rem; }
-  .stepper-progress .step-label { display: none; }
-  .stepper-progress .progress-line { left: 25px; right: 25px; }
+  .equipement-form-container {
+    padding: 1.5rem;
+  }
 }
 </style>

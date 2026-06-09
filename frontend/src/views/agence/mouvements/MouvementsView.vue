@@ -10,10 +10,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-<<<<<<< HEAD:frontend/src/views/mouvements/MouvementsView.vue
-=======
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/agence/mouvements/MouvementsView.vue
 
 const route = useRoute()
 const pageTitle = computed(() => route.name || 'Page')

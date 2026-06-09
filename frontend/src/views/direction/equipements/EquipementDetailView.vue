@@ -1,47 +1,26 @@
 <template>
-<<<<<<< HEAD:frontend/src/views/equipements/EquipementDetailView.vue
-  <MainLayout>
+  <DirectionLayout>
     <div class="equipement-detail-view" v-if="equipement">
-      <!-- En-tête -->
       <div class="page-header">
-        <div class="header-left">
-          <Button 
-            icon="pi pi-arrow-left" 
-            class="p-button-text p-button-secondary mr-2" 
-            @click="$router.push('/equipements')" 
-          />
-          <div class="title-container">
-            <h1>{{ equipement.marque }} {{ equipement.modele }}</h1>
-            <div class="badges">
-              <Tag :value="getStatutLabel(equipement.statut_global)" :severity="getStatutSeverity(equipement.statut_global)" class="mr-2" />
-              <Tag :value="getEtatLabel(equipement.etat)" :severity="getEtatSeverity(equipement.etat)" />
-            </div>
+        <Button icon="pi pi-arrow-left" class="p-button-text p-button-secondary mr-2"
+          @click="$router.push('/equipements')" />
+        <div class="title-container">
+          <h1>{{ equipement.marque }} {{ equipement.modele }}</h1>
+          <div class="badges">
+            <Tag :value="getStatutLabel(equipement.statut_global)"
+              :severity="getStatutSeverity(equipement.statut_global)" />
+            <Tag :value="getEtatLabel(equipement.etat)" :severity="getEtatSeverity(equipement.etat)" />
           </div>
-        </div>
-        <div class="header-actions">
-          <Button 
-            label="Modifier" 
-            icon="pi pi-pencil" 
-            class="p-button-warning p-button-outlined mr-2" 
-            @click="$router.push(`/equipements/${equipement.id}/modifier`)" 
-          />
-          <Button 
-            label="Générer QR" 
-            icon="pi pi-qrcode" 
-            class="p-button-secondary p-button-outlined" 
-            @click="generateQR" 
-            :loading="loadingQR"
-          />
         </div>
       </div>
 
       <div class="grid">
-        <!-- Colonne Gauche : Infos Principales -->
         <div class="col-12 lg:col-4">
           <Card class="info-card mb-4">
             <template #header>
               <div class="photo-container">
-                <img v-if="equipement.photo" :src="`${apiBaseUrl}/storage/${equipement.photo}`" alt="Photo" class="equipement-photo" />
+                <img v-if="equipement.photo" :src="`${apiBaseUrl}/storage/${equipement.photo}`" alt="Photo"
+                  class="equipement-photo" />
                 <div v-else class="photo-placeholder">
                   <i class="pi pi-image"></i>
                   <span>Aucune photo</span>
@@ -59,7 +38,7 @@
                   <span class="value">{{ equipement.code_inventaire }}</span>
                 </div>
                 <div class="detail-item">
-                  <span class="label">N° de Série</span>
+                  <span class="label">Numéro de Série</span>
                   <span class="value">{{ equipement.numero_serie }}</span>
                 </div>
                 <div class="detail-item" v-if="equipement.imei">
@@ -82,18 +61,17 @@
             <template #content>
               <div class="qr-container">
                 <img :src="`${apiBaseUrl}/storage/${equipement.qr_code}`" alt="QR Code" class="qr-img" />
-                <Button label="Télécharger QR" icon="pi pi-download" class="p-button-text p-button-sm mt-2" @click="downloadQR" />
+                <Button label="Télécharger QR" icon="pi pi-download" class="p-button-text p-button-sm mt-2"
+                  @click="downloadQR" />
               </div>
             </template>
           </Card>
         </div>
 
-        <!-- Colonne Droite : Tabs (Historique, Affectations, etc.) -->
         <div class="col-12 lg:col-8">
           <Card class="tabs-card">
             <template #content>
               <TabView>
-                <!-- Vue d'ensemble -->
                 <TabPanel header="Détails">
                   <div class="grid">
                     <div class="col-12 md:col-6">
@@ -126,9 +104,9 @@
                         </div>
                         <div class="detail-item">
                           <span class="label">Fin de garantie</span>
-                          <span class="value" :class="getGarantieClass(equipement.garantie_date_fin)">
-                            {{ formatDate(equipement.garantie_date_fin) }}
-                          </span>
+                          <span :class="getGarantieClass(equipement.garantie_date_fin)">{{
+                            formatDate(equipement.garantie_date_fin)
+                            }}</span>
                         </div>
                         <div class="detail-item">
                           <span class="label">Fournisseur</span>
@@ -139,17 +117,24 @@
                   </div>
                 </TabPanel>
 
-                <!-- Historique des mouvements -->
                 <TabPanel header="Mouvements">
                   <Timeline :value="equipement.mouvements" align="left" class="custom-timeline">
                     <template #opposite="slotProps">
-                      <small class="text-secondary">{{ formatDate(slotProps.item.date_mouvement, true) }}</small>
+                      <small class="text-secondary">
+                        {{ formatDate(slotProps.item.date_mouvement, true) }}
+                      </small>
                     </template>
                     <template #content="slotProps">
                       <div class="timeline-content">
-                        <div class="timeline-type">{{ getMouvementLabel(slotProps.item.type_mouvement) }}</div>
-                        <div class="timeline-desc">{{ slotProps.item.description }}</div>
-                        <small class="timeline-user">Par: {{ slotProps.item.user?.name }}</small>
+                        <div class="timeline-type">
+                          {{ getMouvementLabel(slotProps.item.type_mouvement) }}
+                        </div>
+                        <div class="timeline-desc">
+                          {{ slotProps.item.description }}
+                        </div>
+                        <small class="timeline-user">
+                          Par: {{ slotProps.item.user?.name }}
+                        </small>
                       </div>
                     </template>
                   </Timeline>
@@ -159,7 +144,6 @@
                   </div>
                 </TabPanel>
 
-                <!-- Affectations -->
                 <TabPanel header="Affectations">
                   <DataTable :value="equipement.affectations" responsiveLayout="scroll" class="p-datatable-sm">
                     <Column field="agent.nom" header="Agent">
@@ -174,12 +158,16 @@
                     </Column>
                     <Column field="date_retour_effectif" header="Fin">
                       <template #body="slotProps">
-                        {{ slotProps.data.date_retour_effectif ? formatDate(slotProps.data.date_retour_effectif) : 'En cours' }}
+                        {{ slotProps.data.date_retour_effectif
+                          ? formatDate(slotProps.data.date_retour_effectif)
+                          : 'En cours'
+                        }}
                       </template>
                     </Column>
                     <Column field="statut" header="Statut">
                       <template #body="slotProps">
-                        <Tag :value="slotProps.data.statut" :severity="slotProps.data.statut === 'active' ? 'success' : 'secondary'" />
+                        <Tag :value="slotProps.data.statut === 'active' ? 'En cours' : 'Terminé'"
+                          :severity="slotProps.data.statut === 'active' ? 'success' : 'secondary'" />
                       </template>
                     </Column>
                   </DataTable>
@@ -189,7 +177,6 @@
                   </div>
                 </TabPanel>
 
-                <!-- Consommables -->
                 <TabPanel header="Consommables">
                   <div class="grid" v-if="equipement.consommables?.length">
                     <div v-for="cons in equipement.consommables" :key="cons.id" class="col-12 md:col-6">
@@ -216,39 +203,16 @@
     <div v-else-if="loading" class="loading-state">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
       <p>Chargement des détails de l'équipement...</p>
-=======
-  <DirectionLayout>
-    <div class="page-placeholder">
-      <h2>{{ pageTitle }}</h2>
-      <p>Page en cours de développement...</p>
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/equipements/EquipementDetailView.vue
     </div>
   </DirectionLayout>
 </template>
 
 <script setup>
-<<<<<<< HEAD:frontend/src/views/equipements/EquipementDetailView.vue
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import MainLayout from '@/layouts/MainLayout.vue'
-import { useEquipementStore } from '@/stores/equipementStore'
-
-// PrimeVue
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Tag from 'primevue/tag'
-import Badge from 'primevue/badge'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Timeline from 'primevue/timeline'
-=======
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d:frontend/src/views/direction/equipements/EquipementDetailView.vue
+import { useEquipementStore } from '@/stores/equipementStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -266,7 +230,12 @@ const loadEquipement = async () => {
     const data = await equipementStore.fetchEquipement(route.params.id)
     equipement.value = data
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger l\'équipement', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: 'Impossible de charger l\'équipement',
+      life: 3000
+    })
     router.push('/equipements')
   } finally {
     loading.value = false
@@ -278,9 +247,19 @@ const generateQR = async () => {
   try {
     await equipementStore.generateQRCode(equipement.value.id)
     await loadEquipement()
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'QR Code généré avec succès', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: 'Succès',
+      detail: 'QR Code généré avec succès',
+      life: 3000
+    })
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la génération du QR', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: 'Échec de la génération du QR',
+      life: 3000
+    })
   } finally {
     loadingQR.value = false
   }
@@ -295,7 +274,6 @@ const downloadQR = () => {
   }
 }
 
-// Formatters
 const formatDate = (date, withTime = false) => {
   if (!date) return '-'
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' }
@@ -308,7 +286,10 @@ const formatDate = (date, withTime = false) => {
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined) return '-'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(value)
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF'
+  }).format(value)
 }
 
 const getStatutLabel = (statut) => {
@@ -338,17 +319,39 @@ const getStatutSeverity = (statut) => {
 }
 
 const getEtatLabel = (etat) => {
-  const labels = { neuf: 'Neuf', en_service: 'En Service', en_panne: 'En Panne', en_maintenance: 'En Maintenance', reforme: 'Réformé', perdu: 'Perdu' }
+  const labels = {
+    neuf: 'Neuf',
+    en_service: 'En Service',
+    en_panne: 'En Panne',
+    en_maintenance: 'En Maintenance',
+    reforme: 'Réformé',
+    perdu: 'Perdu'
+  }
   return labels[etat] || etat
 }
 
 const getEtatSeverity = (etat) => {
-  const severities = { neuf: 'success', en_service: 'success', en_panne: 'danger', en_maintenance: 'warning', reforme: 'secondary', perdu: 'danger' }
+  const severities = {
+    neuf: 'success',
+    en_service: 'success',
+    en_panne: 'danger',
+    en_maintenance: 'warning',
+    reforme: 'secondary',
+    perdu: 'danger'
+  }
   return severities[etat] || 'secondary'
 }
 
 const getMouvementLabel = (type) => {
-  const labels = { creation: 'Création', transfert: 'Transfert', affectation: 'Affectation', retour: 'Retour', modification: 'Modification', changement_etat: 'Changement d\'état', qr_generation: 'QR Code' }
+  const labels = {
+    creation: 'Création',
+    transfert: 'Transfert',
+    affectation: 'Affectation',
+    retour: 'Retour',
+    modification: 'Modification',
+    changement_etat: 'Changement d\'état',
+    qr_generation: 'QR Code'
+  }
   return labels[type] || type
 }
 
@@ -376,25 +379,24 @@ onMounted(loadEquipement)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-    
-    .title-container {
-      h1 {
-        margin: 0 0 0.25rem 0;
-        color: #e2e8f0;
-        font-size: 1.75rem;
-      }
-    }
-  }
 }
 
-.info-card {
+.page-header .title-container h1 {
+  margin: 0 0 0.5rem 0;
+  color: #e2e8f0;
+  font-size: 1.75rem;
+}
+
+.page-header .badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.info-card,
+.qr-card,
+.tabs-card {
   background: #1e293b;
   border: 1px solid #334155;
-  overflow: hidden;
 }
 
 .photo-container {
@@ -403,52 +405,54 @@ onMounted(loadEquipement)
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  .equipement-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .photo-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #475569;
-    i { font-size: 3rem; margin-bottom: 1rem; }
-  }
 }
 
-.detail-list {
-  .detail-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #334155;
-    
-    &:last-child { border-bottom: none; }
-    
-    .label { color: #94a3b8; font-size: 0.9rem; }
-    .value { color: #e2e8f0; font-weight: 500; }
-  }
+.equipement-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.qr-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  text-align: center;
-  
-  .qr-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    .qr-img { width: 150px; height: 150px; border-radius: 8px; background: white; padding: 5px; }
-  }
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #475569;
 }
 
-.tabs-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+.detail-list .detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #334155;
+}
+
+.detail-list .detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-list .detail-item .label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.detail-list .detail-item .value {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-img {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  background: white;
+  padding: 5px;
 }
 
 .tab-section-title {
@@ -461,23 +465,41 @@ onMounted(loadEquipement)
 
 .custom-timeline {
   padding: 1rem;
-  .timeline-content {
-    background: #0f172a;
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    
-    .timeline-type { font-weight: 600; color: #3b82f6; font-size: 0.9rem; margin-bottom: 0.25rem; }
-    .timeline-desc { color: #e2e8f0; font-size: 0.85rem; margin-bottom: 0.25rem; }
-    .timeline-user { color: #64748b; }
-  }
+}
+
+.timeline-content {
+  background: #0f172a;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.timeline-type {
+  font-weight: 600;
+  color: #3b82f6;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-desc {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-user {
+  color: #64748b;
 }
 
 .empty-tab {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
-  i { font-size: 3rem; margin-bottom: 1rem; }
+  color: #94a3b8;
+}
+
+.empty-tab i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
 }
 
 .cons-item {
@@ -488,13 +510,22 @@ onMounted(loadEquipement)
   padding: 1rem;
   border-radius: 8px;
   border: 1px solid #334155;
-  
-  .cons-info {
-    display: flex;
-    flex-direction: column;
-    strong { color: #e2e8f0; }
-    small { color: #94a3b8; text-transform: uppercase; font-size: 0.7rem; margin-top: 0.25rem; }
-  }
+}
+
+.cons-item .cons-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cons-item .cons-info strong {
+  color: #e2e8f0;
+}
+
+.cons-item .cons-info small {
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
 }
 
 .loading-state {
@@ -504,15 +535,40 @@ onMounted(loadEquipement)
   justify-content: center;
   height: 60vh;
   color: #94a3b8;
-  p { margin-top: 1rem; }
 }
 
-.text-danger { color: #ef4444; }
-.text-warning { color: #f59e0b; }
-.text-success { color: #10b981; }
+.loading-state p {
+  margin-top: 1rem;
+}
 
-:deep(.p-tabview-nav) { background: transparent !important; border-bottom: 1px solid #334155 !important; }
-:deep(.p-tabview-panels) { background: transparent !important; }
-:deep(.p-tabview-nav-link) { background: transparent !important; color: #94a3b8 !important; }
-:deep(.p-tabview-selected .p-tabview-nav-link) { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+.text-danger {
+  color: #ef4444;
+}
+
+.text-warning {
+  color: #f59e0b;
+}
+
+.text-success {
+  color: #10b981;
+}
+
+:deep(.p-tabview-nav) {
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+:deep(.p-tabview-panels) {
+  background: transparent !important;
+}
+
+:deep(.p-tabview-nav-link) {
+  background: transparent !important;
+  color: #94a3b8 !important;
+}
+
+:deep(.p-tabview-selected .p-tabview-nav-link) {
+  color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
 </style>

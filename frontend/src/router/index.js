@@ -24,89 +24,6 @@ const routes = [
   },
   {
     path: '/',
-<<<<<<< HEAD
-    component: MainLayout,
-    children: [
-      {
-        path: '',
-        name: 'Dashboard',
-        component: () => import('@/views/dashboard/DashboardView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'agences',
-        name: 'Agences',
-        component: () => import('@/views/agences/AgencesView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin'] }
-      },
-      {
-        path: 'agents',
-        name: 'Agents',
-        component: () => import('@/views/agents/AgentsView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
-      },
-      {
-        path: 'equipements',
-        name: 'Equipements',
-        component: () => import('@/views/equipements/EquipementsView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'transferts',
-        name: 'Transferts',
-        component: () => import('@/views/transferts/TransfertsView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'] }
-      },
-      {
-        path: 'demandes-materiel',
-        name: 'DemandesMateriel',
-        component: () => import('@/views/demandes-materiel/DemandesView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'] }
-      },
-      {
-        path: 'affectations',
-        name: 'Affectations',
-        component: () => import('@/views/affectations/AffectationsView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'pannes',
-        name: 'Pannes',
-        component: () => import('@/views/pannes/PannesView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'maintenances',
-        name: 'Maintenances',
-        component: () => import('@/views/maintenances/MaintenancesView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
-      },
-      {
-        path: 'pertes',
-        name: 'Pertes',
-        component: () => import('@/views/pertes/PertesView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'notifications',
-        name: 'Notifications',
-        component: () => import('@/views/notifications/NotificationsView.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: 'rapports',
-        name: 'Rapports',
-        component: () => import('@/views/rapports/RapportsView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin'] }
-      },
-      {
-        path: 'users',
-        name: 'Users',
-        component: () => import('@/views/users/UsersView.vue'),
-        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
-      }
-    ]
-=======
     name: 'Dashboard',
     component: () => import('@/views/agence/dashboard/DashboardView.vue'),
     meta: { requiresAuth: true }
@@ -126,7 +43,7 @@ const routes = [
   {
     path: '/categories',
     name: 'Categories',
-    component: () => import('@/views/categories/CategoriesView.vue'),
+    component: () => import('@/views/direction/categories/CategoriesView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -138,31 +55,31 @@ const routes = [
   {
     path: '/equipements/nouveau',
     name: 'NouvelEquipement',
-    component: () => import('@/views/equipements/EquipementFormView.vue'),
+    component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/equipements/:id',
     name: 'EquipementDetail',
-    component: () => import('@/views/equipements/EquipementDetailView.vue'),
+    component: () => import('@/views/direction/equipements/EquipementDetailView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/equipements/:id/modifier',
     name: 'ModifierEquipement',
-    component: () => import('@/views/equipements/EquipementFormView.vue'),
+    component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/equipements/scan',
     name: 'ScanQR',
-    component: () => import('@/views/equipements/ScanQRView.vue'),
+    component: () => import('@/views/direction/equipements/ScanQRView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/consommables',
     name: 'Consommables',
-    component: () => import('@/views/consommables/ConsommablesView.vue'),
+    component: () => import('@/views/direction/consommables/ConsommablesView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -178,15 +95,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'] }
   },
   {
-<<<<<<< HEAD
-=======
     path: '/demandes-materiel/nouveau',
     name: 'NouvelleDemande',
     component: () => import('@/views/agence/demandes-materiel/DemandeFormView.vue'),
     meta: { requiresAuth: true, roles: ['chef_agence'] }
   },
   {
->>>>>>> 2c965af4f2361eccbef055db409105b763f2340d
     path: '/affectations',
     name: 'Affectations',
     component: () => import('@/views/agence/affectations/AffectationsView.vue'),
@@ -203,6 +117,12 @@ const routes = [
     name: 'Maintenances',
     component: () => import('@/views/agence/maintenances/MaintenancesView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
+  },
+  {
+    path: '/mouvements',
+    name: 'Mouvements',
+    component: () => import('@/views/agence/mouvements/MouvementsView.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/pertes',
@@ -227,7 +147,6 @@ const routes = [
     name: 'Users',
     component: () => import('@/views/direction/utilisateurs/UsersView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
->>>>>>> ffa46c85f50ce66431a07232052669c1f18451a6
   }
 ]
 
