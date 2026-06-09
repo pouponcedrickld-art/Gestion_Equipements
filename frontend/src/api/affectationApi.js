@@ -1,10 +1,9 @@
 import api from './axiosConfig.js'
 
 export default {
-    index: () => api.get('/affectations'),
-    show: (id) => api.get(`/affectations/${id}`),
+    index: (params) => api.get('/affectations', { params }),
     store: (data) => api.post('/affectations', data),
-    update: (id, data) => api.put(`/affectations/${id}`, data),
-    destroy: (id) => api.delete(`/affectations/${id}`),
-    retour: (id) => api.post(`/affectations/${id}/retour`)
+    retour: (id, data) => api.post(`/affectations/${id}/retour`, data),
+    getAgents: () => api.get('/agents'),
+    getEquipementsDisponibles: () => api.get('/equipements', { params: { statut_global: 'en_stock_agence', all_equipements: true } })
 }

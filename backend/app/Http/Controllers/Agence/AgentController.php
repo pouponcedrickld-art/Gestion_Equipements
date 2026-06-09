@@ -7,5 +7,11 @@ use App\Models\Agent;
 
 class AgentController extends Controller
 {
-    //
+    /**
+     * Liste des agents.
+     */
+    public function index()
+    {
+        return response()->json(Agent::orderBy('nom')->get());
+    }
 }
