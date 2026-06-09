@@ -18,7 +18,7 @@ class CheckRole
 
         $roleArray = explode('|', $roles);
         
-        if (!$user->hasAnyRole($roleArray)) {
+        if (!$user->hasAnyRole($roleArray, 'api')) {
             return response()->json([
                 'message' => 'Accès interdit. Rôles requis : ' . implode(', ', $roleArray)
             ], 403);

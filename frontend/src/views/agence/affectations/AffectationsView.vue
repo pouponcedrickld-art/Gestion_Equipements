@@ -180,17 +180,17 @@ onMounted(fetchDemandes)
 .data-table th { text-align: left; padding: 12px; color: #94a3b8; font-size: 0.85rem; border-bottom: 2px solid #334155; }
 .data-table td { padding: 12px; color: #e2e8f0; border-bottom: 1px solid #334155; }
 
-.badge-urgence { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-.badge-urgence.basse { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.badge-urgence.moyenne { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.badge-urgence.haute { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.badge-urgence { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+.badge-urgence.basse { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.badge-urgence.moyenne { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.badge-urgence.haute { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
 .process-btn {
   background: #3b82f6;
   color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
 }

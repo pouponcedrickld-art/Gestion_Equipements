@@ -1,12 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore.js'
+import AuthLayout from '@/layouts/AuthLayout.vue'
+import MainLayout from '@/layouts/MainLayout.vue'
 
 const routes = [
   {
     path: '/login',
-    name: 'Login',
-    component: () => import('@/views/auth/LoginView.vue'),
-    meta: { public: true }
+    component: AuthLayout,
+    children: [
+      {
+        path: '',
+        name: 'Login',
+        component: () => import('@/views/auth/LoginView.vue'),
+        meta: { public: true }
+      },
+      {
+        path: '2fa',
+        name: 'TwoFactor',
+        component: () => import('@/views/auth/TwoFactorView.vue'),
+        meta: { public: true }
+      }
+    ]
   },
   {
     path: '/',
@@ -27,9 +41,45 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
   },
   {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('@/views/direction/categories/CategoriesView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/equipements',
     name: 'Equipements',
     component: () => import('@/views/direction/equipements/EquipementsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/nouveau',
+    name: 'NouvelEquipement',
+    component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/:id',
+    name: 'EquipementDetail',
+    component: () => import('@/views/direction/equipements/EquipementDetailView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/:id/modifier',
+    name: 'ModifierEquipement',
+    component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/equipements/scan',
+    name: 'ScanQR',
+    component: () => import('@/views/direction/equipements/ScanQRView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/consommables',
+    name: 'Consommables',
+    component: () => import('@/views/direction/consommables/ConsommablesView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -67,6 +117,12 @@ const routes = [
     name: 'Maintenances',
     component: () => import('@/views/agence/maintenances/MaintenancesView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
+  },
+  {
+    path: '/mouvements',
+    name: 'Mouvements',
+    component: () => import('@/views/agence/mouvements/MouvementsView.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/pertes',
@@ -113,15 +169,15 @@ const router = createRouter({
 
 router.beforeEach((to, from) => {
   const authStore = useAuthStore()
-  
+
   if (to.meta.public) {
     return
   }
-  
+
   if (!authStore.isAuthenticated) {
     return '/login'
   }
-  
+
   if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
     return '/'
   }

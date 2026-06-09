@@ -12,7 +12,10 @@ return new class extends Migration
             $table->enum('type', ['generale', 'sous_agence'])->default('sous_agence')->after('id');
             $table->foreignId('parent_id')->nullable()->after('type')->constrained('agences');
             $table->string('ville')->nullable()->after('adresse');
-            $table->foreignId('responsable_id')->nullable()->after('ville')->constrained('users');
+            $table->string('code_postal')->nullable()->after('ville');
+            $table->string('telephone')->nullable()->after('code_postal');
+            $table->string('email')->nullable()->after('telephone');
+            $table->foreignId('responsable_id')->nullable()->after('email')->constrained('users');
             $table->foreignId('gestionnaire_stock_id')->nullable()->after('responsable_id')->constrained('users');
             $table->enum('statut', ['active', 'inactive'])->default('active')->after('gestionnaire_stock_id');
         });
@@ -24,7 +27,7 @@ return new class extends Migration
             $table->dropForeign(['parent_id']);
             $table->dropForeign(['responsable_id']);
             $table->dropForeign(['gestionnaire_stock_id']);
-            $table->dropColumn(['type', 'parent_id', 'ville', 'responsable_id', 'gestionnaire_stock_id', 'statut']);
+            $table->dropColumn(['type', 'parent_id', 'ville', 'code_postal', 'telephone', 'email', 'responsable_id', 'gestionnaire_stock_id', 'statut']);
         });
     }
 };

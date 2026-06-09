@@ -13,18 +13,5 @@ import { useRoute } from 'vue-router'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 
 const route = useRoute()
-const pageTitle = computed(() => route.name || 'Page')
+const pageTitle = computed(() => route.params.id ? 'Modifier Affectation' : 'Nouvelle Affectation')
 </script>
-
-<style scoped>
-.page-placeholder {
-  padding: 20px;
-  text-align: center;
-  color: #94a3b8;
-}
-
-.page-placeholder h2 {
-  color: #e2e8f0;
-  margin-bottom: 15px;
-}
-</style>
