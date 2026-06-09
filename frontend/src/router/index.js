@@ -91,7 +91,19 @@ const routes = [
     name: 'Users',
     component: () => import('@/views/direction/utilisateurs/UsersView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
-  }
+  },
+  {
+    path: '/maintenances/calendrier',
+    name: 'MaintenanceCalendar',
+    component: () => import('@/views/maintenances/MaintenanceCalendarView.vue'),
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
+  },
+// {
+//   path: '/maintenances/details/:id',
+//   name: 'MaintenanceDetails',
+//   component: () => import('@/views/maintenances/MaintenanceDetailsView.vue'),
+//   meta: { requiresAuth: true, roles: ['super_admin', 'technicien_maintenance', 'gestionnaire_stock'] }
+// }
 ]
 
 const router = createRouter({
@@ -99,25 +111,20 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const authStore = useAuthStore()
   
   if (to.meta.public) {
-    next()
     return
   }
   
   if (!authStore.isAuthenticated) {
-    next('/login')
-    return
+    return '/login'
   }
   
   if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
-    next('/')
-    return
+    return '/'
   }
-  
-  next()
 })
 
 export default router

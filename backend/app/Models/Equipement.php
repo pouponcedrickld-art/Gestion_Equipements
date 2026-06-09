@@ -82,4 +82,14 @@ class Equipement extends Model
     {
         return $this->hasMany(Transfert::class);
     }
+
+    /**
+     * Marquer l'équipement en panne
+     * 
+     * @return void
+     */
+    public function marquerEnPanne(): void
+    {
+        $this->update(['statut_global' => 'en_panne']);
+    }
 }

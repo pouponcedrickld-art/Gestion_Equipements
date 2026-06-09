@@ -21,6 +21,7 @@ export const getMenuItems = () => {
         { label: 'Affectations', icon: 'pi pi-arrow-right-arrow-left', route: '/affectations', visible: role !== 'agent' },
         { label: 'Pannes', icon: 'pi pi-exclamation-triangle', route: '/pannes', visible: true },
         { label: 'Maintenances', icon: 'pi pi-wrench', route: '/maintenances', visible: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'].includes(role) },
+        { label: 'Calendrier', icon: 'pi pi-calendar', route: '/maintenances/calendrier', visible: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'].includes(role) },
         { label: 'Pertes', icon: 'pi pi-times-circle', route: '/pertes', visible: true },
         { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', visible: true },
         { label: 'Rapports', icon: 'pi pi-chart-bar', route: '/rapports', visible: role !== 'agent' },

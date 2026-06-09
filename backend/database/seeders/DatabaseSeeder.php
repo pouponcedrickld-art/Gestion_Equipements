@@ -13,7 +13,11 @@ class DatabaseSeeder extends Seeder
             AgenceSeeder::class,
             UserSeeder::class,
             CategorieSeeder::class,
+<<<<<<< Updated upstream
             EquipementSeeder::class,
+=======
+            MaintenanceSeeder::class,
+>>>>>>> Stashed changes
         ]);
 
         echo "\n🎉 Tous les seeders ont été exécutés avec succès !\n";
