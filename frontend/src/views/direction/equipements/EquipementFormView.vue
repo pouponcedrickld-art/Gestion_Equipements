@@ -91,6 +91,20 @@
                 class="w-full p-inputtext-sm"
               />
             </div>
+
+            <div class="field mb-3" v-if="form.quantite_a_creer > 1">
+              <label class="font-bold text-sm">Mode d'enregistrement</label>
+              <div class="flex flex-column gap-2 mt-2">
+                <div class="flex align-items-center">
+                  <RadioButton v-model="form.mode_enregistrement" inputId="modeIndividuel" name="mode" value="individuel" />
+                  <label for="modeIndividuel" class="ml-2 text-sm">Individuel (X lignes)</label>
+                </div>
+                <div class="flex align-items-center">
+                  <RadioButton v-model="form.mode_enregistrement" inputId="modeLot" name="mode" value="lot" />
+                  <label for="modeLot" class="ml-2 text-sm">Lot (1 seule ligne)</label>
+                </div>
+              </div>
+            </div>
           </div>
  
           <!-- Attribution -->
@@ -291,6 +305,7 @@ import gsap from 'gsap'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
+import RadioButton from 'primevue/radiobutton'
 import Card from 'primevue/card'
 import Calendar from 'primevue/calendar'
 import InputNumber from 'primevue/inputnumber'
@@ -321,7 +336,8 @@ const form = ref({
   prix_achat: null,
   photo: null,
   specifications: {},
-  quantite_a_creer: 1
+  quantite_a_creer: 1,
+  mode_enregistrement: 'lot'
 })
 
 const selectedCategoryAttributes = computed(() => {
@@ -423,7 +439,8 @@ onMounted(async () => {
         responsable_id: equipement.responsable_id,
         photo: null,
         specifications: equipement.specifications || {},
-        quantite_a_creer: 1
+        quantite_a_creer: equipement.quantite || 1,
+        mode_enregistrement: equipement.is_lot ? 'lot' : 'individuel'
       }
       if (equipement.photo) {
         photoPreview.value = equipement.photo_url

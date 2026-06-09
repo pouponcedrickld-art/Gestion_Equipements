@@ -143,7 +143,7 @@ export const useEquipementStore = defineStore('equipement', () => {
       const response = await equipementApi.show(id)
       
       if (response.data.success) {
-        currentEquipement.value = response.data.data.equipement
+        currentEquipement.value = response.data.data
         return currentEquipement.value
       } else {
         throw new Error(response.data.message)

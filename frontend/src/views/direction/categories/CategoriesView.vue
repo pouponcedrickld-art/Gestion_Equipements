@@ -39,6 +39,12 @@
           <Dropdown v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" 
             placeholder="Statut" @change="handleSearch" class="status-dropdown" />
           
+          <SelectButton v-model="viewMode" :options="viewOptions" optionLabel="icon" optionValue="value" class="view-toggle">
+            <template #option="slotProps">
+              <i :class="slotProps.option.icon"></i>
+            </template>
+          </SelectButton>
+
           <div class="filter-pills">
             <button class="pill" :class="{ active: !showWithEquipementsOnly }" @click="toggleEquipementsFilter(false)">
               Toutes
@@ -52,8 +58,10 @@
 
       <!-- Liste structurée des catégories -->
       <div class="categories-container" v-if="!categorieStore.loading">
-        <DataTable :value="categorieStore.categories" responsiveLayout="scroll" class="modern-table"
-          :rows="10" v-if="categorieStore.categories.length > 0">
+        <!-- Vue Table -->
+        <DataTable v-if="viewMode === 'table' && categorieStore.categories.length > 0" 
+          :value="categorieStore.categories" responsiveLayout="scroll" class="modern-table" :rows="10">
+          <!-- ... colonnes ... -->
           <Column field="nom" header="Nom de la catégorie" sortable>
             <template #body="{ data }">
               <div class="flex align-items-center gap-3">
@@ -98,6 +106,44 @@
           </Column>
         </DataTable>
 
+        <!-- Vue Cartes (Grille) -->
+        <div v-else-if="viewMode === 'grid' && categorieStore.categories.length > 0" class="categories-grid-display">
+          <div v-for="cat in categorieStore.categories" :key="cat.id" class="cat-modern-card animate-card" @click="viewCategorie(cat)">
+            <div class="card-header">
+              <div class="cat-icon-box">
+                <i :class="cat.parent_id ? 'pi pi-tag' : 'pi pi-folder'"></i>
+              </div>
+              <Tag :value="getStatusLabel(cat.statut)" :severity="getStatusSeverity(cat.statut)" class="compact-tag" />
+            </div>
+            
+            <div class="card-body">
+              <h3 class="cat-title">{{ cat.nom }}</h3>
+              <code class="cat-code">{{ cat.code || cat.slug }}</code>
+              
+              <div class="cat-stats-row mt-3">
+                <div class="stat">
+                  <span class="val">{{ cat.nombre_equipements || 0 }}</span>
+                  <span class="lab">Équipements</span>
+                </div>
+              </div>
+              
+              <p class="cat-desc" v-if="cat.description">{{ cat.description }}</p>
+            </div>
+
+            <div class="card-footer">
+              <div class="flex gap-1">
+                <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-sm p-button-info" @click="viewCategorie(cat)" />
+                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editCategorie(cat)" />
+                <Button 
+                  :icon="cat.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
+                  :class="['p-button-text p-button-rounded p-button-sm', cat.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
+                  @click="handleDeleteOrArchive(cat)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Vue vide -->
         <div v-else class="empty-state animate-in">
           <i class="pi pi-folder-open"></i>
@@ -108,9 +154,14 @@
       </div>
 
       <!-- Skeleton loading -->
-      <div class="categories-grid" v-else>
-        <div v-for="n in 6" :key="n" class="category-card skeleton">
-          <div class="skeleton-content"></div>
+      <div class="categories-grid-display" v-else>
+        <div v-for="n in 8" :key="n" class="cat-modern-card skeleton">
+          <div class="card-header skeleton-animate" style="height: 40px"></div>
+          <div class="card-body">
+            <div class="skeleton-line w-60"></div>
+            <div class="skeleton-line w-40"></div>
+            <div class="skeleton-line w-full h-2"></div>
+          </div>
         </div>
       </div>
 
@@ -204,68 +255,6 @@
             :loading="categorieStore.loading" />
         </template>
       </Dialog>
-
-      <!-- Dialog de détails -->
-      <Dialog header="Détails de la Catégorie" v-model:visible="showDetailsDialog" :style="{ width: '600px' }"
-        :modal="true">
-        <div v-if="selectedCategorie" class="category-details">
-          <div class="detail-header">
-            <div class="flex align-items-center gap-3">
-              <div class="detail-cat-icon" v-if="selectedCategorie.code">{{ selectedCategorie.code }}</div>
-              <div>
-                <h3>{{ selectedCategorie.nom }}</h3>
-                <span class="text-sm text-gray-500" v-if="selectedCategorie.parent">Sous-catégorie de : {{ selectedCategorie.parent.nom }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-grid mt-4">
-            <div class="detail-item" v-if="selectedCategorie.frequence_maintenance">
-              <label>Maintenance</label>
-              <span>Tous les {{ selectedCategorie.frequence_maintenance }} mois</span>
-            </div>
-            <div class="detail-item" v-if="selectedCategorie.duree_vie">
-              <label>Durée de vie</label>
-              <span>{{ selectedCategorie.duree_vie }} ans</span>
-            </div>
-          </div>
-
-          <div class="detail-section mt-4">
-            <p v-if="selectedCategorie.description" class="category-description">
-              {{ selectedCategorie.description }}
-            </p>
-          </div>
-
-          <div class="detail-section" v-if="selectedCategorie.attributs_personnalises?.length > 0">
-            <h4>Attributs définis</h4>
-            <div class="flex flex-wrap gap-2">
-              <Badge v-for="attr in selectedCategorie.attributs_personnalises" :key="attr.nom" :value="`${attr.nom} (${attr.type})`" severity="info" />
-            </div>
-          </div>
-
-          <div class="detail-section" v-if="selectedCategorie.statistiques">
-            <h4>Statistiques</h4>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <i class="pi pi-mobile stat-icon"></i>
-                <div>
-                  <div class="stat-value">{{ selectedCategorie.statistiques.total_equipements }}</div>
-                  <div class="stat-label">Équipements total</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-content-center mt-6">
-            <Button 
-              label="Ajouter un équipement dans cette catégorie" 
-              icon="pi pi-plus-circle" 
-              class="p-button-primary p-button-raised"
-              @click="addEquipementToCategory(selectedCategorie)"
-            />
-          </div>
-        </div>
-      </Dialog>
     </div>
   </DirectionLayout>
 </template>
@@ -287,6 +276,7 @@ import Badge from 'primevue/badge'
 import Paginator from 'primevue/paginator'
 import InputNumber from 'primevue/inputnumber'
 import Dropdown from 'primevue/dropdown'
+import SelectButton from 'primevue/selectbutton'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
@@ -306,10 +296,13 @@ const statusFilter = ref('actif')
 const showWithEquipementsOnly = ref(false)
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
-const showDetailsDialog = ref(false)
 const editingCategorie = ref(null)
-const selectedCategorie = ref(null)
 const categorieToDelete = ref(null)
+const viewMode = ref('grid')
+const viewOptions = ref([
+  { icon: 'pi pi-list', value: 'table' },
+  { icon: 'pi pi-th-large', value: 'grid' }
+])
 
 const statusOptions = [
   { label: 'Actif', value: 'actif' },
@@ -434,9 +427,8 @@ const saveCategorie = async () => {
   }
 }
 
-const viewCategorie = async (categorie) => {
-  selectedCategorie.value = await categorieStore.fetchCategorieById(categorie.id)
-  showDetailsDialog.value = true
+const viewCategorie = (categorie) => {
+  router.push(`/categories/${categorie.id}`)
 }
 
 const addEquipementToCategory = (categorie) => {
@@ -501,66 +493,196 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.categories-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.title-with-icon { display: flex; align-items: center; gap: 1rem; i { font-size: 2rem; color: #10b981; } h1 { margin: 0; font-size: 1.8rem; } }
+.categories-page { padding: 1rem; max-width: 1400px; margin: 0 auto; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.title-with-icon { 
+  display: flex; align-items: center; gap: 0.75rem; 
+  .icon-wrapper {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    color: white; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
+    .svg-icon { width: 20px; height: 20px; }
+  }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+  .page-subtitle { color: #64748b; font-size: 0.85rem; margin: 0; }
+}
 
 .filters-section { 
   display: flex; 
   justify-content: space-between;
-  gap: 1.5rem; 
-  margin-bottom: 2rem; 
+  gap: 1rem; 
+  margin-bottom: 1rem; 
   background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 
 .search-container { flex: 1; }
-.modern-input { width: 100%; border-radius: 12px; }
+.modern-input { width: 100%; border-radius: 10px; height: 36px; font-size: 0.85rem; }
 
 .filter-groups {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .status-dropdown {
-  width: 150px;
-  border-radius: 12px;
+  width: 120px;
+  border-radius: 10px;
+  height: 36px;
+  font-size: 0.85rem;
 }
 
 .filter-pills { 
   display: flex; 
-  gap: 0.5rem; 
+  gap: 0.25rem; 
   background: #f1f5f9;
-  padding: 0.25rem;
-  border-radius: 14px;
+  padding: 0.2rem;
+  border-radius: 10px;
   
   .pill { 
-    padding: 0.5rem 1rem; 
-    border-radius: 11px; 
+    padding: 0.4rem 0.75rem; 
+    border-radius: 8px; 
     border: none;
     background: transparent; 
     cursor: pointer; 
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: #64748b;
     transition: all 0.2s;
     
     &.active { 
       background: white; 
       color: #3b82f6; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     } 
   } 
 }
 
 .categories-container {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.categories-grid-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.cat-modern-card {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+
+    .cat-icon-box {
+      width: 32px;
+      height: 32px;
+      background: #eff6ff;
+      color: #3b82f6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .compact-tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+    }
+  }
+
+  .card-body {
+    flex: 1;
+
+    .cat-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.2rem 0;
+    }
+
+    .cat-code {
+      font-size: 0.7rem;
+      background: #f8fafc;
+      color: #64748b;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .cat-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  .cat-stats-row {
+    .stat {
+      display: flex;
+      flex-direction: column;
+      .val { font-size: 1rem; font-weight: 800; color: #1e293b; }
+      .lab { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+    }
+  }
+
+  .card-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    .p-button { width: 28px; height: 28px; }
+  }
+}
+
+/* Skeleton */
+.skeleton-animate {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-line {
+  height: 0.75rem;
+  background: #f1f5f9;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  &.w-40 { width: 40%; }
+  &.w-60 { width: 60%; }
+  &.w-full { width: 100%; }
+  &.h-2 { height: 1.25rem; }
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .modern-table {

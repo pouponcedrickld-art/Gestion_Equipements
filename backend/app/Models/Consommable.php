@@ -32,6 +32,22 @@ class Consommable extends Model
         return $this->belongsTo(Equipement::class);
     }
 
+    public function mouvements()
+    {
+        return $this->hasMany(Mouvement::class);
+    }
+
+    public function createMouvement($type, $description, $userId = null)
+    {
+        return $this->mouvements()->create([
+            'type_mouvement' => $type,
+            'description' => $description,
+            'user_id' => $userId ?? auth()->id(),
+            'date_mouvement' => now(),
+            'nouvelle_valeur' => ['quantite' => $this->quantite]
+        ]);
+    }
+
     // ===== SCOPES =====
 
     /**
@@ -75,7 +91,7 @@ class Consommable extends Model
     {
         $this->increment('quantite', $quantite);
         
-        // TODO: Créer un historique des mouvements de stock si nécessaire
+        $this->createMouvement('entree', $description ?? "Ajout de {$quantite} unités au stock");
         
         return $this;
     }
@@ -86,10 +102,12 @@ class Consommable extends Model
     public function retirerStock($quantite, $description = null)
     {
         if ($this->quantite < $quantite) {
-            throw new \Exception("Stock insuffisant. Stock actuel: {$this->quantite}, demandé: {$quantite}");
+            throw new \Exception("Stock insuffisant pour retirer {$quantite} unités.");
         }
-        
+
         $this->decrement('quantite', $quantite);
+        
+        $this->createMouvement('sortie', $description ?? "Retrait de {$quantite} unités du stock");
         
         return $this;
     }

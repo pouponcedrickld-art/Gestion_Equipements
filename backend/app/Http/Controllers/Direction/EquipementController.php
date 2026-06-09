@@ -53,6 +53,10 @@ class EquipementController extends Controller
                 $query->byCategorie($request->categorie_id);
             }
 
+            if ($request->filled('lot_reference')) {
+                $query->where('lot_reference', $request->lot_reference);
+            }
+
             if ($request->boolean('garantie_expire_bientot')) {
                 $jours = $request->input('jours_garantie', 30);
                 $query->garantieExpireSoon($jours);
@@ -129,10 +133,13 @@ class EquipementController extends Controller
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'specifications' => 'nullable|string',
                 'quantite_a_creer' => 'nullable|integer|min:1|max:100',
+                'mode_enregistrement' => 'nullable|string|in:individuel,lot',
             ]);
 
             $quantite = $request->input('quantite_a_creer', 1);
+            $modeEnregistrement = $request->input('mode_enregistrement', 'individuel');
             $equipements_crees = [];
+            $lotReference = ($quantite > 1 && $modeEnregistrement === 'individuel') ? $this->generateUniqueLotReference() : null;
 
             if ($user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
                 $agenceProprietaireId = $request->input('agence_proprietaire_id') ?? Agence::where('type', 'generale')->first()->id;
@@ -147,10 +154,12 @@ class EquipementController extends Controller
                 $photoPath = $request->file('photo')->store('equipements/photos', 'public');
             }
 
-            // Boucle de création multiple
-            for ($i = 0; $i < $quantite; $i++) {
+            if ($modeEnregistrement === 'lot') {
+                // Création d'un seul enregistrement représentant le lot
                 $equipementData = [
                     'nom' => $validated['nom'],
+                    'quantite' => $quantite,
+                    'is_lot' => true,
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
                     'categorie_id' => $validated['categorie_id'],
@@ -165,38 +174,84 @@ class EquipementController extends Controller
                     'agence_actuelle_id' => $agenceActuelleId,
                     'statut_global' => $this->mapStatut($validated['etat']),
                     'photo' => $photoPath,
-                    'specifications' => isset($validated['specifications']) ? json_decode($validated['specifications'], true) : null,
+                    'lot_reference' => $this->generateUniqueLotReference(),
+                    'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
+                    'reference' => $validated['reference'] ?? $this->generateUniqueReference(),
+                    'code_inventaire' => $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire(),
                 ];
 
-                // Gestion des identifiants uniques
-                if ($quantite === 1) {
-                    $equipementData['numero_serie'] = $validated['numero_serie'] ?? null;
-                    $equipementData['reference'] = $validated['reference'] ?? ('REF-' . strtoupper(Str::random(6)));
-                    $equipementData['code_inventaire'] = $validated['code_inventaire'] ?? strtoupper(Str::random(10));
-                } else {
-                    // Pour la création multiple, on génère des codes différents
-                    $equipementData['numero_serie'] = null; // À remplir manuellement plus tard
-                    $equipementData['reference'] = 'REF-' . strtoupper(Str::random(6));
-                    $equipementData['code_inventaire'] = strtoupper(Str::random(10));
-                    $equipementData['nom'] = $validated['nom'] . " (" . ($i + 1) . "/" . $quantite . ")";
+                $equipement = Equipement::create($equipementData);
+                
+                try {
+                    $equipement->generateQRCode();
+                } catch (\Exception $e) {
+                    \Log::error("Erreur QR Code pour lot {$equipement->id}: " . $e->getMessage());
                 }
 
-                $equipement = Equipement::create($equipementData);
-                $equipement->generateQRCode();
-                $equipement->createMouvement('creation', "Création initiale" . ($quantite > 1 ? " (Lot)" : ""), $user->id);
-                
-                if ($quantite === 1) {
-                    $equipements_crees = $equipement;
-                } else {
-                    $equipements_crees[] = $equipement->id;
+                $equipement->createMouvement('creation', "Création initiale en lot (Quantité: {$quantite})", $user->id);
+                $equipements_crees = $equipement;
+
+            } else {
+                // Boucle de création multiple (individuel)
+                for ($i = 0; $i < $quantite; $i++) {
+                    $equipementData = [
+                        'nom' => $quantite > 1 ? ($validated['nom'] . " (" . ($i + 1) . "/" . $quantite . ")") : $validated['nom'],
+                        'quantite' => 1,
+                        'is_lot' => false,
+                        'marque' => $validated['marque'] ?? null,
+                        'modele' => $validated['modele'] ?? null,
+                        'categorie_id' => $validated['categorie_id'],
+                        'fournisseur' => $validated['fournisseur'] ?? null,
+                        'date_acquisition' => $validated['date_acquisition'] ?? null,
+                        'prix_achat' => $validated['prix_achat'] ?? null,
+                        'garantie_date_fin' => $validated['garantie_date_fin'] ?? null,
+                        'etat' => $validated['etat'],
+                        'localisation' => $validated['localisation'] ?? null,
+                        'responsable_id' => $validated['responsable_id'] ?? null,
+                        'agence_proprietaire_id' => $agenceProprietaireId,
+                        'agence_actuelle_id' => $agenceActuelleId,
+                        'statut_global' => $this->mapStatut($validated['etat']),
+                        'photo' => $photoPath,
+                        'lot_reference' => $lotReference,
+                        'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
+                    ];
+
+                    // Gestion des identifiants uniques
+                    if ($quantite === 1) {
+                        $equipementData['numero_serie'] = $validated['numero_serie'] ?? null;
+                        $equipementData['reference'] = $validated['reference'] ?? $this->generateUniqueReference();
+                        $equipementData['code_inventaire'] = $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire();
+                    } else {
+                        $equipementData['numero_serie'] = null;
+                        $equipementData['reference'] = $this->generateUniqueReference();
+                        $equipementData['code_inventaire'] = $this->generateUniqueCodeInventaire();
+                    }
+
+                    $equipement = Equipement::create($equipementData);
+                    
+                    try {
+                        $equipement->generateQRCode();
+                    } catch (\Exception $e) {
+                        \Log::error("Erreur QR Code pour équipement {$equipement->id}: " . $e->getMessage());
+                    }
+
+                    $equipement->createMouvement('creation', "Création initiale" . ($quantite > 1 ? " (Partie du lot {$lotReference})" : ""), $user->id);
+                    
+                    if ($quantite === 1) {
+                        $equipements_crees = $equipement;
+                    } else {
+                        $equipements_crees[] = $equipement;
+                    }
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $quantite === 1 ? $equipements_crees->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable']) : $equipements_crees,
-                'message' => $quantite > 1 ? "{$quantite} équipements créés avec succès" : 'Équipement créé avec succès'
+                'data' => ($quantite === 1 || $modeEnregistrement === 'lot') ? $equipements_crees->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable']) : $equipements_crees,
+                'message' => ($quantite > 1 && $modeEnregistrement === 'lot') ? "Lot de {$quantite} équipements créé avec succès" : ($quantite > 1 ? "{$quantite} équipements créés avec succès" : 'Équipement créé avec succès')
             ], 201);
+
+
 
         } catch (\Exception $e) {
             return response()->json([
@@ -213,9 +268,20 @@ class EquipementController extends Controller
     public function show(Equipement $equipement): JsonResponse
     {
         $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable', 'consommables', 'mouvements.user']);
+        
+        $relatedInLot = [];
+        if ($equipement->lot_reference) {
+            $relatedInLot = Equipement::where('lot_reference', $equipement->lot_reference)
+                ->where('id', '!=', $equipement->id)
+                ->select('id', 'nom', 'code_inventaire', 'numero_serie', 'etat')
+                ->get();
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $equipement
+            'data' => array_merge($equipement->toArray(), [
+                'related_in_lot' => $relatedInLot
+            ])
         ]);
     }
 
@@ -227,8 +293,21 @@ class EquipementController extends Controller
         try {
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
-                'numero_serie' => 'required|string|max:255|unique:equipements,numero_serie,' . $equipement->id,
+                'quantite' => 'nullable|integer|min:1',
+                'quantite_a_creer' => 'nullable|integer|min:1',
+                'is_lot' => 'nullable|boolean',
+                'mode_enregistrement' => 'nullable|string|in:individuel,lot',
+                'numero_serie' => 'nullable|string|max:255|unique:equipements,numero_serie,' . $equipement->id,
+                'reference' => 'nullable|string|max:255|unique:equipements,reference,' . $equipement->id,
+                'imei' => 'nullable|string|max:255|unique:equipements,imei,' . $equipement->id,
+                'code_inventaire' => 'nullable|string|max:255|unique:equipements,code_inventaire,' . $equipement->id,
+                'marque' => 'nullable|string|max:255',
+                'modele' => 'nullable|string|max:255',
                 'categorie_id' => 'required|exists:categories,id',
+                'fournisseur' => 'nullable|string|max:255',
+                'date_acquisition' => 'nullable|date',
+                'prix_achat' => 'nullable|numeric|min:0',
+                'garantie_date_fin' => 'nullable|date',
                 'etat' => 'required|string|in:nouveau,actif,en_maintenance,hors_service,archive',
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
@@ -241,13 +320,23 @@ class EquipementController extends Controller
                 $validated['photo'] = $request->file('photo')->store('equipements/photos', 'public');
             }
 
-            if (isset($validated['specifications'])) {
+            if (isset($validated['specifications']) && is_string($validated['specifications'])) {
                 $validated['specifications'] = json_decode($validated['specifications'], true);
+            }
+
+            // Gérer la quantité et le mode lot si envoyés via les noms du formulaire
+            if ($request->has('quantite_a_creer')) {
+                $validated['quantite'] = $request->quantite_a_creer;
+            }
+            if ($request->has('mode_enregistrement')) {
+                $validated['is_lot'] = $request->mode_enregistrement === 'lot';
             }
 
             $equipement->update(array_merge($validated, [
                 'statut_global' => $this->mapStatut($validated['etat'])
             ]));
+
+            $equipement->createMouvement('modification', "Mise à jour des informations par " . $request->user()->name, $request->user()->id);
 
             return response()->json([
                 'success' => true,
@@ -255,7 +344,11 @@ class EquipementController extends Controller
                 'message' => 'Équipement modifié avec succès'
             ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error("Erreur lors de la mise à jour de l'équipement {$equipement->id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Erreur lors de la mise à jour: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -273,7 +366,7 @@ class EquipementController extends Controller
                 'statut_global' => 'reforme'
             ]);
 
-            $equipement->createMouvement('suppression', "Mis au rebut / Supprimé par " . $user->name, $user->id);
+            $equipement->createMouvement('reforme', "Mis au rebut / Supprimé par " . $user->name, $user->id);
             
             $equipement->delete();
 
@@ -282,7 +375,11 @@ class EquipementController extends Controller
                 'message' => 'Équipement mis au rebut et retiré de la liste active.'
             ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error("Erreur lors de la suppression de l'équipement {$equipement->id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -296,5 +393,32 @@ class EquipementController extends Controller
             'archive' => 'archive'
         ];
         return $map[$statut] ?? 'en_service';
+    }
+
+    protected function generateUniqueReference(): string
+    {
+        do {
+            $reference = 'REF-' . strtoupper(Str::random(6));
+        } while (Equipement::where('reference', $reference)->exists());
+        
+        return $reference;
+    }
+
+    protected function generateUniqueCodeInventaire(): string
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (Equipement::where('code_inventaire', $code)->exists());
+        
+        return $code;
+    }
+
+    protected function generateUniqueLotReference(): string
+    {
+        do {
+            $lot = 'LOT-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+        } while (Equipement::where('lot_reference', $lot)->exists());
+        
+        return $lot;
     }
 }
