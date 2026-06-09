@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Classes personnalisées pour Glassmorphism */
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-lg bg-white/30 border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply backdrop-blur-lg bg-black/30 border border-black/20;
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/10 border border-white/20 shadow-lg rounded-lg;
+  }
+  
+  .glass-card-hover {
+    @apply transition-all duration-300 hover:bg-white/20 hover:border-white/30;
+  }
+}
+
+/* Styles existants de l'application */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}

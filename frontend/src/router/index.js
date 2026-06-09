@@ -95,7 +95,7 @@ const routes = [
   {
     path: '/maintenances/calendrier',
     name: 'MaintenanceCalendar',
-    component: () => import('@/views/maintenances/MaintenanceCalendarView.vue'),
+    component: () => import('@/views/agence/maintenances/MaintenanceCalendarView.vue'),
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance', 'gestionnaire_stock'] }
   },
 // {
