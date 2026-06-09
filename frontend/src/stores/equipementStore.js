@@ -165,12 +165,18 @@ export const useEquipementStore = defineStore('equipement', () => {
     error.value = null
     
     try {
-      // Créer FormData pour gérer les fichiers (photo)
       const formData = new FormData()
       
       Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key])
+        const value = data[key]
+        if (value !== null && value !== undefined) {
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+          } else if (key === 'specifications' && typeof value === 'object') {
+            formData.append(key, JSON.stringify(value))
+          } else {
+            formData.append(key, value)
+          }
         }
       })
 
@@ -178,10 +184,12 @@ export const useEquipementStore = defineStore('equipement', () => {
       
       if (response.data.success) {
         const newEquipement = response.data.data
-        
-        // Ajouter à la liste locale
-        equipements.value.unshift(newEquipement)
-        
+        if (Array.isArray(newEquipement)) {
+          // Si création multiple, on rafraîchit la liste
+          await fetchEquipements()
+        } else {
+          equipements.value.unshift(newEquipement)
+        }
         return newEquipement
       } else {
         throw new Error(response.data.message)
@@ -204,13 +212,20 @@ export const useEquipementStore = defineStore('equipement', () => {
     
     try {
       const formData = new FormData()
-      
-      // Ajouter _method pour le PATCH via FormData
-      formData.append('_method', 'PATCH')
+      formData.append('_method', 'PUT')
       
       Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key])
+        const value = data[key]
+        if (value !== null && value !== undefined) {
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+          } else if (key === 'specifications' && typeof value === 'object') {
+            formData.append(key, JSON.stringify(value))
+          } else if (key === 'photo' && !(value instanceof File)) {
+            // Ne pas ajouter la photo si ce n'est pas un nouveau fichier
+          } else {
+            formData.append(key, value)
+          }
         }
       })
 
@@ -218,17 +233,13 @@ export const useEquipementStore = defineStore('equipement', () => {
       
       if (response.data.success) {
         const updatedEquipement = response.data.data
-        
-        // Mettre à jour dans la liste locale
         const index = equipements.value.findIndex(eq => eq.id === id)
         if (index !== -1) {
           equipements.value[index] = updatedEquipement
         }
-        
         if (currentEquipement.value && currentEquipement.value.id === id) {
           currentEquipement.value = updatedEquipement
         }
-        
         return updatedEquipement
       } else {
         throw new Error(response.data.message)

@@ -1,108 +1,122 @@
 <template>
   <DirectionLayout>
-    <div class="kanban-container">
-      <div class="header-bar">
-        <div>
-          <h2>Gestion des Transferts</h2>
-          <p>Workflow logistique des équipements</p>
+    <div class="transferts-view" ref="pageContainer">
+      <!-- En-tête Moderne -->
+      <div class="page-header animate-in">
+        <div class="header-left">
+          <div class="title-with-icon">
+            <div class="icon-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg-icon">
+                <path d="M8 7L12 3M12 3L16 7M12 3V13M16 17L12 21M12 21L8 17M12 21V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h1>Flux de Transferts</h1>
+              <p class="subtitle">Mouvements inter-agences et affectations</p>
+            </div>
+          </div>
         </div>
-        <button class="refresh-btn" @click="fetchKanban" :disabled="loading">
-          <i class="pi pi-refresh" :class="{ 'pi-spin': loading }"></i> Actualiser
-        </button>
+        <div class="header-actions">
+          <Button 
+            label="Nouveau Transfert" 
+            icon="pi pi-plus" 
+            class="p-button-success p-button-raised action-btn"
+            @click="$router.push('/transferts/nouveau')"
+          />
+        </div>
       </div>
 
-      <div class="kanban-board">
-        <!-- Colonne: A EXPEDIER -->
-        <div 
-          class="kanban-column" 
-          :class="{ 'drag-over': dragOverColumn === 'a_expedier' }"
-          @dragover.prevent 
-          @dragenter="dragOverColumn = 'a_expedier'"
-          @dragleave="dragOverColumn = null"
-          @drop="onDrop($event, 'a_expedier')"
-        >
-          <div class="column-header a-expedier">
-            <h3>A EXPÉDIER ({{ columns.a_expedier.length }})</h3>
-          </div>
-          <div class="column-content">
-            <div 
-              v-for="item in columns.a_expedier" 
-              :key="item.id" 
-              class="kanban-card"
-              draggable="true"
-              @dragstart="onDragStart($event, item)"
-              @dragend="onDragEnd"
-            >
-              <div class="card-tag" :class="item.urgence?.toLowerCase()">{{ item.urgence }}</div>
-              <div class="card-title">{{ item.nom_materiel }}</div>
-              <div class="card-info">
-                <span><i class="pi pi-building"></i> {{ item.agence }}</span>
-                <span><i class="pi pi-shopping-cart"></i> Qté: {{ item.quantite }}</span>
-              </div>
-              <div class="card-date">
-                <i class="pi pi-calendar"></i> {{ formatDate(item.date) }}
-              </div>
-            </div>
+      <!-- Statistiques Glassmorphism -->
+      <div class="stats-container animate-in">
+        <div class="stat-glass-card warning">
+          <div class="stat-icon-box"><i class="pi pi-clock"></i></div>
+          <div class="stat-details">
+            <span class="value">{{ transfertsEnAttente.length }}</span>
+            <span class="label">En Attente</span>
           </div>
         </div>
-
-        <!-- Colonne: EN TRANSIT -->
-        <div 
-          class="kanban-column" 
-          :class="{ 'drag-over': dragOverColumn === 'en_transit' }"
-          @dragover.prevent 
-          @dragenter="dragOverColumn = 'en_transit'"
-          @dragleave="dragOverColumn = null"
-          @drop="onDrop($event, 'en_transit')"
-        >
-          <div class="column-header en-transit">
-            <h3>EN TRANSIT ({{ columns.en_transit.length }})</h3>
-          </div>
-          <div class="column-content">
-            <div 
-              v-for="item in columns.en_transit" 
-              :key="item.id" 
-              class="kanban-card"
-              draggable="true"
-              @dragstart="onDragStart($event, item)"
-              @dragend="onDragEnd"
-            >
-              <div class="card-title">{{ item.nom_materiel }}</div>
-              <div class="card-info">
-                <span><i class="pi pi-map-marker"></i> Vers: {{ item.agence }}</span>
-                <span><i class="pi pi-shopping-cart"></i> Qté: {{ item.quantite }}</span>
-              </div>
-              <div class="card-status-label">Expédié</div>
-            </div>
+        <div class="stat-glass-card primary">
+          <div class="stat-icon-box"><i class="pi pi-send"></i></div>
+          <div class="stat-details">
+            <span class="value">{{ transfertsEnTransit.length }}</span>
+            <span class="label">En Transit</span>
           </div>
         </div>
-
-        <!-- Colonne: DESTINATION ANNEX -->
-        <div 
-          class="kanban-column" 
-          :class="{ 'drag-over': dragOverColumn === 'recu' }"
-          @dragover.prevent 
-          @dragenter="dragOverColumn = 'recu'"
-          @dragleave="dragOverColumn = null"
-          @drop="onDrop($event, 'recu')"
-        >
-          <div class="column-header recu">
-            <h3>DESTINATION ANNEX ({{ columns.recu.length }})</h3>
+        <div class="stat-glass-card success">
+          <div class="stat-icon-box"><i class="pi pi-check"></i></div>
+          <div class="stat-details">
+            <span class="value">{{ transfertsTermines.length }}</span>
+            <span class="label">Terminés</span>
           </div>
-          <div class="column-content">
-            <div 
-              v-for="item in columns.recu" 
-              :key="item.id" 
-              class="kanban-card"
-            >
-              <div class="card-title">{{ item.nom_materiel }}</div>
-              <div class="card-info">
-                <span><i class="pi pi-check-circle"></i> Reçu par: {{ item.agence }}</span>
-                <span><i class="pi pi-shopping-cart"></i> Qté: {{ item.quantite }}</span>
+        </div>
+      </div>
+
+      <!-- Filtres et Recherche -->
+      <div class="filters-bar animate-in">
+        <div class="search-box">
+          <i class="pi pi-search"></i>
+          <InputText v-model="searchQuery" placeholder="Rechercher un transfert..." class="search-input" />
+        </div>
+        <div class="dropdown-filters">
+          <Dropdown v-model="selectedStatut" :options="statutOptions" optionLabel="label" optionValue="value" placeholder="Statut" class="modern-dropdown" showClear />
+        </div>
+      </div>
+
+      <!-- Liste des Transferts (Cards) -->
+      <div class="transferts-grid" v-if="!loading">
+        <div v-for="(trans, index) in filteredTransferts" :key="trans.id" class="transfert-card animate-card" :style="`--index: ${index}`">
+          <div class="card-status-line" :class="trans.statut"></div>
+          
+          <div class="card-body">
+            <div class="card-header-top">
+              <span class="trans-no">{{ trans.numero_transfert || '#' + trans.id }}</span>
+              <Tag :value="trans.statut" :severity="getStatutSeverity(trans.statut)" />
+            </div>
+
+            <div class="route-display">
+              <div class="node">
+                <i class="pi pi-building"></i>
+                <span>{{ trans.agence_origine?.nom || 'Origine' }}</span>
               </div>
-              <div class="card-date">Reçu le {{ formatDate(item.date) }}</div>
+              <div class="path">
+                <div class="line"></div>
+                <i class="pi pi-chevron-right"></i>
+              </div>
+              <div class="node">
+                <i class="pi pi-map-marker"></i>
+                <span>{{ trans.agence_destination?.nom || 'Destination' }}</span>
+              </div>
+            </div>
+
+            <div class="equipement-info-box">
+              <div class="equip-icon"><i class="pi pi-desktop"></i></div>
+              <div class="equip-details">
+                <strong>{{ trans.equipement?.marque }} {{ trans.equipement?.modele }}</strong>
+                <span>SN: {{ trans.equipement?.numero_serie }}</span>
+              </div>
+            </div>
+
+            <div class="card-meta">
+              <div class="meta-item">
+                <i class="pi pi-calendar"></i>
+                <span>{{ formatDate(trans.date_demande) }}</span>
+              </div>
             </div>
           </div>
+
+          <div class="card-actions-bar">
+            <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(trans)" />
+            <Button v-if="trans.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(trans)" />
+            <Button v-if="trans.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(trans)" />
+            <Button v-if="trans.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(trans)" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div class="transferts-grid" v-else>
+        <div v-for="n in 6" :key="n" class="transfert-card skeleton">
+          <div class="skeleton-body"></div>
         </div>
       </div>
     </div>
@@ -110,239 +124,126 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import DirectionLayout from '@/layouts/DirectionLayout.vue'
-import transfertApi from '@/api/transfertApi'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useTransfertStore } from '@/stores/transfertStore'
+import DirectionLayout from '@/layouts/DirectionLayout.vue'
+import gsap from 'gsap'
 
+// PrimeVue Components
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
+import Tag from 'primevue/tag'
+
+const router = useRouter()
 const toast = useToast()
+const transfertStore = useTransfertStore()
+
 const loading = ref(false)
-const dragOverColumn = ref(null)
-const columns = ref({
-  a_expedier: [],
-  en_transit: [],
-  recu: []
+const selectedStatut = ref(null)
+const searchQuery = ref('')
+
+const transfertsEnAttente = computed(() => transfertStore.transfertsEnAttente)
+const transfertsEnTransit = computed(() => transfertStore.transfertsEnTransit)
+const transfertsTermines = computed(() => transfertStore.transfertsTermines)
+
+const filteredTransferts = computed(() => {
+  let list = transfertStore.transferts
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(t => t.numero_transfert?.toLowerCase().includes(q) || t.equipement?.marque?.toLowerCase().includes(q))
+  }
+  if (selectedStatut.value) {
+    list = list.filter(t => t.statut === selectedStatut.value)
+  }
+  return list
 })
 
-const fetchKanban = async () => {
+const statutOptions = [
+  { label: 'Demande', value: 'demande' },
+  { label: 'Approuvé', value: 'approuve' },
+  { label: 'Expédié', value: 'expedie' },
+  { label: 'Reçu', value: 'recu' },
+  { label: 'Refusé', value: 'refuse' }
+]
+
+const getStatutSeverity = (s) => {
+  switch(s) {
+    case 'demande': return 'warning'
+    case 'approuve': return 'info'
+    case 'expedie': return 'primary'
+    case 'recu': return 'success'
+    case 'refuse': return 'danger'
+    default: return 'secondary'
+  }
+}
+
+const formatDate = (date) => date ? new Date(date).toLocaleDateString() : 'N/A'
+
+const viewDetails = (trans) => router.push(`/transferts/${trans.id}`)
+const approveTransfert = async (trans) => {
+  try {
+    await transfertStore.approuverTransfert(trans.id)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert approuvé' })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'approbation' })
+  }
+}
+
+onMounted(async () => {
   loading.value = true
-  try {
-    const { data } = await transfertApi.getKanban()
-    columns.value = data
-  } catch (error) {
-    console.error(error)
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger le tableau de bord', life: 3000 })
-  } finally {
-    loading.value = false
-  }
-}
-
-// Drag & Drop Natif
-const onDragStart = (event, item) => {
-  event.dataTransfer.setData('itemId', item.id)
-  event.dataTransfer.effectAllowed = 'move'
-  // On peut ajouter une classe CSS au drag image si besoin
-  event.target.classList.add('dragging')
-}
-
-const onDragEnd = (event) => {
-  event.target.classList.remove('dragging')
-  dragOverColumn.value = null
-}
-
-const onDrop = async (event, targetColumn) => {
-  dragOverColumn.value = null
-  const itemId = event.dataTransfer.getData('itemId')
+  await transfertStore.fetchTransferts()
+  loading.value = false
   
-  // Logique métier des colonnes
-  if (targetColumn === 'a_expedier') return 
-  
-  const item = findItem(itemId)
-  if (!item) return
-
-  // Empêcher les sauts d'étapes (optionnel selon le besoin)
-  // De "A expédier" directement à "Reçu"
-  if (targetColumn === 'recu' && item.id.startsWith('demande_')) {
-    toast.add({ severity: 'warn', summary: 'Action impossible', detail: 'Le matériel doit d\'abord transiter par l\'expédition.', life: 3000 })
-    return
-  }
-
-  // Optimistic UI : Déplacement local immédiat pour la fluidité
-  moveItemLocally(item, targetColumn)
-
-  try {
-    await transfertApi.updateStatus(item.id, targetColumn)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Mise à jour effectuée', life: 2000 })
-    // On rafraîchit quand même pour être sûr de la cohérence avec le serveur
-    fetchKanban()
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la mise à jour', life: 3000 })
-    fetchKanban() // Recharger l'état initial en cas d'erreur
-  }
-}
-
-const findItem = (id) => {
-  return [...columns.value.a_expedier, ...columns.value.en_transit, ...columns.value.recu]
-    .find(i => i.id === id)
-}
-
-const moveItemLocally = (item, targetColumn) => {
-  // Supprimer de toutes les colonnes
-  columns.value.a_expedier = columns.value.a_expedier.filter(i => i.id !== item.id)
-  columns.value.en_transit = columns.value.en_transit.filter(i => i.id !== item.id)
-  columns.value.recu = columns.value.recu.filter(i => i.id !== item.id)
-  
-  // Ajouter à la cible
-  columns.value[targetColumn].unshift(item)
-}
-
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-}
-
-onMounted(fetchKanban)
+  gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
+  gsap.from('.animate-card', { opacity: 0, y: 20, duration: 0.6, stagger: 0.05, ease: 'power2.out' })
+})
 </script>
 
-<style scoped>
-.kanban-container {
-  padding: 24px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+<style scoped lang="scss">
+.transferts-view { padding: 2rem; }
+.title-with-icon {
+  display: flex; align-items: center; gap: 1.5rem;
+  .icon-wrapper {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    color: white; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2);
+    .svg-icon { width: 32px; height: 32px; }
+  }
+  h1 { font-size: 2rem; font-weight: 800; color: #1e293b; margin: 0; }
+  .subtitle { color: #64748b; }
+}
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+
+.stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+.stat-glass-card {
+  background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  display: flex; align-items: center; gap: 1rem;
+  .stat-icon-box { font-size: 1.5rem; color: #6366f1; }
+  .value { display: block; font-size: 1.5rem; font-weight: 800; }
+  .label { color: #64748b; font-size: 0.8rem; }
 }
 
-.header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+.route-display {
+  display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px;
+  .node { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; i { color: #6366f1; } span { font-size: 0.8rem; font-weight: 600; } }
+  .path { flex: 1; display: flex; align-items: center; padding: 0 1rem; .line { height: 2px; flex: 1; background: #e2e8f0; } i { color: #cbd5e1; margin-left: -5px; } }
 }
 
-.header-bar h2 { color: #f8fafc; margin: 0; }
-.header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
-
-.refresh-btn {
-  background: #334155;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.equipement-info-box {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 1rem;
+  .equip-icon { width: 40px; height: 40px; background: #eef2ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6366f1; }
+  .equip-details { display: flex; flex-direction: column; strong { font-size: 0.9rem; } span { font-size: 0.75rem; color: #64748b; } }
 }
 
-.kanban-board {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  flex: 1;
-  min-height: 0;
-}
-
-.kanban-column {
-  background: #0f172a;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #1e293b;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.kanban-column.drag-over {
-  background: #1e293b;
-  border-color: #3b82f6;
-}
-
-.column-header {
-  padding: 16px;
-  border-radius: 12px 12px 0 0;
-}
-
-.column-header h3 {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: white;
-}
-
-.column-header.a-expedier { background: #1e293b; border-bottom: 3px solid #f59e0b; }
-.column-header.en-transit { background: #1e293b; border-bottom: 3px solid #3b82f6; }
-.column-header.recu { background: #1e293b; border-bottom: 3px solid #10b981; }
-
-.column-content {
-  padding: 12px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.kanban-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  cursor: grab;
-  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-}
-
-.kanban-card.dragging {
-  opacity: 0.5;
-  transform: scale(0.95);
-}
-
-.kanban-card:active { cursor: grabbing; }
-.kanban-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  border-color: #475569;
-}
-
-.card-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-
-.card-tag.haute { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-.card-tag.moyenne { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-.card-tag.basse { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-
-.card-title {
-  color: #f8fafc;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: #94a3b8;
-  margin-bottom: 8px;
-}
-
-.card-info i { margin-right: 4px; }
-
-.card-date {
-  font-size: 0.75rem;
-  color: #64748b;
-  border-top: 1px solid #334155;
-  padding-top: 8px;
-}
-
-.card-status-label {
-  font-size: 0.75rem;
-  color: #3b82f6;
-  font-weight: 600;
-  text-align: right;
+.transferts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.transfert-card {
+  background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;
+  .card-status-line { height: 4px; width: 100%; &.demande { background: #f59e0b; } &.expedie { background: #3b82f6; } &.recu { background: #10b981; } }
+  .card-body { padding: 1.5rem; .card-header-top { display: flex; justify-content: space-between; .trans-no { font-family: monospace; font-weight: bold; color: #64748b; } } }
+  .card-actions-bar { display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid #f1f5f9; }
 }
 </style>
