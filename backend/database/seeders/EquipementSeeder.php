@@ -12,17 +12,14 @@ class EquipementSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer les agences pour le tracking
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
         
-        // Récupérer les catégories
         $categories = Categorie::all();
 
-        // Équipements type pour tests
         $equipements = [
-            // PDA
             [
+                'nom' => 'PDA Zebra MC3300',
                 'reference' => 'PDA-001',
                 'numero_serie' => 'MC3300-001',
                 'imei' => '123456789012345',
@@ -42,6 +39,7 @@ class EquipementSeeder extends Seeder
                 'qr_code' => 'QR_PDA_001',
             ],
             [
+                'nom' => 'PDA Zebra MC3300 #2',
                 'reference' => 'PDA-002',
                 'numero_serie' => 'MC3300-002',
                 'imei' => '123456789012346',
@@ -60,8 +58,8 @@ class EquipementSeeder extends Seeder
                 'agence_actuelle_id' => $sousAgences->first()->id,
                 'qr_code' => 'QR_PDA_002',
             ],
-            // Smartphones
             [
+                'nom' => 'Smartphone Cat S62 Pro',
                 'reference' => 'SPH-001',
                 'numero_serie' => 'IP68-001',
                 'imei' => '987654321098765',
@@ -80,8 +78,8 @@ class EquipementSeeder extends Seeder
                 'agence_actuelle_id' => $sousAgences->first()->id,
                 'qr_code' => 'QR_SPH_001',
             ],
-            // Scanner
             [
+                'nom' => 'Scanner Zebra DS4608',
                 'reference' => 'SCN-001',
                 'numero_serie' => 'DS4608-001',
                 'code_inventaire' => 'INV-SCN-001',
@@ -99,8 +97,8 @@ class EquipementSeeder extends Seeder
                 'agence_actuelle_id' => $agenceGenerale->id,
                 'qr_code' => 'QR_SCN_001',
             ],
-            // Tablette
             [
+                'nom' => 'Tablette Zebra ET51',
                 'reference' => 'TAB-001',
                 'numero_serie' => 'ET51-001',
                 'code_inventaire' => 'INV-TAB-001',
@@ -118,8 +116,8 @@ class EquipementSeeder extends Seeder
                 'agence_actuelle_id' => $sousAgences->where('ville', 'Kara')->first()->id,
                 'qr_code' => 'QR_TAB_001',
             ],
-            // Ordinateur portable
             [
+                'nom' => 'PC Portable Dell Latitude 5520',
                 'reference' => 'PC-001',
                 'numero_serie' => 'LAPTOP-001',
                 'code_inventaire' => 'INV-PC-001',
@@ -142,12 +140,11 @@ class EquipementSeeder extends Seeder
         foreach ($equipements as $equipementData) {
             $equipement = Equipement::create($equipementData);
             
-            // Créer un mouvement initial pour chaque équipement
             Mouvement::create([
                 'equipement_id' => $equipement->id,
                 'type_mouvement' => 'creation',
                 'agent_id' => null,
-                'user_id' => 1, // Admin par défaut
+                'user_id' => 1,
                 'date_mouvement' => $equipement->date_acquisition,
                 'ancienne_valeur' => null,
                 'nouvelle_valeur' => json_encode([
