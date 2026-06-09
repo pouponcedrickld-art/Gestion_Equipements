@@ -20,6 +20,7 @@
           :day="day"
           @event-click="$emit('event-click', $event)"
           @show-more="$emit('show-more', $event)"
+          @day-click="$emit('day-click', $event)"
         />
       </template>
     </div>
@@ -52,7 +53,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['event-click', 'show-more'])
+defineEmits(['event-click', 'show-more', 'day-click'])
 
 const gridRef = ref(null)
 
