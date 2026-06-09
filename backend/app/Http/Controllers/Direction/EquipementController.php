@@ -224,6 +224,33 @@ class EquipementController extends Controller
         }
     }
 
+    /**
+     * Supprimer un équipement (Soft Delete / Mise au rebut)
+     */
+    public function destroy(Request $request, Equipement $equipement): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // On change le statut avant le soft delete pour garder la trace métier
+            $equipement->update([
+                'etat' => 'hors_service',
+                'statut_global' => 'reforme'
+            ]);
+
+            $equipement->createMouvement('suppression', "Mis au rebut / Supprimé par " . $user->name, $user->id);
+            
+            $equipement->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Équipement mis au rebut et retiré de la liste active.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     protected function mapStatut(string $statut): string
     {
         $map = [

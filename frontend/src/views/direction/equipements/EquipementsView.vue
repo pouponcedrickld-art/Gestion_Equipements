@@ -89,8 +89,9 @@
           <i class="pi pi-search"></i>
           <InputText
             v-model="searchQuery"
-            placeholder="Référence, N° Série, Modèle..."
+            placeholder="Rechercher par N° Série, Nom, Code Inventaire..."
             class="search-input"
+            @input="handleSearch"
           />
         </div>
         <div class="dropdown-filters">
@@ -99,58 +100,100 @@
             :options="categories"
             optionLabel="nom"
             optionValue="id"
-            placeholder="Catégorie"
+            placeholder="Filtrer par Catégorie"
             class="modern-dropdown"
             showClear
+            @change="handleSearch"
+          />
+          <Dropdown
+            v-model="selectedStatut"
+            :options="statutOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Filtrer par Statut"
+            class="modern-dropdown"
+            showClear
+            @change="handleSearch"
           />
           <Button 
             icon="pi pi-filter-slash" 
-            class="p-button-text p-button-rounded p-button-secondary"
+            label="Réinitialiser"
+            class="p-button-text p-button-secondary"
             @click="resetFilters"
           />
         </div>
       </div>
 
-      <!-- Liste des Équipements (Cards avec animations) -->
-      <div class="equipements-grid" v-if="!loading">
-        <div 
-          v-for="(equip, index) in filteredEquipements" 
-          :key="equip.id"
-          class="equip-card animate-card"
-          :style="`--index: ${index}`"
+      <!-- Liste des Équipements (DataTable structurée) -->
+      <div class="equipements-container" v-if="!loading">
+        <DataTable 
+          :value="equipementStore.equipements" 
+          responsiveLayout="scroll" 
+          class="modern-table"
+          :rows="10" 
+          v-if="equipementStore.equipements.length > 0"
         >
-          <div class="card-image-box" @click="viewDetails(equip)">
-            <img v-if="equip.photo" :src="`${apiBaseUrl}/storage/${equip.photo}`" :alt="equip.marque" />
-            <div v-else class="img-placeholder">
-              <i class="pi pi-image"></i>
-            </div>
-            <div class="status-overlay">
-              <Tag :value="equip.statut_global" :severity="getStatutSeverity(equip.statut_global)" />
-            </div>
-          </div>
+          <Column field="code_inventaire" header="Code Inventaire" sortable>
+            <template #body="{ data }">
+              <code class="code-badge">{{ data.code_inventaire }}</code>
+            </template>
+          </Column>
           
-          <div class="card-body">
-            <div class="card-header-info">
-              <span class="category-tag">{{ equip.categorie?.nom }}</span>
-              <span class="serial-no">{{ equip.numero_serie }}</span>
-            </div>
-            
-            <h3 class="equip-title" @click="viewDetails(equip)">{{ equip.marque }} {{ equip.modele }}</h3>
-            
-            <div class="equip-meta">
-              <div class="meta-item">
-                <i class="pi pi-map-marker"></i>
-                <span>{{ equip.agence_actuelle?.nom || 'Non attribué' }}</span>
+          <Column field="nom" header="Désignation" sortable>
+            <template #body="{ data }">
+              <div class="flex flex-column">
+                <span class="font-bold text-gray-800">{{ data.nom }}</span>
+                <small class="text-gray-500">{{ data.marque }} {{ data.modele }}</small>
               </div>
-            </div>
-          </div>
-          
-          <div class="card-actions-bar">
-            <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(equip)" />
-            <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-warning" @click="editEquipement(equip)" />
-            <Button icon="pi pi-qrcode" class="p-button-text p-button-rounded p-button-secondary" @click="showQRCode(equip)" />
-            <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" @click="confirmDelete(equip)" />
-          </div>
+            </template>
+          </Column>
+
+          <Column field="categorie.nom" header="Catégorie" sortable>
+            <template #body="{ data }">
+              <span class="category-pill">{{ data.categorie?.nom }}</span>
+            </template>
+          </Column>
+
+          <Column field="numero_serie" header="N° Série Fabricant" sortable></Column>
+
+          <Column field="localisation" header="Emplacement" sortable>
+            <template #body="{ data }">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-map-marker text-gray-400"></i>
+                <span>{{ data.localisation || 'Non défini' }}</span>
+              </div>
+            </template>
+          </Column>
+
+          <Column field="etat" header="Statut" sortable>
+            <template #body="{ data }">
+              <div class="flex align-items-center gap-2">
+                <span class="status-dot" :class="`bg-${getStatutColor(data.etat)}`"></span>
+                <span :class="[`text-${getStatutColor(data.etat)}`, 'font-medium', 'text-sm']">
+                  {{ getStatutLabel(data.etat) }}
+                </span>
+              </div>
+            </template>
+          </Column>
+
+          <Column header="Actions" class="text-right">
+            <template #body="{ data }">
+              <div class="flex justify-content-end gap-1">
+                <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" v-tooltip.top="'Voir la fiche'" @click="viewDetails(data)" />
+                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editEquipement(data)" />
+                <Button icon="pi pi-qrcode" class="p-button-text p-button-rounded p-button-secondary" v-tooltip.top="'Imprimer QR'" @click="showQRCode(data)" />
+                <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" v-tooltip.top="'Mettre au rebut'" @click="handleDelete(data)" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+
+        <!-- Vue vide -->
+        <div v-else class="empty-state animate-in">
+          <i class="pi pi-desktop"></i>
+          <h3>Aucun équipement trouvé</h3>
+          <p>Enregistrez votre premier matériel pour commencer le suivi.</p>
+          <Button label="Ajouter un équipement" icon="pi pi-plus" @click="$router.push('/equipements/nouveau')" class="p-button-raised mt-3" />
         </div>
       </div>
 
@@ -179,6 +222,9 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Tooltip from 'primevue/tooltip'
 
 const router = useRouter()
 const toast = useToast()
@@ -188,44 +234,68 @@ const categorieStore = useCategorieStore()
 const loading = ref(false)
 const searchQuery = ref('')
 const selectedCategorie = ref(null)
+const selectedStatut = ref(null)
 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+const statutOptions = [
+  { label: 'Nouveau', value: 'nouveau' },
+  { label: 'Actif', value: 'actif' },
+  { label: 'En maintenance', value: 'en_maintenance' },
+  { label: 'Hors service', value: 'hors_service' },
+  { label: 'Archivé', value: 'archive' }
+]
+
 // Stats
-const statsDispo = computed(() => equipementStore.equipements.filter(e => e.statut_global === 'en_stock_general').length)
+const statsDispo = computed(() => equipementStore.equipements.filter(e => e.etat === 'nouveau' || e.etat === 'actif').length)
 const statsAffectes = computed(() => equipementStore.equipements.filter(e => e.statut_global === 'affecte').length)
-const statsMaintenance = computed(() => equipementStore.equipements.filter(e => e.statut_global === 'en_maintenance').length)
+const statsMaintenance = computed(() => equipementStore.equipements.filter(e => e.etat === 'en_maintenance').length)
 
 const categories = computed(() => categorieStore.categories)
 
-const filteredEquipements = computed(() => {
-  let list = equipementStore.equipements
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    list = list.filter(e => e.reference.toLowerCase().includes(q) || e.marque.toLowerCase().includes(q) || e.modele.toLowerCase().includes(q))
-  }
-  if (selectedCategorie.value) {
-    list = list.filter(e => e.categorie_id === selectedCategorie.value)
-  }
-  return list
-})
+const handleSearch = () => {
+  equipementStore.fetchEquipements({
+    search: searchQuery.value,
+    categorie_id: selectedCategorie.value,
+    etat: selectedStatut.value
+  })
+}
 
-const getStatutSeverity = (s) => {
+const getStatutLabel = (s) => {
+  const found = statutOptions.find(opt => opt.value === s)
+  return found ? found.label : s
+}
+
+const getStatutColor = (s) => {
   switch(s) {
-    case 'en_stock_general': return 'success'
-    case 'affecte': return 'info'
-    case 'en_maintenance': return 'danger'
-    default: return 'warning'
+    case 'actif': return 'green-500'
+    case 'nouveau': return 'blue-500'
+    case 'en_maintenance': return 'orange-500'
+    case 'hors_service': return 'red-500'
+    case 'archive': return 'gray-500'
+    default: return 'gray-400'
   }
 }
 
 const viewDetails = (equip) => router.push(`/equipements/${equip.id}`)
 const editEquipement = (equip) => router.push(`/equipements/modifier/${equip.id}`)
-const showQRCode = (equip) => toast.add({ severity: 'info', summary: 'QR Code', detail: `Génération pour ${equip.reference}` })
-const confirmDelete = (equip) => toast.add({ severity: 'warn', summary: 'Suppression', detail: 'Action non autorisée ici' })
+const showQRCode = (equip) => toast.add({ severity: 'info', summary: 'QR Code', detail: `Génération pour ${equip.code_inventaire}` })
+
+const handleDelete = async (equip) => {
+  if (confirm(`Voulez-vous vraiment mettre au rebut l'équipement ${equip.nom} ?`)) {
+    try {
+      await equipementStore.deleteEquipement(equip.id)
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis au rebut' })
+    } catch (err) {
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Action impossible' })
+    }
+  }
+}
 
 const resetFilters = () => {
   searchQuery.value = ''
   selectedCategorie.value = null
+  selectedStatut.value = null
+  handleSearch()
 }
 
 onMounted(async () => {
@@ -272,13 +342,60 @@ onMounted(async () => {
   .dropdown-filters { display: flex; gap: 1rem; .modern-dropdown { border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); } }
 }
 
-.equipements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-.equip-card {
-  background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease;
-  &:hover { transform: translateY(-5px); }
-  .card-image-box { height: 180px; position: relative; background: #f8fafc; img { width: 100%; height: 100%; object-fit: cover; } .img-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 3rem; color: #cbd5e1; } .status-overlay { position: absolute; top: 1rem; right: 1rem; } }
-  .card-body { padding: 1.5rem; .category-tag { font-size: 0.7rem; font-weight: 700; color: #3b82f6; text-transform: uppercase; } .serial-no { float: right; font-size: 0.75rem; color: #94a3b8; } .equip-title { margin: 0.5rem 0; font-size: 1.1rem; font-weight: 700; color: #1e293b; cursor: pointer; } .equip-meta { display: flex; gap: 1rem; color: #64748b; font-size: 0.85rem; .meta-item { display: flex; align-items: center; gap: 0.4rem; } } }
-  .card-actions-bar { display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid #f1f5f9; }
+.modern-table {
+  :deep(.p-datatable-thead > tr > th) {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1.25rem 1rem;
+    border: none;
+  }
+  
+  :deep(.p-datatable-tbody > tr) {
+    transition: background 0.2s;
+    &:hover { background: #f1f5f9; }
+  }
+  
+  :deep(.p-datatable-tbody > tr > td) {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.code-badge {
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-family: monospace;
+  color: #475569;
+  font-weight: 600;
+}
+
+.category-pill {
+  background: #eff6ff;
+  color: #3b82f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: #64748b;
+  
+  i { font-size: 4rem; margin-bottom: 1.5rem; color: #cbd5e1; }
+  h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e293b; }
 }
 </style>

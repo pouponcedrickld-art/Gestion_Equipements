@@ -30,56 +30,80 @@
         <div class="search-container">
           <span class="p-input-icon-left search-input-wrapper">
             <i class="pi pi-search" />
-            <InputText v-model="searchTerm" placeholder="Rechercher une catégorie..." @input="handleSearch"
+            <InputText v-model="searchTerm" placeholder="Rechercher par nom, code ou description..." @input="handleSearch"
               class="modern-input" />
           </span>
         </div>
 
-        <div class="filter-pills">
-          <button class="pill" :class="{ active: !showWithEquipementsOnly }" @click="toggleEquipementsFilter(false)">
-            Tous ({{ categorieStore.pagination.total }})
-          </button>
-          <button class="pill" :class="{ active: showWithEquipementsOnly }" @click="toggleEquipementsFilter(true)">
-            Avec équipements
-          </button>
+        <div class="filter-groups">
+          <Dropdown v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" 
+            placeholder="Statut" @change="handleSearch" class="status-dropdown" />
+          
+          <div class="filter-pills">
+            <button class="pill" :class="{ active: !showWithEquipementsOnly }" @click="toggleEquipementsFilter(false)">
+              Toutes
+            </button>
+            <button class="pill" :class="{ active: showWithEquipementsOnly }" @click="toggleEquipementsFilter(true)">
+              Avec équipements
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Grille de cartes -->
-      <div class="categories-grid" v-if="!categorieStore.loading">
-        <div v-for="(categorie, index) in categorieStore.categories" :key="categorie.id"
-          class="category-card animate-card" :style="{ '--index': index }">
-          <div class="card-content">
-            <div class="card-header">
-              <div class="category-icon-bg">
-                <div class="cat-code" v-if="categorie.code">{{ categorie.code }}</div>
-                <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="card-svg">
-                  <path
-                    d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7Z"
-                    stroke="currentColor" stroke-width="2" />
-                  <path d="M3 10H21" stroke="currentColor" stroke-width="2" />
-                </svg>
+      <!-- Liste structurée des catégories -->
+      <div class="categories-container" v-if="!categorieStore.loading">
+        <DataTable :value="categorieStore.categories" responsiveLayout="scroll" class="modern-table"
+          :rows="10" v-if="categorieStore.categories.length > 0">
+          <Column field="nom" header="Nom de la catégorie" sortable>
+            <template #body="{ data }">
+              <div class="flex align-items-center gap-3">
+                <div class="cat-icon-small">
+                  <i :class="data.parent_id ? 'pi pi-tag' : 'pi pi-folder'"></i>
+                </div>
+                <div>
+                  <div class="font-bold">{{ data.nom }}</div>
+                  <div class="text-xs text-gray-500" v-if="data.parent">Parent: {{ data.parent.nom }}</div>
+                </div>
               </div>
-              <div class="card-actions" v-if="hasRole(['super_admin', 'gestionnaire_stock_general'])">
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm"
-                  @click="editCategorie(categorie)" />
-                <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-sm p-button-danger"
-                  @click="confirmDelete(categorie)" :disabled="categorie.nombre_equipements > 0" />
+            </template>
+          </Column>
+          <Column field="code" header="Code / Slug" sortable>
+            <template #body="{ data }">
+              <code class="slug-badge">{{ data.code || data.slug }}</code>
+            </template>
+          </Column>
+          <Column field="nombre_equipements" header="Équipements" sortable class="text-center">
+            <template #body="{ data }">
+              <Badge :value="data.nombre_equipements || '0'" :severity="data.nombre_equipements > 0 ? 'info' : 'secondary'" />
+            </template>
+          </Column>
+          <Column field="statut" header="Statut" sortable>
+            <template #body="{ data }">
+              <Tag :value="getStatusLabel(data.statut)" :severity="getStatusSeverity(data.statut)" />
+            </template>
+          </Column>
+          <Column header="Actions" class="text-right">
+            <template #body="{ data }">
+              <div class="flex justify-content-end gap-2">
+                <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" v-tooltip.top="'Détails'" @click="viewCategorie(data)" />
+                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editCategorie(data)" />
+                <Button 
+                  :icon="data.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
+                  :class="['p-button-text p-button-rounded', data.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
+                  v-tooltip.top="data.statut === 'archive' ? 'Désarchiver' : 'Supprimer / Archiver'"
+                  @click="handleDeleteOrArchive(data)"
+                />
               </div>
-            </div>
+            </template>
+          </Column>
+        </DataTable>
 
-            <h3 class="category-name">{{ categorie.nom }}</h3>
-            <p class="category-desc">{{ categorie.description || 'Aucune description fournie' }}</p>
-
-            <div class="card-footer">
-              <div class="equip-badge" @click="viewCategorie(categorie)">
-                <span class="count">{{ categorie.nombre_equipements || 0 }}</span>
-                <span class="label">Équipements</span>
-              </div>
-              <Button icon="pi pi-chevron-right" class="p-button-text p-button-rounded"
-                @click="viewCategorie(categorie)" />
-            </div>
-          </div>
+        <!-- Vue vide -->
+        <div v-else class="empty-state animate-in">
+          <i class="pi pi-folder-open"></i>
+          <h3>Aucune catégorie trouvée</h3>
+          <p>Commencez par créer une catégorie pour organiser votre matériel.</p>
+          <Button label="Créer ma première catégorie" icon="pi pi-plus" @click="openCreateDialog" class="p-button-raised mt-3" />
         </div>
       </div>
 
@@ -263,6 +287,10 @@ import Badge from 'primevue/badge'
 import Paginator from 'primevue/paginator'
 import InputNumber from 'primevue/inputnumber'
 import Dropdown from 'primevue/dropdown'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Tag from 'primevue/tag'
+import Tooltip from 'primevue/tooltip'
 
 // Stores
 import { useCategorieStore } from '@/stores/categorieStore'
@@ -274,6 +302,7 @@ const categorieStore = useCategorieStore()
 
 const pageContainer = ref(null)
 const searchTerm = ref('')
+const statusFilter = ref('actif')
 const showWithEquipementsOnly = ref(false)
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
@@ -281,6 +310,13 @@ const showDetailsDialog = ref(false)
 const editingCategorie = ref(null)
 const selectedCategorie = ref(null)
 const categorieToDelete = ref(null)
+
+const statusOptions = [
+  { label: 'Actif', value: 'actif' },
+  { label: 'Inactif', value: 'inactif' },
+  { label: 'Archivé', value: 'archive' },
+  { label: 'Tous', value: '' }
+]
 
 const attrTypes = [
   { label: 'Texte', value: 'texte' },
@@ -316,8 +352,27 @@ const removeAttribute = (index) => {
 const handleSearch = () => {
   categorieStore.fetchCategories({ 
     search: searchTerm.value, 
+    statut: statusFilter.value,
     with_equipements_only: showWithEquipementsOnly.value 
   })
+}
+
+const getStatusLabel = (statut) => {
+  const options = {
+    'actif': 'Actif',
+    'inactif': 'Inactif',
+    'archive': 'Archivé'
+  }
+  return options[statut] || statut
+}
+
+const getStatusSeverity = (statut) => {
+  const options = {
+    'actif': 'success',
+    'inactif': 'warning',
+    'archive': 'danger'
+  }
+  return options[statut] || 'info'
 }
 
 const toggleEquipementsFilter = (val) => {
@@ -329,6 +384,7 @@ const onPageChange = (event) => {
   categorieStore.fetchCategories({ 
     page: event.page + 1,
     search: searchTerm.value,
+    statut: statusFilter.value,
     with_equipements_only: showWithEquipementsOnly.value
   })
 }
@@ -390,6 +446,34 @@ const addEquipementToCategory = (categorie) => {
   })
 }
 
+const handleDeleteOrArchive = async (categorie) => {
+  if (categorie.statut === 'archive') {
+    // Désarchiver
+    try {
+      await categorieStore.updateCategorie(categorie.id, { statut: 'actif' })
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie désarchivée', life: 3000 })
+    } catch (err) {
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de désarchiver', life: 3000 })
+    }
+    return
+  }
+
+  if (categorie.nombre_equipements > 0) {
+    // Archiver car équipements liés
+    if (confirm(`Cette catégorie contient ${categorie.nombre_equipements} équipements. Elle ne peut pas être supprimée, mais elle peut être archivée. Voulez-vous l'archiver ?`)) {
+      try {
+        await categorieStore.updateCategorie(categorie.id, { statut: 'archive' })
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie archivée', life: 3000 })
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible d\'archiver', life: 3000 })
+      }
+    }
+  } else {
+    // Supprimer car pas d'équipements
+    confirmDelete(categorie)
+  }
+}
+
 const confirmDelete = (categorie) => {
   categorieToDelete.value = categorie
   showDeleteDialog.value = true
@@ -420,19 +504,116 @@ onMounted(() => {
 .categories-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .title-with-icon { display: flex; align-items: center; gap: 1rem; i { font-size: 2rem; color: #10b981; } h1 { margin: 0; font-size: 1.8rem; } }
-.filters-section { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; }
+
+.filters-section { 
+  display: flex; 
+  justify-content: space-between;
+  gap: 1.5rem; 
+  margin-bottom: 2rem; 
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
 .search-container { flex: 1; }
 .modern-input { width: 100%; border-radius: 12px; }
-.filter-pills { display: flex; gap: 0.5rem; .pill { padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid #e2e8f0; background: white; cursor: pointer; &.active { background: #10b981; color: white; border-color: #10b981; } } }
-.categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-.category-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; &:hover { transform: translateY(-5px); } }
-.card-content { padding: 1.5rem; }
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-.category-icon-bg { width: 48px; height: 48px; background: #ecfdf5; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #10b981; .cat-code { font-weight: 800; font-size: 0.8rem; } }
-.category-name { margin: 0 0 0.5rem 0; font-size: 1.2rem; }
-.category-desc { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; height: 3rem; overflow: hidden; }
-.card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 1rem; }
-.equip-badge { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; .count { background: #f1f5f9; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; } .label { font-size: 0.8rem; color: #64748b; } }
+
+.filter-groups {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-dropdown {
+  width: 150px;
+  border-radius: 12px;
+}
+
+.filter-pills { 
+  display: flex; 
+  gap: 0.5rem; 
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 14px;
+  
+  .pill { 
+    padding: 0.5rem 1rem; 
+    border-radius: 11px; 
+    border: none;
+    background: transparent; 
+    cursor: pointer; 
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #64748b;
+    transition: all 0.2s;
+    
+    &.active { 
+      background: white; 
+      color: #3b82f6; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    } 
+  } 
+}
+
+.categories-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.modern-table {
+  :deep(.p-datatable-thead > tr > th) {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1.25rem 1rem;
+    border: none;
+  }
+  
+  :deep(.p-datatable-tbody > tr) {
+    transition: background 0.2s;
+    &:hover { background: #f1f5f9; }
+  }
+  
+  :deep(.p-datatable-tbody > tr > td) {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.cat-icon-small {
+  width: 36px;
+  height: 36px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slug-badge {
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-family: monospace;
+  color: #475569;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: #64748b;
+  
+  i { font-size: 4rem; margin-bottom: 1.5rem; color: #cbd5e1; }
+  h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1e293b; }
+}
+
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .detail-item { label { display: block; font-size: 0.8rem; color: #94a3b8; } span { font-weight: 600; } }
 .detail-cat-icon { width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; }

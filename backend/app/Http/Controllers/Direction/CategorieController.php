@@ -7,6 +7,7 @@ use App\Models\Categorie;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class CategorieController extends Controller
 {
@@ -20,6 +21,10 @@ class CategorieController extends Controller
 
             if ($request->filled('search')) {
                 $query->search($request->search);
+            }
+
+            if ($request->filled('statut')) {
+                $query->byStatut($request->statut);
             }
 
             if ($request->boolean('with_equipements_only')) {
@@ -63,12 +68,18 @@ class CategorieController extends Controller
             $validated = $request->validate([
                 'nom' => 'required|string|max:255|unique:categories,nom',
                 'code' => 'nullable|string|max:50|unique:categories,code',
+                'slug' => 'nullable|string|max:255|unique:categories,slug',
                 'description' => 'nullable|string|max:1000',
+                'statut' => 'nullable|string|in:actif,inactif,archive',
                 'parent_id' => 'nullable|exists:categories,id',
                 'frequence_maintenance' => 'nullable|integer|min:1',
                 'duree_vie' => 'nullable|integer|min:1',
                 'attributs_personnalises' => 'nullable|array',
             ]);
+
+            if (!isset($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['nom']);
+            }
 
             $categorie = Categorie::create($validated);
 
@@ -104,12 +115,18 @@ class CategorieController extends Controller
             $validated = $request->validate([
                 'nom' => 'required|string|max:255|unique:categories,nom,' . $categorie->id,
                 'code' => 'nullable|string|max:50|unique:categories,code,' . $categorie->id,
+                'slug' => 'nullable|string|max:255|unique:categories,slug,' . $categorie->id,
                 'description' => 'nullable|string|max:1000',
+                'statut' => 'nullable|string|in:actif,inactif,archive',
                 'parent_id' => 'nullable|exists:categories,id',
                 'frequence_maintenance' => 'nullable|integer|min:1',
                 'duree_vie' => 'nullable|integer|min:1',
                 'attributs_personnalises' => 'nullable|array',
             ]);
+
+            if (isset($validated['nom']) && !isset($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['nom']);
+            }
 
             $categorie->update($validated);
 

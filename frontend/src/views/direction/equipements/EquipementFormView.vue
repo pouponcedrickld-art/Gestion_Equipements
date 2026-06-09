@@ -21,16 +21,16 @@
                 <!-- Informations de base -->
                 <div class="col-12 md:col-6">
                   <div class="field">
-                    <label class="font-bold">Nom de l'équipement *</label>
-                    <InputText v-model="form.nom" :class="{ 'p-invalid': errors.nom }" placeholder="Ex: Ordinateur HP..." />
+                    <label class="font-bold">Désignation / Nom *</label>
+                    <InputText v-model="form.nom" :class="{ 'p-invalid': errors.nom }" placeholder="Ex: ThinkPad X1 Carbon" />
                     <small class="p-error" v-if="errors.nom">{{ errors.nom[0] }}</small>
                   </div>
                 </div>
 
                 <div class="col-12 md:col-6">
                   <div class="field">
-                    <label class="font-bold">Numéro de Série *</label>
-                    <InputText v-model="form.numero_serie" :class="{ 'p-invalid': errors.numero_serie }" placeholder="S/N unique" />
+                    <label class="font-bold">Numéro de Série Fabricant *</label>
+                    <InputText v-model="form.numero_serie" :class="{ 'p-invalid': errors.numero_serie }" placeholder="S/N unique du constructeur" />
                     <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
                   </div>
                 </div>
@@ -43,7 +43,7 @@
                       :options="categories" 
                       optionLabel="nom" 
                       optionValue="id" 
-                      placeholder="Choisir une catégorie"
+                      placeholder="Sélectionner une catégorie"
                       :class="{ 'p-invalid': errors.categorie_id }"
                       filter
                     />
@@ -52,17 +52,55 @@
 
                 <div class="col-12 md:col-6">
                   <div class="field">
-                    <label class="font-bold">État actuel *</label>
+                    <label class="font-bold">Marque / Modèle</label>
+                    <div class="flex gap-2">
+                      <InputText v-model="form.marque" placeholder="Marque" class="flex-1" />
+                      <InputText v-model="form.modele" placeholder="Modèle" class="flex-1" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label class="font-bold">Code d'Inventaire Interne</label>
+                    <InputText v-model="form.code_inventaire" placeholder="Ex: EQ-2026-001" />
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label class="font-bold">Statut Initial *</label>
                     <Dropdown v-model="form.etat" :options="etatOptions" optionLabel="label" optionValue="value" />
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold">Date d'acquisition</label>
+                    <Calendar v-model="form.date_acquisition" dateFormat="dd/mm/yy" showIcon />
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold">Prix d'achat</label>
+                    <InputNumber v-model="form.prix_achat" mode="currency" currency="XOF" locale="fr-FR" />
+                  </div>
+                </div>
+
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold">Emplacement / Localisation</label>
+                    <InputText v-model="form.localisation" placeholder="Ex: Bureau 302" />
                   </div>
                 </div>
 
                 <!-- Attributs Spécifiques (Genres) -->
                 <div v-if="selectedCategoryAttributes.length > 0" class="col-12">
-                  <div class="specific-attrs-box p-4 border-round bg-blue-50 border-1 border-blue-100 mb-4">
+                  <div class="specific-attrs-box p-4 border-round bg-blue-50 border-1 border-blue-100 mb-4 mt-2">
                     <h3 class="text-blue-800 mt-0 mb-3 flex align-items-center gap-2">
                       <i class="pi pi-list"></i>
-                      Détails pour {{ selectedCategoryName }}
+                      Caractéristiques techniques pour {{ selectedCategoryName }}:
                     </h3>
                     <div class="grid">
                       <div v-for="attr in selectedCategoryAttributes" :key="attr.nom" class="col-12 md:col-4">
@@ -83,40 +121,17 @@
                   </div>
                 </div>
 
-                <!-- Autres infos importantes -->
-                <div class="col-12 md:col-6">
-                  <div class="field">
-                    <label class="font-bold">Localisation</label>
-                    <InputText v-model="form.localisation" placeholder="Bâtiment, bureau..." />
-                  </div>
-                </div>
-
-                <div class="col-12 md:col-6">
-                  <div class="field">
-                    <label class="font-bold">Responsable</label>
-                    <Dropdown 
-                      v-model="form.responsable_id" 
-                      :options="users" 
-                      optionLabel="name" 
-                      optionValue="id" 
-                      placeholder="Assigner à..."
-                      filter
-                      showClear
-                    />
-                  </div>
-                </div>
-
                 <div class="col-12">
                   <div class="field">
-                    <label class="font-bold">Photo de l'équipement</label>
+                    <label class="font-bold">Photo du matériel</label>
                     <div class="flex align-items-center gap-4">
                       <div class="photo-preview-small" v-if="photoPreview">
-                        <img :src="photoPreview" alt="Aperçu" class="w-6rem h-6rem border-round shadow-1 object-cover" />
+                        <img :src="photoPreview" alt="Aperçu" class="w-8rem h-8rem border-round shadow-1 object-cover" />
                         <Button icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text -mt-2 -ml-2" @click="removePhoto" />
                       </div>
                       <div class="upload-btn-wrapper">
                         <input type="file" @change="handleFileChange" accept="image/*" class="hidden" id="photo-input" />
-                        <label for="photo-input" class="p-button p-component p-button-outlined">
+                        <label for="photo-input" class="p-button p-component p-button-outlined cursor-pointer">
                           <i class="pi pi-camera mr-2"></i>
                           {{ photoPreview ? 'Changer la photo' : 'Prendre/Ajouter une photo' }}
                         </label>

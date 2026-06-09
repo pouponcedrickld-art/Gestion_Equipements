@@ -151,20 +151,22 @@ class Equipement extends Model
         return $query->where('agence_actuelle_id', $agenceId);
     }
 
-    /**
-     * Scope : Filtrer par statut global
-     */
-    public function scopeByStatut($query, $statut)
+    public function scopeSearch($query, $term)
     {
-        return $query->where('statut_global', $statut);
+        return $query->where(function($q) use ($term) {
+            $q->where('nom', 'like', '%' . $term . '%')
+              ->orWhere('numero_serie', 'like', '%' . $term . '%')
+              ->orWhere('code_inventaire', 'like', '%' . $term . '%')
+              ->orWhere('reference', 'like', '%' . $term . '%');
+        });
     }
 
     /**
-     * Scope : Filtrer par état
+     * Scope : Filtrer par statut (pastille couleur)
      */
-    public function scopeByEtat($query, $etat)
+    public function scopeByStatut($query, $statut)
     {
-        return $query->where('etat', $etat);
+        return $query->where('etat', $statut);
     }
 
     /**
@@ -173,21 +175,6 @@ class Equipement extends Model
     public function scopeByCategorie($query, $categorieId)
     {
         return $query->where('categorie_id', $categorieId);
-    }
-
-    /**
-     * Scope : Recherche multi-critères
-     */
-    public function scopeSearch($query, $term)
-    {
-        return $query->where(function($q) use ($term) {
-            $q->where('reference', 'like', '%' . $term . '%')
-              ->orWhere('numero_serie', 'like', '%' . $term . '%')
-              ->orWhere('imei', 'like', '%' . $term . '%')
-              ->orWhere('code_inventaire', 'like', '%' . $term . '%')
-              ->orWhere('marque', 'like', '%' . $term . '%')
-              ->orWhere('modele', 'like', '%' . $term . '%');
-        });
     }
 
     /**
