@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ['email' => 'cheflome@gestpark.local'],
             [
                 'name' => 'Chef Agence Lomé',
-                'password' => bcrypt('password123'),
+                'password' => bcrypt(' '),
                 'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]

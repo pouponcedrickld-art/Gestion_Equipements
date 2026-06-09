@@ -81,8 +81,19 @@
               </div>
             </div>
  
-            <div class="field">
-              <label class="font-bold text-sm text-blue-700">Quantité à créer</label>
+            <div class="field mb-3">
+              <label class="font-bold text-sm">Quantité</label>
+              <InputNumber
+                v-model="form.quantite"
+                :min="1"
+                showButtons
+                placeholder="Nombre d'unités"
+                class="w-full p-inputtext-sm"
+              />
+            </div>
+
+            <div class="field" v-if="!isEditing">
+              <label class="font-bold text-sm text-blue-700">Quantité à créer (Lots)</label>
               <InputNumber
                 v-model="form.quantite_a_creer"
                 :min="1"
@@ -321,6 +332,7 @@ const form = ref({
   prix_achat: null,
   photo: null,
   specifications: {},
+  quantite: 1,
   quantite_a_creer: 1
 })
 
@@ -423,6 +435,7 @@ onMounted(async () => {
         responsable_id: equipement.responsable_id,
         photo: null,
         specifications: equipement.specifications || {},
+        quantite: equipement.quantite || 1,
         quantite_a_creer: 1
       }
       if (equipement.photo) {

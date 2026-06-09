@@ -29,7 +29,7 @@ class DemandeAgenceController extends Controller
     {
         $request->validate([
             'decision' => 'required|in:Approuver,Refuser,Partiel',
-            'quantite_validee' => 'required_if:decision,Approuver,Partiel|integer|min:0',
+            'quantite_validee' => 'required_if:decision,Approuver,Partiel|integer|min:1',
             'observations' => 'required_if:decision,Refuser|string|nullable',
         ]);
 
