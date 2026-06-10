@@ -1,18 +1,20 @@
 <?php
 
+// database/seeders/UserSeeder.php
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Agence;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer les agences pour l'assignation
-        $agenceLome = \App\Models\Agence::where('nom', 'Agence Lomé-Centre')->first();
+        $agenceLome = Agence::where('nom', 'Agence Lomé-Centre')->first();
+        $agenceKara = Agence::where('nom', 'Agence Kara')->first();
+        $agenceSokode = Agence::where('nom', 'Agence Sokodé')->first();
 
-        // Gestionnaire Stock Général
         $gestionnaireGeneral = User::updateOrCreate(
             ['email' => 'gestionnaire@gestpark.local'],
             [
@@ -23,7 +25,6 @@ class UserSeeder extends Seeder
         );
         $gestionnaireGeneral->syncRoles(['gestionnaire_stock_general']);
 
-        // Chef d'Agence Lomé
         $chefLome = User::updateOrCreate(
             ['email' => 'cheflome@gestpark.local'],
             [
@@ -35,7 +36,6 @@ class UserSeeder extends Seeder
         );
         $chefLome->syncRoles(['chef_agence']);
 
-        // Gestionnaire Stock Lomé
         $gestionnaireLome = User::updateOrCreate(
             ['email' => 'stocklome@gestpark.local'],
             [
@@ -47,27 +47,38 @@ class UserSeeder extends Seeder
         );
         $gestionnaireLome->syncRoles(['gestionnaire_stock']);
 
-        // Technicien
         $technicien = User::updateOrCreate(
             ['email' => 'technicien@gestpark.local'],
             [
                 'name' => 'Technicien Maintenance',
                 'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
         );
         $technicien->syncRoles(['technicien_maintenance']);
 
-        // Agent
         $agent = User::updateOrCreate(
             ['email' => 'agent@gestpark.local'],
             [
                 'name' => 'Agent Terrain',
                 'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
         );
         $agent->syncRoles(['agent']);
+
+        $chefKara = User::updateOrCreate(
+            ['email' => 'chefkara@gestpark.local'],
+            [
+                'name' => 'Chef Agence Kara',
+                'password' => bcrypt('password123'),
+                'agence_id' => $agenceKara?->id,
+                'email_verified_at' => now(),
+            ]
+        );
+        $chefKara->syncRoles(['chef_agence']);
 
         echo "✅ Utilisateurs de test créés ou mis à jour avec succès !\n";
     }

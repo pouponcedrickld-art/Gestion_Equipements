@@ -1,5 +1,6 @@
 <?php
 
+// database/seeders/ConsommableSeeder.php
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -10,16 +11,14 @@ class ConsommableSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer quelques équipements pour associer des consommables
         $equipements = Equipement::all();
-        
+
         if ($equipements->isEmpty()) {
             echo "⚠️ Aucun équipement trouvé. Exécutez d'abord EquipementSeeder.\n";
             return;
         }
 
         $consommables = [
-            // Consommables pour PDA
             [
                 'nom' => 'Batterie MC3300 Standard',
                 'type' => 'batterie',
@@ -44,7 +43,6 @@ class ConsommableSeeder extends Seeder
                 'equipement_id' => $equipements->where('reference', 'PDA-001')->first()->id ?? $equipements->first()->id,
                 'quantite' => 1,
             ],
-            // Consommables pour Smartphone
             [
                 'nom' => 'Batterie Cat S62 Pro',
                 'type' => 'batterie',
@@ -63,7 +61,6 @@ class ConsommableSeeder extends Seeder
                 'equipement_id' => $equipements->where('reference', 'SPH-001')->first()->id ?? $equipements->skip(1)->first()->id,
                 'quantite' => 2,
             ],
-            // Consommables pour Tablette
             [
                 'nom' => 'Batterie ET51 Extended',
                 'type' => 'batterie',
@@ -82,7 +79,6 @@ class ConsommableSeeder extends Seeder
                 'equipement_id' => $equipements->where('reference', 'TAB-001')->first()->id ?? $equipements->skip(2)->first()->id,
                 'quantite' => 1,
             ],
-            // Consommables génériques
             [
                 'nom' => 'Câble USB-A vers micro-USB',
                 'type' => 'câble',
