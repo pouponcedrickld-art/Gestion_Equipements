@@ -287,6 +287,16 @@ class Equipement extends Model
     }
 
     /**
+     * Marquer l'équipement en panne
+     * 
+     * @return void
+     */
+    public function marquerEnPanne(): void
+    {
+        $this->update(['statut_global' => 'en_panne']);
+    }
+
+    /**
      * Vérifier si l'équipement est disponible pour affectation
      */
     public function isDisponiblePourAffectation()

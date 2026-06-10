@@ -41,10 +41,7 @@
           <i class="pi pi-bars"></i>
         </button>
         <h1>{{ pageTitle }}</h1>
-        <div class="notifications">
-          <i class="pi pi-bell" @click="$router.push('/notifications')"></i>
-          <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
-        </div>
+        <NotificationCenter />
       </header>
       
       <div class="content">
@@ -59,13 +56,13 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { getMenuItems } from '@/utils/permissions'
+import NotificationCenter from '@/components/notifications/NotificationCenter.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
 const sidebarCollapsed = ref(false)
-const unreadCount = ref(0)
 
 const menuItems = computed(() => getMenuItems())
 
