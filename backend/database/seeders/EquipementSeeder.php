@@ -14,7 +14,6 @@ class EquipementSeeder extends Seeder
     {
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
-        
         $categories = Categorie::all();
 
         $equipements = [
@@ -31,7 +30,7 @@ class EquipementSeeder extends Seeder
                 'date_acquisition' => '2024-01-15',
                 'prix_achat' => 850.00,
                 'garantie_date_fin' => '2026-01-15',
-                'etat' => 'en_service',
+                'etat' => 'neuf',
                 'statut_global' => 'en_stock_general',
                 'localisation' => 'Stock Central',
                 'agence_proprietaire_id' => $agenceGenerale->id,
@@ -138,24 +137,28 @@ class EquipementSeeder extends Seeder
         ];
 
         foreach ($equipements as $equipementData) {
-            $equipement = Equipement::create($equipementData);
-            
-            Mouvement::create([
-                'equipement_id' => $equipement->id,
-                'type_mouvement' => 'creation',
-                'agent_id' => null,
-                'user_id' => 1,
-                'date_mouvement' => $equipement->date_acquisition,
-                'ancienne_valeur' => null,
-                'nouvelle_valeur' => json_encode([
-                    'etat' => $equipement->etat,
-                    'statut_global' => $equipement->statut_global,
-                    'agence_actuelle' => $equipement->agence_actuelle_id,
-                ]),
-                'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
-            ]);
+            $equipement = Equipement::updateOrCreate(
+                ['reference' => $equipementData['reference']],
+                $equipementData
+            );
+
+            Mouvement::updateOrCreate(
+                ['equipement_id' => $equipement->id, 'type_mouvement' => 'creation'],
+                [
+                    'agent_id' => null,
+                    'user_id' => 1,
+                    'date_mouvement' => $equipement->date_acquisition,
+                    'ancienne_valeur' => null,
+                    'nouvelle_valeur' => json_encode([
+                        'etat' => $equipement->etat,
+                        'statut_global' => $equipement->statut_global,
+                        'agence_actuelle' => $equipement->agence_actuelle_id,
+                    ]),
+                    'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
+                ]
+            );
         }
 
-        echo "✅ " . count($equipements) . " équipements de test créés avec mouvements initiaux !\n";
+        echo "✅ " . count($equipements) . " équipements de test créés/mis à jour avec mouvements initiaux !\n";
     }
 }

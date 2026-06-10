@@ -1,91 +1,87 @@
 <?php
 
+// database/seeders/AgentSeeder.php
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Agent;
+use App\Models\User;
+use App\Models\Agence;
 
 class AgentSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        $agenceLome = Agence::where('nom', 'Agence Lomé-Centre')->first();
+        $agenceKara = Agence::where('nom', 'Agence Kara')->first();
+
         $agents = [
             [
-                'matricule' => 'AG-2026-001',
-                'nom' => 'KOFFI',
-                'prenom' => 'Jean-Marc',
-                'telephone' => '+225 0707070701',
-                'email' => 'jm.koffi@agence.com',
+                'matricule' => 'AGT-001',
+                'nom' => 'Dupont',
+                'prenom' => 'Jean',
+                'telephone' => '+228 90 12 34 56',
+                'email' => 'jean.dupont@gestpark.tg',
                 'direction' => 'Opérations',
-                'service' => 'Logistique',
-                'poste' => 'Responsable Transport',
+                'service' => 'Terrain',
+                'poste' => 'Agent de collecte',
                 'statut' => 'actif',
+                'user_id' => User::where('email', 'agent@gestpark.local')->first()?->id,
             ],
             [
-                'matricule' => 'AG-2026-002',
-                'nom' => 'DIALLO',
-                'prenom' => 'Aminata',
-                'telephone' => '+225 0707070702',
-                'email' => 'a.diallo@agence.com',
-                'direction' => 'Finance',
-                'service' => 'Comptabilité',
-                'poste' => 'Comptable Senior',
+                'matricule' => 'AGT-002',
+                'nom' => 'Koffi',
+                'prenom' => 'Marie',
+                'telephone' => '+228 90 23 45 67',
+                'email' => 'marie.koffi@gestpark.tg',
+                'direction' => 'Opérations',
+                'service' => 'Terrain',
+                'poste' => 'Agent de saisie',
                 'statut' => 'actif',
+                'user_id' => null,
             ],
             [
-                'matricule' => 'AG-2026-003',
-                'nom' => 'TRAORE',
-                'prenom' => 'Bakary',
-                'telephone' => '+225 0707070703',
-                'email' => 'b.traore@agence.com',
-                'direction' => 'Informatique',
-                'service' => 'Support IT',
-                'poste' => 'Technicien Réseaux',
-                'statut' => 'actif',
-            ],
-            [
-                'matricule' => 'AG-2026-004',
-                'nom' => 'SYLLA',
-                'prenom' => 'Fatoumata',
-                'telephone' => '+225 0707070704',
-                'email' => 'f.sylla@agence.com',
-                'direction' => 'Ressources Humaines',
-                'service' => 'Paie',
-                'poste' => 'Gestionnaire RH',
-                'statut' => 'actif',
-            ],
-            [
-                'matricule' => 'AG-2026-005',
-                'nom' => 'YESSIA',
-                'prenom' => 'Marcel',
-                'telephone' => '+225 0707070705',
-                'email' => 'm.yessia@agence.com',
+                'matricule' => 'AGT-003',
+                'nom' => 'Amouzou',
+                'prenom' => 'Kossi',
+                'telephone' => '+228 90 34 56 78',
+                'email' => 'kossi.amouzou@gestpark.tg',
                 'direction' => 'Technique',
                 'service' => 'Maintenance',
-                'poste' => 'Ingénieur Maintenance',
+                'poste' => 'Technicien terrain',
                 'statut' => 'actif',
+                'user_id' => User::where('email', 'technicien@gestpark.local')->first()?->id,
             ],
             [
-                'matricule' => 'AG-2026-006',
-                'nom' => 'OUEDRAOGO',
-                'prenom' => 'Idrissa',
-                'telephone' => '+225 0707070706',
-                'email' => 'i.ouedraogo@agence.com',
-                'direction' => 'Commerciale',
-                'service' => 'Ventes',
-                'poste' => 'Agent de Terrain',
+                'matricule' => 'AGT-004',
+                'nom' => 'Bodjona',
+                'prenom' => 'Afi',
+                'telephone' => '+228 90 45 67 89',
+                'email' => 'afi.bodjona@gestpark.tg',
+                'direction' => 'Opérations',
+                'service' => 'Terrain',
+                'poste' => 'Agent de collecte',
+                'statut' => 'inactif',
+                'user_id' => null,
+            ],
+            [
+                'matricule' => 'AGT-005',
+                'nom' => 'Tchala',
+                'prenom' => 'Kodjo',
+                'telephone' => '+228 90 56 78 90',
+                'email' => 'kodjo.tchala@gestpark.tg',
+                'direction' => 'Opérations',
+                'service' => 'Terrain',
+                'poste' => 'Superviseur terrain',
                 'statut' => 'actif',
+                'user_id' => null,
             ],
         ];
 
         foreach ($agents as $agentData) {
-            \App\Models\Agent::updateOrCreate(
-                ['matricule' => $agentData['matricule']],
-                $agentData
-            );
+            Agent::updateOrCreate(['matricule' => $agentData['matricule']], $agentData);
         }
+
+        echo "✅ " . count($agents) . " agents créés avec succès !\n";
     }
 }
