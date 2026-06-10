@@ -55,32 +55,32 @@ const routes = [
   {
     path: '/equipements',
     name: 'Equipements',
-    component: () => import('@/views/direction/equipements/EquipementsView.vue'),
+    component: () => import('@/views/shared/EquipementsRouter.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/equipements/nouveau',
     name: 'NouvelEquipement',
     component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
     path: '/equipements/:id',
     name: 'EquipementDetail',
     component: () => import('@/views/direction/equipements/EquipementDetailView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
     path: '/equipements/:id/modifier',
     name: 'ModifierEquipement',
     component: () => import('@/views/direction/equipements/EquipementFormView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
     path: '/equipements/scan',
     name: 'ScanQR',
     component: () => import('@/views/direction/equipements/ScanQRView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
         path: '/consommables',

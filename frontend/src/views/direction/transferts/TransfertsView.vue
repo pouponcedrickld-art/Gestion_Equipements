@@ -59,8 +59,8 @@
         </div>
       </div>
 
-      <!-- Statistiques Glassmorphism -->
-      <div class="stats-container animate-in">
+      <!-- Statistiques Glassmorphism (commenté sur demande) -->
+      <!-- <div class="stats-container animate-in">
         <div class="stat-glass-card warning">
           <div class="stat-icon-box"><i class="pi pi-clock"></i></div>
           <div class="stat-details">
@@ -82,7 +82,7 @@
             <span class="label">Terminés</span>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Filtres et Recherche -->
       <div class="filters-bar animate-in">
@@ -221,7 +221,12 @@ const filteredTransferts = computed(() => {
   let list = transfertStore.transferts
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    list = list.filter(t => t.numero_transfert?.toLowerCase().includes(q) || t.equipement?.marque?.toLowerCase().includes(q))
+    list = list.filter(t => 
+      t.numero_transfert?.toLowerCase().includes(q) || 
+      t.equipement?.marque?.toLowerCase().includes(q) ||
+      t.agence_origine?.nom?.toLowerCase().includes(q) ||
+      t.agence_destination?.nom?.toLowerCase().includes(q)
+    )
   }
   if (selectedStatut.value) {
     list = list.filter(t => t.statut === selectedStatut.value)
@@ -230,8 +235,6 @@ const filteredTransferts = computed(() => {
 })
 
 const statutOptions = [
-  { label: 'Demande', value: 'demande' },
-  { label: 'Approuvé', value: 'approuve' },
   { label: 'Expédié', value: 'expedie' },
   { label: 'Reçu', value: 'recu' },
   { label: 'Refusé', value: 'refuse' }
