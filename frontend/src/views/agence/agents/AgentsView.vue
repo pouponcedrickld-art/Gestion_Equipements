@@ -235,6 +235,7 @@ const onSaved = () => { showForm.value = false; editingAgent.value = null; agent
   align-items: center;
   justify-content: center;
   z-index: 100;
+  padding: 20px;
 }
 
 .loading {

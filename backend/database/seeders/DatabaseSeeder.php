@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AgenceSeeder::class,
             UserSeeder::class,
+            AgentSeeder::class,
             CategorieSeeder::class,
             EquipementSeeder::class,
             MaintenanceSeeder::class,

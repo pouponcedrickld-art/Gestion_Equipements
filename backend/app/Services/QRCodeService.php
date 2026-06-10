@@ -41,7 +41,7 @@ class QRCodeService
             ->errorCorrection('H')
             ->generate($qrData);
         
-        Storage::put($this->qrCodePath . '/' . $filename, $qrCode);
+        Storage::disk('public')->put('qr-codes/' . $filename, $qrCode);
 
         return $filename;
     }
@@ -63,8 +63,8 @@ class QRCodeService
 
     public function getUrlQRCode(string $filename): ?string
     {
-        if (Storage::exists($this->qrCodePath . '/' . $filename)) {
-            return Storage::url($this->qrCodePath . '/' . $filename);
+        if (Storage::disk('public')->exists('qr-codes/' . $filename)) {
+            return Storage::disk('public')->url('qr-codes/' . $filename);
         }
         return null;
     }

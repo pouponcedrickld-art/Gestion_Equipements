@@ -55,9 +55,30 @@ export const useEquipementStore = defineStore('equipement', {
       }
     },
 
-    async fetchEquipementById(id) {
-      this.loading = true
-      this.error = null
+  /**
+   * Charger un équipement spécifique avec ses détails complets
+   */
+  async function fetchEquipement(id) {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await equipementApi.show(id)
+      
+      if (response.data.success) {
+        currentEquipement.value = response.data.data
+        return currentEquipement.value
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Erreur fetchEquipement:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
 
       try {
         const response = await equipementApi.getOne(id)

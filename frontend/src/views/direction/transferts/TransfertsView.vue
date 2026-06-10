@@ -26,6 +26,39 @@
         </div>
       </div>
 
+      <!-- Section des demandes approuvées à transférer -->
+      <div class="approved-demandes-section animate-in" v-if="approvedDemandes.length > 0">
+        <div class="section-header">
+          <i class="pi pi-verified"></i>
+          <h3>Demandes de matériel approuvées à transférer</h3>
+          <span class="count-badge">{{ approvedDemandes.length }}</span>
+        </div>
+        
+        <div class="demandes-horizontal-scroll">
+          <div v-for="demande in approvedDemandes" :key="demande.id" class="approved-demande-card">
+            <div class="demande-header">
+              <span class="agence-name">{{ demande.agence?.nom }}</span>
+              <span class="date">{{ formatDate(demande.created_at) }}</span>
+            </div>
+            <div class="demande-body">
+              <strong>{{ demande.equipement?.nom }}</strong>
+              <div class="demande-meta">
+                <span>Qté: {{ demande.quantite }}</span>
+                <span class="urgency" :class="demande.urgence.toLowerCase()">{{ demande.urgence }}</span>
+              </div>
+            </div>
+            <div class="demande-footer">
+              <Button 
+                label="Lancer le transfert" 
+                icon="pi pi-external-link" 
+                class="p-button-sm p-button-outlined"
+                @click="createTransfertFromDemande(demande)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Statistiques Glassmorphism -->
       <div class="stats-container animate-in">
         <div class="stat-glass-card warning">
@@ -129,6 +162,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTransfertStore } from '@/stores/transfertStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
+import transfertApi from '@/api/transfertApi' // Ajout de l'API transfert
 import gsap from 'gsap'
 
 // PrimeVue Components
@@ -142,8 +176,42 @@ const toast = useToast()
 const transfertStore = useTransfertStore()
 
 const loading = ref(false)
+const loadingApprovedDemandes = ref(false) // État chargement demandes
+const approvedDemandes = ref([]) // Liste des demandes approuvées
 const selectedStatut = ref(null)
 const searchQuery = ref('')
+
+// Récupérer les demandes approuvées prêtes pour transfert
+const fetchApprovedDemandes = async () => {
+  loadingApprovedDemandes.value = true
+  try {
+    const res = await transfertApi.getDemandesApprouvees()
+    if (res.data && res.data.success) {
+      approvedDemandes.value = res.data.data
+    }
+  } catch (err) {
+    console.error('Erreur lors de la récupération des demandes approuvées', err)
+  } finally {
+    loadingApprovedDemandes.value = false
+  }
+}
+
+// Créer un transfert depuis une demande
+const createTransfertFromDemande = async (demande) => {
+  try {
+    const res = await transfertApi.creerDepuisDemande(demande.id)
+    if (res.data && res.data.success) {
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert généré avec succès' })
+      // Rafraîchir les données
+      await Promise.all([
+        fetchApprovedDemandes(),
+        transfertStore.fetchTransferts()
+      ])
+    }
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: err.response?.data?.message || 'Échec de la création du transfert' })
+  }
+}
 
 const transfertsEnAttente = computed(() => transfertStore.transfertsEnAttente)
 const transfertsEnTransit = computed(() => transfertStore.transfertsEnTransit)
@@ -192,9 +260,30 @@ const approveTransfert = async (trans) => {
   }
 }
 
+const shipTransfert = async (trans) => {
+  try {
+    await transfertStore.expedierTransfert(trans.id)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement expédié' })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'expédition' })
+  }
+}
+
+const receiveTransfert = async (trans) => {
+  try {
+    await transfertStore.recevoirTransfert(trans.id)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement reçu' })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la réception' })
+  }
+}
+
 onMounted(async () => {
   loading.value = true
-  await transfertStore.fetchTransferts()
+  await Promise.all([
+    transfertStore.fetchTransferts(),
+    fetchApprovedDemandes()
+  ])
   loading.value = false
   
   gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
@@ -217,6 +306,91 @@ onMounted(async () => {
   .subtitle { color: #64748b; }
 }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+
+/* Styles pour la section des demandes approuvées */
+.approved-demandes-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    color: #10b981;
+    
+    i { font-size: 1.2rem; }
+    h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+    .count-badge {
+      background: #10b981;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+  }
+}
+
+.demandes-horizontal-scroll {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+}
+
+.approved-demande-card {
+  min-width: 280px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+  
+  .demande-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+    .agence-name { font-weight: 700; color: #6366f1; font-size: 0.9rem; }
+    .date { color: #94a3b8; font-size: 0.75rem; }
+  }
+  
+  .demande-body {
+    margin-bottom: 1rem;
+    strong { display: block; font-size: 1rem; color: #1e293b; margin-bottom: 0.4rem; }
+    .demande-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      span { font-size: 0.85rem; color: #64748b; }
+      .urgency {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        &.basse { color: #10b981; }
+        &.moyenne { color: #f59e0b; }
+        &.haute { color: #ef4444; }
+      }
+    }
+  }
+  
+  .demande-footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
 
 .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
 .stat-glass-card {

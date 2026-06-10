@@ -52,5 +52,9 @@ export default {
 
     // Utilitaires
     getStatistiques: () => api.get('/transferts/statistiques'),
-    getOptions: () => api.get('/transferts/options')
+    getOptions: () => api.get('/transferts/options'),
+
+    // Demandes approuvées à transférer
+    getDemandesApprouvees: () => api.get('/transferts/demandes-approuvees'),
+    creerDepuisDemande: (demandeId) => api.post(`/transferts/creer-depuis-demande/${demandeId}`)
 }
