@@ -11,8 +11,8 @@ export const useEquipementStore = defineStore('equipement', {
 
   getters: {
     equipementsDisponibles: (state) => {
-      return state.equipements.filter(e => 
-        e.statut_global !== 'hors_service' && 
+      return state.equipements.filter(e =>
+        e.statut_global !== 'hors_service' &&
         e.etat === 'en_service'
       )
     },
@@ -29,7 +29,7 @@ export const useEquipementStore = defineStore('equipement', {
   actions: {
     async fetchEquipements(filters = {}) {
       const cacheKey = `all_${JSON.stringify(filters)}`
-      
+
       const cached = this.cache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
         this.equipements = cached.data
@@ -40,9 +40,9 @@ export const useEquipementStore = defineStore('equipement', {
       this.error = null
 
       try {
-        const response = await equipementApi.getAll(filters)
-        this.equipements = response.data || []
-        
+        const response = await equipementApi.index(filters)
+        this.equipements = response.data?.data || response.data || []
+
         this.cache.set(cacheKey, {
           data: this.equipements,
           timestamp: Date.now()
@@ -55,33 +55,12 @@ export const useEquipementStore = defineStore('equipement', {
       }
     },
 
-  /**
-   * Charger un équipement spécifique avec ses détails complets
-   */
-  async function fetchEquipement(id) {
-    loading.value = true
-    error.value = null
-    
-    try {
-      const response = await equipementApi.show(id)
-      
-      if (response.data.success) {
-        currentEquipement.value = response.data.data
-        return currentEquipement.value
-      } else {
-        throw new Error(response.data.message)
-      }
-    } catch (err) {
-      error.value = err.response?.data?.message || err.message
-      console.error('Erreur fetchEquipement:', err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
+    async fetchEquipementById(id) {
+      this.loading = true
+      this.error = null
 
       try {
-        const response = await equipementApi.getOne(id)
+        const response = await equipementApi.show(id)
         return response.data
       } catch (error) {
         this.error = error.response?.data?.message || 'Erreur lors du chargement de l\'équipement'
@@ -95,7 +74,7 @@ export const useEquipementStore = defineStore('equipement', {
     async createEquipement(data) {
       this.loading = true
       this.error = null
-      
+
       try {
         const formData = new FormData()
         Object.keys(data).forEach(key => {
@@ -112,7 +91,7 @@ export const useEquipementStore = defineStore('equipement', {
         })
 
         const response = await equipementApi.store(formData)
-        
+
         if (response.data.success) {
           const newEquipement = response.data.data
           if (Array.isArray(newEquipement)) {
@@ -136,11 +115,11 @@ export const useEquipementStore = defineStore('equipement', {
     async updateEquipement(id, data) {
       this.loading = true
       this.error = null
-      
+
       try {
         const formData = new FormData()
         formData.append('_method', 'PUT')
-        
+
         Object.keys(data).forEach(key => {
           const value = data[key]
           if (value !== null && value !== undefined) {
@@ -156,7 +135,7 @@ export const useEquipementStore = defineStore('equipement', {
         })
 
         const response = await equipementApi.update(id, formData)
-        
+
         if (response.data.success) {
           const updatedEquipement = response.data.data
           const index = this.equipements.findIndex(eq => eq.id === id)
@@ -179,10 +158,10 @@ export const useEquipementStore = defineStore('equipement', {
     async deleteEquipement(id) {
       this.loading = true
       this.error = null
-      
+
       try {
         const response = await equipementApi.destroy(id)
-        
+
         if (response.data.success) {
           this.equipements = this.equipements.filter(eq => eq.id !== id)
           return true
@@ -201,10 +180,10 @@ export const useEquipementStore = defineStore('equipement', {
     async generateQRCode(id) {
       this.loading = true
       this.error = null
-      
+
       try {
         const response = await equipementApi.generateQr(id)
-        
+
         if (response.data.success) {
           const index = this.equipements.findIndex(eq => eq.id === id)
           if (index !== -1) {

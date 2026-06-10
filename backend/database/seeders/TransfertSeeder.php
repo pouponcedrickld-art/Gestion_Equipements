@@ -12,20 +12,18 @@ class TransfertSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer les données nécessaires
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
         $equipements = Equipement::all();
         $gestionnaireGeneral = User::role('gestionnaire_stock_general')->first();
         $chefAgence = User::role('chef_agence')->first();
-        
+
         if (!$agenceGenerale || $sousAgences->isEmpty() || $equipements->isEmpty()) {
             echo "⚠️ Données manquantes. Exécutez d'abord AgenceSeeder, EquipementSeeder et UserSeeder.\n";
             return;
         }
 
         $transferts = [
-            // Transfert approuvé et expédié (prêt à être reçu)
             [
                 'equipement_id' => $equipements->where('reference', 'PC-001')->first()->id ?? $equipements->first()->id,
                 'agence_source_id' => $agenceGenerale->id,
@@ -40,7 +38,6 @@ class TransfertSeeder extends Seeder
                 'quantite' => 1,
                 'observations' => 'Ordinateur portable pour le responsable IT de Sokodé',
             ],
-            // Transfert en attente d'approbation
             [
                 'equipement_id' => $equipements->where('reference', 'SCN-001')->first()->id ?? $equipements->skip(1)->first()->id,
                 'agence_source_id' => $agenceGenerale->id,
@@ -55,7 +52,6 @@ class TransfertSeeder extends Seeder
                 'quantite' => 1,
                 'observations' => 'Scanner pour renforcer l\'équipement de l\'agence de Lomé',
             ],
-            // Transfert terminé (historique)
             [
                 'equipement_id' => $equipements->where('reference', 'PDA-002')->first()->id ?? $equipements->skip(2)->first()->id,
                 'agence_source_id' => $agenceGenerale->id,
@@ -70,7 +66,6 @@ class TransfertSeeder extends Seeder
                 'quantite' => 1,
                 'observations' => 'PDA pour agent terrain - Transfert effectué avec succès',
             ],
-            // Transfert interne entre sous-agences
             [
                 'equipement_id' => $equipements->where('reference', 'TAB-001')->first()->id ?? $equipements->skip(3)->first()->id,
                 'agence_source_id' => $sousAgences->where('ville', 'Lomé')->first()->id ?? $sousAgences->first()->id,
@@ -85,7 +80,6 @@ class TransfertSeeder extends Seeder
                 'quantite' => 1,
                 'observations' => 'Tablette transférée pour maintenance spécialisée à Kara',
             ],
-            // Transfert refusé (exemple de workflow)
             [
                 'equipement_id' => $equipements->first()->id,
                 'agence_source_id' => $agenceGenerale->id,

@@ -116,6 +116,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::patch('notifications/{id}/lu', [NotificationController::class, 'markAsRead']);
+    Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 
     // Rapports
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock|technicien_maintenance')->group(function () {
