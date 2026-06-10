@@ -29,7 +29,14 @@ class EquipementController extends Controller
                 'responsable:id,name'
             ]);
 
-            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+            // Scope selon rôle
+            if ($user->hasRole('agent')) {
+                // Agent ne voit que les équipements affectés à lui
+                $query->whereHas('affectations', function ($q) use ($user) {
+                    $q->where('agent_id', $user->id)->where('statut', 'active');
+                });
+            } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                // Chef d'agence, gestionnaire local, technicien: voit équipements de son agence
                 $query->byAgence($user->agence_id);
             }
 
@@ -114,24 +121,23 @@ class EquipementController extends Controller
         try {
             $user = $request->user();
             
+            // Vérifier la permission
+            if (!$user->can('equipements.create')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de créer des équipements.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
-                'reference' => 'nullable|string|max:255|unique:equipements,reference',
-                'numero_serie' => 'nullable|string|max:255|unique:equipements,numero_serie',
-                'imei' => 'nullable|string|max:255|unique:equipements,imei',
-                'code_inventaire' => 'nullable|string|max:255|unique:equipements,code_inventaire',
                 'marque' => 'nullable|string|max:255',
                 'modele' => 'nullable|string|max:255',
                 'categorie_id' => 'required|exists:categories,id',
-                'fournisseur' => 'nullable|string|max:255',
                 'date_acquisition' => 'nullable|date',
                 'prix_achat' => 'nullable|numeric|min:0',
-                'garantie_date_fin' => 'nullable|date|after_or_equal:date_acquisition',
                 'etat' => 'required|string|in:nouveau,actif,en_maintenance,hors_service,archive',
-                'localisation' => 'nullable|string|max:255',
-                'responsable_id' => 'nullable|exists:users,id',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'specifications' => 'nullable|string',
                 'quantite_a_creer' => 'nullable|integer|min:1|max:100',
                 'mode_enregistrement' => 'nullable|string|in:individuel,lot',
             ]);
@@ -163,21 +169,16 @@ class EquipementController extends Controller
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
                     'categorie_id' => $validated['categorie_id'],
-                    'fournisseur' => $validated['fournisseur'] ?? null,
                     'date_acquisition' => $validated['date_acquisition'] ?? null,
                     'prix_achat' => $validated['prix_achat'] ?? null,
-                    'garantie_date_fin' => $validated['garantie_date_fin'] ?? null,
                     'etat' => $validated['etat'],
-                    'localisation' => $validated['localisation'] ?? null,
-                    'responsable_id' => $validated['responsable_id'] ?? null,
                     'agence_proprietaire_id' => $agenceProprietaireId,
                     'agence_actuelle_id' => $agenceActuelleId,
                     'statut_global' => $this->mapStatut($validated['etat']),
                     'photo' => $photoPath,
                     'lot_reference' => $this->generateUniqueLotReference(),
-                    'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
-                    'reference' => $validated['reference'] ?? $this->generateUniqueReference(),
-                    'code_inventaire' => $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire(),
+                    'reference' => $this->generateUniqueReference(),
+                    'code_inventaire' => $this->generateUniqueCodeInventaire(),
                 ];
 
                 $equipement = Equipement::create($equipementData);
@@ -201,31 +202,17 @@ class EquipementController extends Controller
                         'marque' => $validated['marque'] ?? null,
                         'modele' => $validated['modele'] ?? null,
                         'categorie_id' => $validated['categorie_id'],
-                        'fournisseur' => $validated['fournisseur'] ?? null,
                         'date_acquisition' => $validated['date_acquisition'] ?? null,
                         'prix_achat' => $validated['prix_achat'] ?? null,
-                        'garantie_date_fin' => $validated['garantie_date_fin'] ?? null,
                         'etat' => $validated['etat'],
-                        'localisation' => $validated['localisation'] ?? null,
-                        'responsable_id' => $validated['responsable_id'] ?? null,
                         'agence_proprietaire_id' => $agenceProprietaireId,
                         'agence_actuelle_id' => $agenceActuelleId,
                         'statut_global' => $this->mapStatut($validated['etat']),
                         'photo' => $photoPath,
                         'lot_reference' => $lotReference,
-                        'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
+                        'reference' => $this->generateUniqueReference(),
+                        'code_inventaire' => $this->generateUniqueCodeInventaire(),
                     ];
-
-                    // Gestion des identifiants uniques
-                    if ($quantite === 1) {
-                        $equipementData['numero_serie'] = $validated['numero_serie'] ?? null;
-                        $equipementData['reference'] = $validated['reference'] ?? $this->generateUniqueReference();
-                        $equipementData['code_inventaire'] = $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire();
-                    } else {
-                        $equipementData['numero_serie'] = null;
-                        $equipementData['reference'] = $this->generateUniqueReference();
-                        $equipementData['code_inventaire'] = $this->generateUniqueCodeInventaire();
-                    }
 
                     $equipement = Equipement::create($equipementData);
                     
@@ -267,6 +254,24 @@ class EquipementController extends Controller
      */
     public function show(Equipement $equipement): JsonResponse
     {
+        $user = request()->user();
+        
+        // Vérifier l'accès
+        if ($user->hasRole('agent')) {
+            $canView = $equipement->affectations()->where('agent_id', $user->id)->where('statut', 'active')->exists();
+            if (!$canView) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de voir cet équipement.'
+                ], 403);
+            }
+        } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general']) && $equipement->agence_actuelle_id != $user->agence_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas la permission de voir cet équipement.'
+            ], 403);
+        }
+
         $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable', 'consommables', 'mouvements.user']);
         
         $relatedInLot = [];
@@ -291,6 +296,16 @@ class EquipementController extends Controller
     public function update(Request $request, Equipement $equipement): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('equipements.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de modifier des équipements.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
                 'quantite' => 'nullable|integer|min:1',
@@ -359,6 +374,14 @@ class EquipementController extends Controller
     {
         try {
             $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('equipements.delete')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de supprimer des équipements.'
+                ], 403);
+            }
             
             // On change le statut avant le soft delete pour garder la trace métier
             $equipement->update([

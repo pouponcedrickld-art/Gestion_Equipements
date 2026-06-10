@@ -20,6 +20,7 @@
         </div>
         <div class="header-actions">
           <Button 
+            v-if="canManageEquipements"
             label="Importer CSV" 
             icon="pi pi-upload" 
             class="p-button-outlined p-button-secondary action-btn mr-2"
@@ -32,6 +33,7 @@
             @click="$router.push('/equipements/scan')"
           />
           <Button 
+            v-if="canManageEquipements"
             label="Nouvel Équipement" 
             icon="pi pi-plus" 
             class="p-button-success p-button-raised action-btn"
@@ -141,7 +143,13 @@
           paginator
           :rowsPerPageOptions="[10, 20, 50]"
         >
-          <!-- ... colonnes existantes ... -->
+          <Column field="qr_code" header="QR" sortable>
+            <template #body="{ data }">
+              <img v-if="data.qr_code" :src="`${apiBaseUrl}/storage/${data.qr_code}`" alt="QR" class="qr-table-img" />
+              <span v-else class="text-gray-400 text-xs">N/A</span>
+            </template>
+          </Column>
+          
           <Column field="code_inventaire" header="Code Inventaire" sortable>
             <template #body="{ data }">
               <code class="code-badge">{{ data.code_inventaire }}</code>
@@ -166,17 +174,6 @@
             </template>
           </Column>
 
-          <Column field="numero_serie" header="N° Série Fabricant" sortable></Column>
-
-          <Column field="localisation" header="Emplacement" sortable>
-            <template #body="{ data }">
-              <div class="flex align-items-center gap-2">
-                <i class="pi pi-map-marker text-gray-400"></i>
-                <span>{{ data.localisation || 'Non défini' }}</span>
-              </div>
-            </template>
-          </Column>
-
           <Column field="etat" header="Statut" sortable>
             <template #body="{ data }">
               <div class="flex align-items-center gap-2">
@@ -192,9 +189,8 @@
             <template #body="{ data }">
               <div class="flex justify-content-end gap-1">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" v-tooltip.top="'Voir la fiche'" @click="viewDetails(data)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editEquipement(data)" />
-                <Button icon="pi pi-qrcode" class="p-button-text p-button-rounded p-button-secondary" v-tooltip.top="'Imprimer QR'" @click="showQRCode(data)" />
-                <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" v-tooltip.top="'Mettre au rebut'" @click="handleDelete(data)" />
+                <Button v-if="canManageEquipements" icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editEquipement(data)" />
+                <Button v-if="canManageEquipements" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" v-tooltip.top="'Mettre au rebut'" @click="handleDelete(data)" />
               </div>
             </template>
           </Column>
@@ -219,24 +215,19 @@
               <p class="card-subtitle">{{ eq.marque }} {{ eq.modele }}</p>
               
               <div class="card-info">
-                <div class="info-row">
+                <div class="info-row code-row">
                   <i class="pi pi-barcode"></i>
-                  <span>{{ eq.code_inventaire }}</span>
+                  <span class="code-inventaire">{{ eq.code_inventaire }}</span>
                 </div>
-                <div class="info-row" v-if="eq.numero_serie">
-                  <i class="pi pi-tag"></i>
-                  <span>{{ eq.numero_serie }}</span>
-                </div>
-                <div class="info-row">
-                  <i class="pi pi-map-marker"></i>
-                  <span>{{ eq.localisation || 'Non défini' }}</span>
+                <div v-if="eq.qr_code" class="qr-preview">
+                  <img :src="`${apiBaseUrl}/storage/${eq.qr_code}`" alt="QR Code" class="qr-img" />
                 </div>
               </div>
             </div>
             <div class="card-footer">
               <Button icon="pi pi-eye" class="p-button-text p-button-rounded" @click="viewDetails(eq)" v-tooltip.top="'Détails'" />
-              <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" @click="editEquipement(eq)" v-tooltip.top="'Modifier'" />
-              <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" @click="handleDelete(eq)" v-tooltip.top="'Supprimer'" />
+              <Button v-if="canManageEquipements" icon="pi pi-pencil" class="p-button-text p-button-rounded" @click="editEquipement(eq)" v-tooltip.top="'Modifier'" />
+              <Button v-if="canManageEquipements" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" @click="handleDelete(eq)" v-tooltip.top="'Supprimer'" />
             </div>
           </div>
         </div>
@@ -245,7 +236,7 @@
         <div v-else-if="equipementStore.equipements.length === 0" class="empty-state-grid">
           <i class="pi pi-box"></i>
           <p>Aucun équipement trouvé</p>
-          <Button label="Ajouter un équipement" icon="pi pi-plus" class="p-button-outlined" @click="$router.push('/equipements/ajouter')" />
+          <Button v-if="canManageEquipements" label="Ajouter un équipement" icon="pi pi-plus" class="p-button-outlined" @click="$router.push('/equipements/ajouter')" />
         </div>
       </div>
 
@@ -270,6 +261,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useEquipementStore } from '@/stores/equipementStore'
 import { useCategorieStore } from '@/stores/categorieStore'
+import { useAuthStore } from '@/stores/authStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import gsap from 'gsap'
 
@@ -288,6 +280,7 @@ const router = useRouter()
 const toast = useToast()
 const equipementStore = useEquipementStore()
 const categorieStore = useCategorieStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const searchQuery = ref('')
@@ -314,6 +307,7 @@ const statsAffectes = computed(() => equipementStore.equipements.filter(e => e.s
 const statsMaintenance = computed(() => equipementStore.equipements.filter(e => e.etat === 'en_maintenance').length)
 
 const categories = computed(() => categorieStore.categories)
+const canManageEquipements = computed(() => authStore.isSuperAdmin || authStore.isGestionnaireGeneral)
 
 const handleSearch = () => {
   equipementStore.fetchEquipements({
@@ -517,7 +511,8 @@ onMounted(async () => {
   .card-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
+    align-items: center;
 
     .info-row {
       display: flex;
@@ -527,6 +522,36 @@ onMounted(async () => {
       color: #475569;
       
       i { color: #94a3b8; width: 12px; font-size: 0.7rem; }
+
+      &.code-row {
+        font-weight: 700;
+        color: #1e293b;
+        padding: 0.25rem 0.5rem;
+        background: #f1f5f9;
+        border-radius: 6px;
+        width: 100%;
+        justify-content: center;
+        
+        .code-inventaire {
+          font-family: monospace;
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .qr-preview {
+      margin-top: 0.25rem;
+      background: white;
+      border: 1px solid #f1f5f9;
+      padding: 0.25rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      
+      .qr-img {
+        width: 60px;
+        height: 60px;
+        display: block;
+      }
     }
   }
 }
@@ -608,6 +633,15 @@ onMounted(async () => {
   font-family: monospace;
   color: #475569;
   font-weight: 600;
+}
+
+.qr-table-img {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #f1f5f9;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
 }
 
 .category-pill {

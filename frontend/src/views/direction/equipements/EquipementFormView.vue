@@ -106,37 +106,7 @@
               </div>
             </div>
           </div>
- 
-          <!-- Attribution -->
-          <div class="sidebar-card">
-            <div class="card-section-label">
-              <i class="pi pi-user"></i> Attribution
-            </div>
- 
-            <div class="field mb-3">
-              <label class="font-bold text-sm">Responsable</label>
-              <Dropdown
-                v-model="form.responsable_id"
-                :options="users"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Attribuer à..."
-                filter
-                showClear
-                class="w-full p-inputtext-sm"
-              />
-            </div>
- 
-            <div class="field">
-              <label class="font-bold text-sm">Localisation</label>
-              <InputText
-                v-model="form.localisation"
-                placeholder="Bureau / Site"
-                class="w-full p-inputtext-sm"
-              />
-            </div>
-          </div>
- 
+
         </aside>
  
         <!-- ─── CONTENU PRINCIPAL ─── -->
@@ -161,27 +131,16 @@
               </div>
  
               <div class="grid grid-tight">
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Marque</label>
                     <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" />
                   </div>
                 </div>
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Modèle</label>
                     <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" />
-                  </div>
-                </div>
-                <div class="col-12 md:col-4">
-                  <div class="field">
-                    <label class="font-bold text-sm">Numéro de série</label>
-                    <InputText
-                      v-model="form.numero_serie"
-                      :class="{ 'p-invalid': errors.numero_serie }"
-                      :placeholder="form.quantite_a_creer > 1 ? 'Auto' : 'S/N'"
-                      class="p-inputtext-sm"
-                    />
                   </div>
                 </div>
               </div>
@@ -192,14 +151,8 @@
               <div class="card-section-label">
                 <i class="pi pi-clipboard"></i> Inventaire &amp; acquisition
               </div>
- 
+
               <div class="grid grid-tight">
-                <div class="col-12 md:col-6">
-                  <div class="field mb-3">
-                    <label class="font-bold text-sm">Code inventaire</label>
-                    <InputText v-model="form.code_inventaire" placeholder="Ex : INV-2024" class="p-inputtext-sm" />
-                  </div>
-                </div>
                 <div class="col-12 md:col-6">
                   <div class="field mb-3">
                     <label class="font-bold text-sm">Date d'acquisition</label>
@@ -225,49 +178,7 @@
                 </div>
               </div>
             </div>
- 
-            <!-- Spécifications techniques -->
-            <div class="main-card">
-              <div class="card-section-label">
-                <i class="pi pi-sliders-h"></i> Spécifications techniques
-                <span v-if="selectedCategoryName" class="category-badge">
-                  {{ selectedCategoryName }}
-                </span>
-              </div>
- 
-              <div v-if="selectedCategoryAttributes.length > 0" class="specs-grid">
-                <div
-                  v-for="attr in selectedCategoryAttributes"
-                  :key="attr.nom"
-                  class="field"
-                >
-                  <label class="font-bold text-xs">{{ attr.nom }}</label>
-                  <InputText
-                    v-if="attr.type === 'texte'"
-                    v-model="form.specifications[attr.nom]"
-                    class="p-inputtext-sm w-full"
-                  />
-                  <InputNumber
-                    v-else-if="attr.type === 'nombre'"
-                    v-model="form.specifications[attr.nom]"
-                    class="p-inputtext-sm w-full"
-                  />
-                  <Calendar
-                    v-else-if="attr.type === 'date'"
-                    v-model="form.specifications[attr.nom]"
-                    dateFormat="dd/mm/yy"
-                    showIcon
-                    class="p-inputtext-sm w-full"
-                  />
-                </div>
-              </div>
- 
-              <div v-else class="specs-empty">
-                <i class="pi pi-info-circle"></i>
-                <span>Aucune spécification technique pour cette catégorie</span>
-              </div>
-            </div>
- 
+
             <!-- Footer actions -->
             <div class="form-footer">
               <Button
@@ -324,18 +235,13 @@ const errors = ref({})
  
 const form = ref({
   nom: '',
-  numero_serie: '',
   marque: '',
   modele: '',
-  code_inventaire: '',
   categorie_id: null,
   etat: 'nouveau',
-  localisation: '',
-  responsable_id: null,
   date_acquisition: null,
   prix_achat: null,
   photo: null,
-  specifications: {},
   quantite_a_creer: 1,
   mode_enregistrement: 'lot'
 })

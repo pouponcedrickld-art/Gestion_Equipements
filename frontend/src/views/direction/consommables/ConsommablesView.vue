@@ -21,6 +21,7 @@
             @click="showStockAlertes"
           />
           <Button 
+            v-if="canManageConsommables"
             label="Nouveau" 
             icon="pi pi-plus" 
             class="p-button-success p-button-raised action-btn"
@@ -124,9 +125,9 @@
             <template #body="{ data }">
               <div class="flex justify-content-end gap-1">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info p-button-sm" @click="viewConsommable(data)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editConsommable(data)" />
-                <Button icon="pi pi-plus-minus" class="p-button-text p-button-rounded p-button-secondary p-button-sm" @click="ajusterStockDialog(data)" />
-                <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger p-button-sm" @click="confirmDelete(data)" />
+                <Button v-if="canManageConsommables" icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editConsommable(data)" />
+                <Button v-if="canManageConsommables" icon="pi pi-plus-minus" class="p-button-text p-button-rounded p-button-secondary p-button-sm" @click="ajusterStockDialog(data)" />
+                <Button v-if="canManageConsommables" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger p-button-sm" @click="confirmDelete(data)" />
               </div>
             </template>
           </Column>
@@ -138,7 +139,7 @@
             <div class="card-body">
               <div class="card-header-top">
                 <span class="type-tag">{{ getTypeLabel(item.type) }}</span>
-                <div class="actions-overlay" @click.stop>
+                <div class="actions-overlay" @click.stop v-if="canManageConsommables">
                   <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editConsommable(item)" />
                   <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-sm p-button-danger" @click="confirmDelete(item)" />
                 </div>
@@ -164,7 +165,7 @@
 
               <div class="card-footer">
                 <Tag :value="getStockStatusLabel(item)" :severity="getStockStatusSeverity(item)" />
-                <Button label="Stock" icon="pi pi-plus-minus" class="p-button-text p-button-sm" @click.stop="ajusterStockDialog(item)" />
+                <Button v-if="canManageConsommables" label="Stock" icon="pi pi-plus-minus" class="p-button-text p-button-sm" @click.stop="ajusterStockDialog(item)" />
               </div>
             </div>
           </div>
@@ -337,6 +338,7 @@ import { useToast } from 'primevue/usetoast'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import { useConsommableStore } from '@/stores/consommableStore'
 import { useEquipementStore } from '@/stores/equipementStore'
+import { useAuthStore } from '@/stores/authStore'
 import gsap from 'gsap'
 
 // Composants PrimeVue
@@ -357,6 +359,7 @@ const toast = useToast()
 const router = useRouter()
 const consommableStore = useConsommableStore()
 const equipementStore = useEquipementStore()
+const authStore = useAuthStore()
 
 const pageContainer = ref(null)
 const showCreateDialog = ref(false)
@@ -370,6 +373,7 @@ const viewOptions = ref([
 ])
 
 const statistiques = computed(() => consommableStore.statistiques)
+const canManageConsommables = computed(() => authStore.isSuperAdmin || authStore.isGestionnaireGeneral)
 
 const typeOptions = [
   { label: 'Batterie', value: 'batterie' },
