@@ -5,11 +5,9 @@
       <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
     </div>
     <form @submit.prevent="handleSubmit">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Matricule *</label>
-          <input v-model="formData.matricule" required placeholder="Matricule de l'agent" />
-        </div>
+      <div class="form-group">
+        <label>Matricule *</label>
+        <input v-model="formData.matricule" required placeholder="Matricule de l'agent" />
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -93,6 +91,23 @@ const formData = reactive({
   user_id: null,
 })
 
+const resetForm = () => {
+  Object.assign(formData, {
+    matricule: '',
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    direction: '',
+    service: '',
+    poste: '',
+    statut: 'actif',
+    photo: null,
+    user_id: null,
+  })
+  error.value = null
+}
+
 watch(() => props.editData, (val) => {
   if (val) {
     formData.matricule = val.matricule || ''
@@ -110,23 +125,6 @@ watch(() => props.editData, (val) => {
     resetForm()
   }
 }, { immediate: true, deep: true })
-
-const resetForm = () => {
-  Object.assign(formData, {
-    matricule: '',
-    nom: '',
-    prenom: '',
-    telephone: '',
-    email: '',
-    direction: '',
-    service: '',
-    poste: '',
-    statut: 'actif',
-    photo: null,
-    user_id: null,
-  })
-  error.value = null
-}
 
 const handleSubmit = async () => {
   saving.value = true
