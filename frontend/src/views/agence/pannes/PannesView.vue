@@ -5,11 +5,23 @@
         <div class="header-left">
           <h2>Gestion des Pannes</h2>
           <p>Signalez et suivez les pannes de matériel</p>
+          <p>Debug: showModal = {{ showModal }}</p>
         </div>
         <div class="header-right">
           <button class="add-btn" @click="openAddModal">
             <i class="pi pi-plus"></i> Nouvelle Panne
           </button>
+        </div>
+      </div>
+
+      <!-- Debug inline modal first -->
+      <div v-if="showModal"
+        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,0,0,0.3);z-index:9999;display:flex;align-items:center;justify-content:center;">
+        <div style="background:#1e293b;padding:20px;border-radius:12px;width:550px;color:white;">
+          <h3>Nouvelle Panne</h3>
+          <p>🎉 Modal affiché!</p>
+          <button @click="showModal = false"
+            style="background:#3b82f6;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Fermer</button>
         </div>
       </div>
 
@@ -71,8 +83,10 @@
                 <td>
                   <div class="actions">
                     <button class="detail-btn" @click="showDetail(p)">Détails</button>
-                    <button v-if="p.statut === 'déclarée'" class="transmettre-btn" @click="transmettrePanne(p)">Transmettre</button>
-                    <button v-if="p.statut === 'en cours'" class="diagnostic-btn" @click="openDiagnosticModal(p)">Diagnostic</button>
+                    <button v-if="p.statut === 'déclarée'" class="transmettre-btn"
+                      @click="transmettrePanne(p)">Transmettre</button>
+                    <button v-if="p.statut === 'en cours'" class="diagnostic-btn"
+                      @click="openDiagnosticModal(p)">Diagnostic</button>
                     <button class="edit-btn" @click="openEditModal(p)">Modifier</button>
                     <button class="delete-btn" @click="deletePanne(p)">Supprimer</button>
                   </div>
@@ -83,13 +97,8 @@
         </div>
       </div>
 
-      <Dialog 
-        v-model:visible="showModal" 
-        :header="isEdit ? 'Modifier la Panne' : 'Nouvelle Panne'" 
-        :style="{ width: '550px' }" 
-        modal
-        class="p-fluid dark-modal"
-      >
+      <Dialog v-model:visible="showModal" :header="isEdit ? 'Modifier la Panne' : 'Nouvelle Panne'"
+        :style="{ width: '550px' }" modal class="p-fluid dark-modal">
         <form @submit.prevent="submitPanne" class="panne-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Équipement</label>
@@ -147,13 +156,8 @@
         </form>
       </Dialog>
 
-      <Dialog 
-        v-model:visible="showDiagnosticModal" 
-        header="Ajouter un Diagnostic" 
-        :style="{ width: '500px' }" 
-        modal
-        class="p-fluid dark-modal"
-      >
+      <Dialog v-model:visible="showDiagnosticModal" header="Ajouter un Diagnostic" :style="{ width: '500px' }" modal
+        class="p-fluid dark-modal">
         <form @submit.prevent="submitDiagnostic" class="panne-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Diagnostic</label>
@@ -166,27 +170,32 @@
         </form>
       </Dialog>
 
-      <Dialog 
-        v-model:visible="showDetailModal" 
-        header="Détails de la Panne" 
-        :style="{ width: '600px' }" 
-        modal
-        class="p-fluid dark-modal"
-      >
+      <Dialog v-model:visible="showDetailModal" header="Détails de la Panne" :style="{ width: '600px' }" modal
+        class="p-fluid dark-modal">
         <div v-if="selectedPanne" class="detail-content">
-          <div class="detail-row"><span class="label">Équipement:</span> <span class="value">{{ selectedPanne.equipement?.nom }} ({{ selectedPanne.equipement?.reference }})</span></div>
-          <div class="detail-row"><span class="label">Agent:</span> <span class="value">{{ selectedPanne.agent?.nom }} {{ selectedPanne.agent?.prenom }}</span></div>
-          <div class="detail-row"><span class="label">Date Déclaration:</span> <span class="value">{{ formatDate(selectedPanne.date_declaration) }}</span></div>
-          <div class="detail-row"><span class="label">Gravité:</span> <span class="value"><span class="gravite-badge" :class="selectedPanne.niveau_gravite">{{ selectedPanne.niveau_gravite }}</span></span></div>
-          <div class="detail-row"><span class="label">Statut:</span> <span class="value"><span class="status-badge" :class="selectedPanne.statut">{{ selectedPanne.statut }}</span></span></div>
+          <div class="detail-row"><span class="label">Équipement:</span> <span class="value">{{
+            selectedPanne.equipement?.nom }} ({{ selectedPanne.equipement?.reference }})</span></div>
+          <div class="detail-row"><span class="label">Agent:</span> <span class="value">{{ selectedPanne.agent?.nom }}
+              {{ selectedPanne.agent?.prenom }}</span></div>
+          <div class="detail-row"><span class="label">Date Déclaration:</span> <span class="value">{{
+            formatDate(selectedPanne.date_declaration) }}</span></div>
+          <div class="detail-row"><span class="label">Gravité:</span> <span class="value"><span class="gravite-badge"
+                :class="selectedPanne.niveau_gravite">{{ selectedPanne.niveau_gravite }}</span></span></div>
+          <div class="detail-row"><span class="label">Statut:</span> <span class="value"><span class="status-badge"
+                :class="selectedPanne.statut">{{ selectedPanne.statut }}</span></span></div>
           <div class="detail-row"><span class="label">Description:</span></div>
           <div class="detail-text">{{ selectedPanne.description }}</div>
-          <div v-if="selectedPanne.diagnostic_technicien" class="detail-row mt-4"><span class="label">Diagnostic:</span></div>
-          <div v-if="selectedPanne.diagnostic_technicien" class="detail-text">{{ selectedPanne.diagnostic_technicien }}</div>
-          <div v-if="selectedPanne.action_realisee" class="detail-row mt-4"><span class="label">Action Réalisée:</span></div>
+          <div v-if="selectedPanne.diagnostic_technicien" class="detail-row mt-4"><span class="label">Diagnostic:</span>
+          </div>
+          <div v-if="selectedPanne.diagnostic_technicien" class="detail-text">{{ selectedPanne.diagnostic_technicien }}
+          </div>
+          <div v-if="selectedPanne.action_realisee" class="detail-row mt-4"><span class="label">Action Réalisée:</span>
+          </div>
           <div v-if="selectedPanne.action_realisee" class="detail-text">{{ selectedPanne.action_realisee }}</div>
-          <div v-if="selectedPanne.cout_reparation" class="detail-row"><span class="label">Coût Réparation:</span> <span class="value">{{ selectedPanne.cout_reparation }} €</span></div>
-          <div v-if="selectedPanne.date_resolution" class="detail-row"><span class="label">Date Résolution:</span> <span class="value">{{ formatDate(selectedPanne.date_resolution) }}</span></div>
+          <div v-if="selectedPanne.cout_reparation" class="detail-row"><span class="label">Coût Réparation:</span> <span
+              class="value">{{ selectedPanne.cout_reparation }} €</span></div>
+          <div v-if="selectedPanne.date_resolution" class="detail-row"><span class="label">Date Résolution:</span> <span
+              class="value">{{ formatDate(selectedPanne.date_resolution) }}</span></div>
         </div>
         <div class="modal-footer">
           <Button label="Fermer" class="p-button-secondary" @click="showDetailModal = false" />
@@ -228,7 +237,7 @@ const diagnosticForm = ref({})
 
 const filteredPannes = computed(() => {
   return pannes.value.filter(p => {
-    const matchesSearch = !search.value || 
+    const matchesSearch = !search.value ||
       p.equipement?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
       p.agent?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
       p.description.toLowerCase().includes(search.value.toLowerCase())
@@ -252,8 +261,10 @@ const fetchData = async () => {
 }
 
 const openAddModal = () => {
+  console.log('Nouvelle Panne clicked!')
   isEdit.value = false
   panneForm.value = { equipement_id: '', agent_id: '', description: '', niveau_gravite: 'moyenne', statut: 'déclarée' }
+  console.log('showModal set to true!')
   showModal.value = true
 }
 
@@ -337,47 +348,285 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.pannes-container { padding: 24px; color: #f8fafc; }
-.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.header-bar h2 { margin: 0; font-size: 1.5rem; }
-.header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
-.add-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.add-btn:hover { background: #2563eb; }
-.filters-card { background: #1e293b; border: 1px solid #334155; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
-.filters-row { display: flex; gap: 16px; flex-wrap: wrap; }
-.search-box { position: relative; flex: 1; min-width: 200px; }
-.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.search-box input, select { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px 12px 10px 40px; border-radius: 8px; width: 100%; }
-select { padding-left: 12px; width: 180px; }
-.table-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { background: #0f172a; padding: 14px 16px; text-align: left; color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-.data-table td { padding: 14px 16px; border-bottom: 1px solid #334155; }
-.gravite-badge, .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-.gravite-badge.basse { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.gravite-badge.moyenne { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.gravite-badge.haute { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-.gravite-badge.critique { background: rgba(239, 68, 68, 0.3); color: #ef4444; }
-.status-badge.déclarée { background: rgba(107, 114, 128, 0.15); color: #94a3b8; }
-.status-badge.en-cours { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-.status-badge.réparée { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.status-badge.irrécupérable { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-.status-badge.remplacée { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
-.actions { display: flex; gap: 8px; }
-.detail-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.transmettre-btn { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.diagnostic-btn { background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.edit-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.delete-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.loading-state, .empty-state { padding: 60px; text-align: center; color: #94a3b8; }
-.loading-state i { font-size: 2rem; margin-bottom: 12px; color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.panne-form select, .panne-form textarea, .panne-form input { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px; border-radius: 6px; width: 100%; }
-.detail-content { padding: 8px 0; }
-.detail-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.detail-row .label { font-weight: 600; color: #94a3b8; min-width: 140px; }
-.detail-row .value { color: #e2e8f0; }
-.detail-text { padding: 12px; background: #0f172a; border-radius: 8px; color: #e2e8f0; line-height: 1.5; }
-.mt-4 { margin-top: 16px; }
-:deep(.dark-modal) .p-dialog-content, :deep(.dark-modal) .p-dialog-header { background: #1e293b; color: #f8fafc; border-color: #334155; }
+.pannes-container {
+  padding: 24px;
+  color: #f8fafc;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-bar h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.header-bar p {
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.add-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.add-btn:hover {
+  background: #2563eb;
+}
+
+.filters-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-box input,
+select {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  padding: 10px 12px 10px 40px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+select {
+  padding-left: 12px;
+  width: 180px;
+}
+
+.table-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #0f172a;
+  padding: 14px 16px;
+  text-align: left;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.gravite-badge,
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.gravite-badge.basse {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.gravite-badge.moyenne {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.gravite-badge.haute {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.gravite-badge.critique {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.status-badge.déclarée {
+  background: rgba(107, 114, 128, 0.15);
+  color: #94a3b8;
+}
+
+.status-badge.en-cours {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.status-badge.réparée {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-badge.irrécupérable {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.status-badge.remplacée {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-btn {
+  background: #334155;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.transmettre-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.diagnostic-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background: #334155;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.loading-state,
+.empty-state {
+  padding: 60px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.loading-state i {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  color: #3b82f6;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.panne-form select,
+.panne-form textarea,
+.panne-form input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  padding: 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.detail-content {
+  padding: 8px 0;
+}
+
+.detail-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-row .label {
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 140px;
+}
+
+.detail-row .value {
+  color: #e2e8f0;
+}
+
+.detail-text {
+  padding: 12px;
+  background: #0f172a;
+  border-radius: 8px;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+
+:deep(.dark-modal) .p-dialog-content,
+:deep(.dark-modal) .p-dialog-header {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
 </style>
