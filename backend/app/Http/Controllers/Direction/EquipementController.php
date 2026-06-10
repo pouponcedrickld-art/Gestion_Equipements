@@ -30,7 +30,13 @@ class EquipementController extends Controller
             ]);
 
             if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
-                $query->byAgence($user->agence_id);
+                // On autorise la vue globale si demandé explicitement (ex: pour les demandes de matériel)
+                // ou si on filtre spécifiquement sur le stock général
+                if ($request->boolean('all_equipements') || $request->input('statut_global') === 'en_stock_general') {
+                    // Pas de filtrage par agence
+                } else {
+                    $query->byAgence($user->agence_id);
+                }
             }
 
             if ($request->filled('search')) {
@@ -42,7 +48,7 @@ class EquipementController extends Controller
             }
 
             if ($request->filled('statut_global')) {
-                $query->byStatut($request->statut_global);
+                $query->byStatutGlobal($request->statut_global);
             }
 
             if ($request->filled('etat')) {
@@ -128,10 +134,12 @@ class EquipementController extends Controller
                 'responsable_id' => 'nullable|exists:users,id',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'specifications' => 'nullable|string',
+                'quantite' => 'nullable|integer|min:1',
                 'quantite_a_creer' => 'nullable|integer|min:1|max:100',
             ]);
 
-            $quantite = $request->input('quantite_a_creer', 1);
+            $quantite_items = $request->input('quantite_a_creer', 1);
+            $quantite_par_item = $validated['quantite'] ?? 1;
             $equipements_crees = [];
 
             if ($user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
@@ -148,11 +156,12 @@ class EquipementController extends Controller
             }
 
             // Boucle de création multiple
-            for ($i = 0; $i < $quantite; $i++) {
+            for ($i = 0; $i < $quantite_items; $i++) {
                 $equipementData = [
                     'nom' => $validated['nom'],
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
+                    'quantite' => $quantite_par_item,
                     'categorie_id' => $validated['categorie_id'],
                     'fournisseur' => $validated['fournisseur'] ?? null,
                     'date_acquisition' => $validated['date_acquisition'] ?? null,
@@ -169,7 +178,7 @@ class EquipementController extends Controller
                 ];
 
                 // Gestion des identifiants uniques
-                if ($quantite === 1) {
+                if ($quantite_items === 1) {
                     $equipementData['numero_serie'] = $validated['numero_serie'] ?? null;
                     $equipementData['reference'] = $validated['reference'] ?? ('REF-' . strtoupper(Str::random(6)));
                     $equipementData['code_inventaire'] = $validated['code_inventaire'] ?? strtoupper(Str::random(10));
@@ -178,14 +187,14 @@ class EquipementController extends Controller
                     $equipementData['numero_serie'] = null; // À remplir manuellement plus tard
                     $equipementData['reference'] = 'REF-' . strtoupper(Str::random(6));
                     $equipementData['code_inventaire'] = strtoupper(Str::random(10));
-                    $equipementData['nom'] = $validated['nom'] . " (" . ($i + 1) . "/" . $quantite . ")";
+                    $equipementData['nom'] = $validated['nom'] . " (" . ($i + 1) . "/" . $quantite_items . ")";
                 }
 
                 $equipement = Equipement::create($equipementData);
                 $equipement->generateQRCode();
-                $equipement->createMouvement('creation', "Création initiale" . ($quantite > 1 ? " (Lot)" : ""), $user->id);
+                $equipement->createMouvement('creation', "Création initiale" . ($quantite_items > 1 ? " (Lot)" : ""), $user->id);
                 
-                if ($quantite === 1) {
+                if ($quantite_items === 1) {
                     $equipements_crees = $equipement;
                 } else {
                     $equipements_crees[] = $equipement->id;
@@ -194,8 +203,8 @@ class EquipementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $quantite === 1 ? $equipements_crees->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable']) : $equipements_crees,
-                'message' => $quantite > 1 ? "{$quantite} équipements créés avec succès" : 'Équipement créé avec succès'
+                'data' => $quantite_items === 1 ? $equipements_crees->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable']) : $equipements_crees,
+                'message' => $quantite_items > 1 ? "{$quantite_items} équipements créés avec succès" : 'Équipement créé avec succès'
             ], 201);
 
         } catch (\Exception $e) {
@@ -232,6 +241,7 @@ class EquipementController extends Controller
                 'etat' => 'required|string|in:nouveau,actif,en_maintenance,hors_service,archive',
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
+                'quantite' => 'nullable|integer|min:1',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'specifications' => 'nullable|string',
             ]);

@@ -11,16 +11,26 @@
       <form @submit.prevent="submitForm" class="demande-form">
         <div class="form-grid">
           <!-- Type de matériel -->
-          <div class="form-group">
+          <div class="form-group full-width">
             <label for="equipement_id">Type de matériel</label>
-            <select v-model="form.equipement_id" id="equipement_id" required>
-              <option value="" disabled>
-                {{ equipements.length === 0 ? 'Aucun équipement disponible' : 'Sélectionner un équipement' }}
-              </option>
-              <option v-for="eq in equipements" :key="eq.id" :value="eq.id">
-                {{ eq.nom }} - {{ eq.marque }} {{ eq.modele }} ({{ eq.reference }})
-              </option>
-            </select>
+            <Dropdown
+              v-model="form.equipement_id"
+              :options="equipements"
+              optionLabel="label"
+              optionValue="id"
+              placeholder="Sélectionner un matériel au stock"
+              filter
+              class="w-full"
+              :loading="loadingEquipements"
+              required
+            >
+              <template #option="slotProps">
+                <div class="flex flex-column">
+                  <span class="font-bold">{{ slotProps.option.nom }}</span>
+                  <small>{{ slotProps.option.marque }} {{ slotProps.option.modele }} ({{ slotProps.option.reference }})</small>
+                </div>
+              </template>
+            </Dropdown>
             <small v-if="errorMsg" class="error-text">
               {{ errorMsg }}
             </small>
@@ -29,36 +39,46 @@
           <!-- Quantité demandée -->
           <div class="form-group">
             <label for="quantite">Quantité demandée</label>
-            <input 
-              type="number" 
+            <InputNumber 
               v-model="form.quantite" 
               id="quantite" 
-              min="1" 
+              :min="1" 
+              showButtons
+              buttonLayout="horizontal"
+              decrementButtonClass="p-button-secondary"
+              incrementButtonClass="p-button-primary"
+              incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus"
               required
-              placeholder="Minimum 1"
-            >
+              class="w-full"
+            />
           </div>
 
           <!-- Urgence -->
           <div class="form-group">
             <label for="urgence">Urgence</label>
-            <select v-model="form.urgence" id="urgence" required>
-              <option value="Basse">Basse</option>
-              <option value="Moyenne">Moyenne</option>
-              <option value="Haute">Haute</option>
-            </select>
+            <Dropdown
+              v-model="form.urgence"
+              :options="urgenceOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionner l'urgence"
+              class="w-full"
+              required
+            />
           </div>
 
           <!-- Date souhaitée -->
           <div class="form-group">
             <label for="date_souhaitee">Date souhaitée</label>
-            <input 
-              type="date" 
+            <Calendar 
               v-model="form.date_souhaitee" 
               id="date_souhaitee" 
               required
-              :min="today"
-            >
+              :minDate="new Date()"
+              dateFormat="yy-mm-dd"
+              class="w-full"
+            />
           </div>
 
           <!-- Motif -->
@@ -94,52 +114,83 @@ import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import equipementApi from '@/api/equipementApi'
 import demandeAgenceApi from '@/api/demandeAgenceApi'
 
+// PrimeVue components
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
+import Calendar from 'primevue/calendar'
+
 const router = useRouter()
 const toast = useToast()
 const equipements = ref([])
 const submitting = ref(false)
+const loadingEquipements = ref(false)
 const errorMsg = ref('')
 
-// Date du jour au format YYYY-MM-DD (local)
-const today = new Date().toLocaleDateString('en-CA')
+const urgenceOptions = [
+  { label: 'Basse', value: 'Basse' },
+  { label: 'Moyenne', value: 'Moyenne' },
+  { label: 'Haute', value: 'Haute' }
+]
 
 const form = ref({
   equipement_id: '',
   quantite: 1,
   urgence: 'Basse',
   motif: '',
-  date_souhaitee: ''
+  date_souhaitee: null
 })
 
 // Charge les équipements disponibles
 onMounted(async () => {
+  loadingEquipements.value = true
   try {
-    const res = await equipementApi.index()
-    console.log('API Response:', res)
-    if (res.data) {
-      equipements.value = Array.isArray(res.data) ? res.data : (res.data.data || [])
+    // On récupère tous les équipements pour que l'agence puisse choisir
+    // Le filtrage se fera par le gestionnaire lors du traitement
+    const res = await equipementApi.index({ 
+      all_equipements: true,
+      per_page: 100 
+    })
+    
+    if (res.data && res.data.success) {
+      // Laravel Paginated response: res.data.data.data
+      const rawData = res.data.data.data || res.data.data
+      equipements.value = rawData.map(eq => ({
+        ...eq,
+        label: `${eq.nom} (${eq.reference})`
+      }))
+      
       if (equipements.value.length === 0) {
-        errorMsg.value = "Aucun matériel n'est disponible au stock."
+        errorMsg.value = "Aucun matériel n'est répertorié dans le système."
       }
     }
   } catch (error) {
     console.error('Erreur lors du chargement des équipements', error)
-    errorMsg.value = "Erreur de connexion au serveur lors du chargement des équipements."
+    errorMsg.value = "Erreur de connexion lors du chargement des équipements."
     toast.add({ severity: 'error', summary: 'Erreur', detail: errorMsg.value, life: 3000 })
+  } finally {
+    loadingEquipements.value = false
   }
 })
 
 // Soumet le formulaire
 const submitForm = async () => {
-  // Validation supplémentaire de la date
-  if (form.value.date_souhaitee < today) {
-    toast.add({ severity: 'warn', summary: 'Attention', detail: 'La date souhaitée ne peut pas être dans le passé.', life: 3000 })
+  if (!form.value.date_souhaitee) {
+    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez choisir une date.', life: 3000 })
     return
   }
 
   submitting.value = true
+  
+  // Formatage de la date pour l'API
+  const dateFormatted = form.value.date_souhaitee instanceof Date 
+    ? form.value.date_souhaitee.toISOString().split('T')[0]
+    : form.value.date_souhaitee
+
   try {
-    await demandeAgenceApi.store(form.value)
+    await demandeAgenceApi.store({
+      ...form.value,
+      date_souhaitee: dateFormatted
+    })
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Demande envoyée avec succès', life: 3000 })
     setTimeout(() => {
       router.push('/demandes-materiel')
@@ -221,19 +272,45 @@ label {
   margin-top: 4px;
 }
 
-input, select, textarea {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: #f8fafc;
-  font-size: 1rem;
+input, select, textarea, :deep(.p-dropdown), :deep(.p-inputnumber-input), :deep(.p-calendar-input) {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
 }
 
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+textarea {
+  padding: 10px 12px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus, :deep(.p-focus) {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+:deep(.p-dropdown-label), :deep(.p-inputtext) {
+  color: #f8fafc !important;
+}
+
+:deep(.p-dropdown-panel) {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+:deep(.p-dropdown-item) {
+  color: #f8fafc;
+}
+
+:deep(.p-dropdown-item:hover) {
+  background: #334155;
+}
+
+:deep(.p-dropdown-filter) {
+  background: #0f172a;
+  color: #f8fafc;
 }
 
 .form-actions {

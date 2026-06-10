@@ -41,6 +41,10 @@
                   <span class="label">Numéro de Série</span>
                   <span class="value">{{ equipement.numero_serie }}</span>
                 </div>
+                <div class="detail-item">
+                  <span class="label">Quantité</span>
+                  <span class="value font-bold text-blue-600">{{ equipement.quantite || 1 }}</span>
+                </div>
                 <div class="detail-item" v-if="equipement.imei">
                   <span class="label">IMEI</span>
                   <span class="value">{{ equipement.imei }}</span>
