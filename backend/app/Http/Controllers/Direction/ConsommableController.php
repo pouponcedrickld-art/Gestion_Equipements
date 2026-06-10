@@ -96,7 +96,7 @@ class ConsommableController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $consommable->load('equipement')
+            'data' => $consommable->load(['equipement', 'mouvements.user'])
         ]);
     }
 

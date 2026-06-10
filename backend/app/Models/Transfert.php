@@ -11,6 +11,7 @@ class Transfert extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'demande_materiel_id',
         'equipement_id',
         'agence_source_id',
         'agence_destination_id',
@@ -65,6 +66,11 @@ class Transfert extends Model
     /**
      * Relations
      */
+    public function demandeMateriel()
+    {
+        return $this->belongsTo(DemandeMateriel::class, 'demande_materiel_id');
+    }
+
     public function equipement()
     {
         return $this->belongsTo(Equipement::class);
@@ -96,7 +102,7 @@ class Transfert extends Model
     public function approuver($userId)
     {
         $this->update([
-            'statut' => 'en_attente_expedition',
+            'statut' => 'approuve',
             'valide_par_id' => $userId
         ]);
     }
@@ -104,7 +110,7 @@ class Transfert extends Model
     public function refuser($userId, $observations = null)
     {
         $this->update([
-            'statut' => 'annule',
+            'statut' => 'refuse',
             'valide_par_id' => $userId,
             'observations' => $this->observations . "\nRefusé par admin: " . $observations
         ]);
@@ -113,7 +119,7 @@ class Transfert extends Model
     public function expedier($userId)
     {
         $this->update([
-            'statut' => 'en_transit',
+            'statut' => 'expedie',
             'date_expedition' => now()
         ]);
     }
@@ -134,7 +140,7 @@ class Transfert extends Model
             
             $this->equipement->createMouvement(
                 'transfert_recu',
-                "Réception transfert depuis " . $this->agenceSource->nom,
+                "Réception transfert depuis " . ($this->agenceSource->nom ?? 'Origine'),
                 $userId
             );
         }
@@ -143,11 +149,11 @@ class Transfert extends Model
     public static function getStatusDisponibles()
     {
         return [
-            'brouillon' => 'Brouillon',
-            'en_attente_expedition' => 'En attente d\'expédition',
-            'en_transit' => 'En transit',
+            'demande' => 'En attente de validation',
+            'approuve' => 'Approuvé / Prêt à expédier',
+            'expedie' => 'En transit',
             'recu' => 'Reçu',
-            'annule' => 'Annulé'
+            'refuse' => 'Refusé'
         ];
     }
 

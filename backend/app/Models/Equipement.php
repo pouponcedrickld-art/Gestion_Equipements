@@ -12,10 +12,13 @@ class Equipement extends Model
 
     protected $fillable = [
         'nom',
+        'quantite',
+        'is_lot',
         'reference',
         'numero_serie',
         'imei',
         'code_inventaire',
+        'lot_reference',
         'marque',
         'modele',
         'quantite',
@@ -42,6 +45,8 @@ class Equipement extends Model
         'prix_achat' => 'decimal:2',
         'documents' => 'array',
         'specifications' => 'array',
+        'is_lot' => 'boolean',
+        'quantite' => 'integer',
     ];
 
     // ===== RELATIONS =====

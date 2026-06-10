@@ -12,6 +12,7 @@ class Mouvement extends Model
     protected $fillable = [
         'type_mouvement',
         'equipement_id',
+        'consommable_id',
         'agent_id',
         'user_id',
         'date_mouvement',
@@ -30,6 +31,11 @@ class Mouvement extends Model
     public function equipement()
     {
         return $this->belongsTo(Equipement::class);
+    }
+
+    public function consommable()
+    {
+        return $this->belongsTo(Consommable::class);
     }
 
     public function agent()

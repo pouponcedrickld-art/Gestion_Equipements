@@ -79,6 +79,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Transferts
     Route::get('transferts-kanban', [TransfertController::class, 'index']);
     Route::post('transferts-kanban/update-status', [TransfertController::class, 'updateStatus']);
+    Route::get('transferts/demandes-approuvees', [TransfertController::class, 'getApprovedDemandes'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/creer-depuis-demande/{demandeId}', [TransfertController::class, 'createFromDemande'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::apiResource('transferts', TransfertController::class);
     Route::post('transferts/{id}/approuver', [TransfertController::class, 'approuver'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general');

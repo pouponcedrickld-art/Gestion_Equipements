@@ -109,7 +109,7 @@ export const useCategorieStore = defineStore('categorie', () => {
       const response = await categorieApi.show(id)
       
       if (response.data.success) {
-        currentCategorie.value = response.data.data.categorie
+        currentCategorie.value = response.data.data
         return currentCategorie.value
       } else {
         throw new Error(response.data.message)

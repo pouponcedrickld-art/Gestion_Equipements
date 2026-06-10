@@ -47,6 +47,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/categories/:id',
+    name: 'CategorieDetail',
+    component: () => import('@/views/direction/categories/CategorieDetailView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/equipements',
     name: 'Equipements',
     component: () => import('@/views/direction/equipements/EquipementsView.vue'),
@@ -77,11 +83,17 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/consommables',
-    name: 'Consommables',
-    component: () => import('@/views/direction/consommables/ConsommablesView.vue'),
-    meta: { requiresAuth: true }
-  },
+        path: '/consommables',
+        name: 'Consommables',
+        component: () => import('@/views/direction/consommables/ConsommablesView.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/consommables/:id',
+        name: 'ConsommableDetail',
+        component: () => import('@/views/direction/consommables/ConsommableDetailView.vue'),
+        meta: { requiresAuth: true }
+      },
   {
     path: '/transferts',
     name: 'Transferts',
