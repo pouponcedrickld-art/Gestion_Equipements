@@ -1,11 +1,15 @@
-<script setup lang="ts"></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <Toast position="top-right" />
+  <router-view />
 </template>
 
-<style scoped></style>
+<script setup>
+import Toast from 'primevue/toast'
+</script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+</style>

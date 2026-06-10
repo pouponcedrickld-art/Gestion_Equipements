@@ -41,14 +41,11 @@
           <i class="pi pi-bars"></i>
         </button>
         <h1>{{ pageTitle }}</h1>
-        <div class="notifications">
-          <i class="pi pi-bell" @click="$router.push('/notifications')"></i>
-          <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
-        </div>
+        <NotificationCenter />
       </header>
       
       <div class="content">
-        <router-view />
+        <slot />
       </div>
     </main>
   </div>
@@ -59,13 +56,13 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { getMenuItems } from '@/utils/permissions'
+import NotificationCenter from '@/components/notifications/NotificationCenter.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
 const sidebarCollapsed = ref(false)
-const unreadCount = ref(0)
 
 const menuItems = computed(() => getMenuItems())
 
@@ -190,16 +187,27 @@ const logout = async () => {
 
 .main-content {
   flex: 1;
-  background: #f1f5f9;
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .top-bar {
-  background: white;
+  background-color: white !important;
+  color: #1e293b !important;
   padding: 15px 25px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.content {
+  padding: 25px;
+  flex: 1;
+  background-color: #f8fafc !important;
 }
 
 .toggle-btn {
@@ -231,5 +239,6 @@ const logout = async () => {
 
 .content {
   padding: 25px;
+  flex: 1;
 }
 </style>

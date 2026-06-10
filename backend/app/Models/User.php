@@ -12,11 +12,16 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
+    protected $guard_name = 'api';
+
     protected $fillable = [
         'name',
         'email',
         'password',
         'agence_id',
+        'telephone',
+        'poste',
+        'actif',
     ];
 
     protected $hidden = [
@@ -29,6 +34,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'actif' => 'boolean',
         ];
     }
 
@@ -86,5 +92,16 @@ class User extends Authenticatable
     public function demandesMaterielTraitees()
     {
         return $this->hasMany(DemandeMateriel::class, 'traite_par_id');
+    }
+
+    /**
+     * Vérifie si l'utilisateur a un rôle spécifique
+     * 
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role): bool
+    {
+        return $this->roles()->where('name', $role)->exists();
     }
 }

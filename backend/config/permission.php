@@ -28,10 +28,12 @@ return [
     'display_permission_in_exception' => false,
     'display_role_in_exception' => false,
     'enable_wildcard_permission' => false,
-    'cache' => [
+'cache' => [
         'expiration_time' => \DateInterval::createFromDateString('24 hours'),
         'key' => 'spatie.permission.cache',
-        'store' => 'default',
+        // Sécurise le seed sur un environnement fresh (évite cache DB manquant)
+        'store' => env('PERMISSION_CACHE_STORE', 'file'),
     ],
+
 
 ];

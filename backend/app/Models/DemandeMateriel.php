@@ -14,17 +14,18 @@ class DemandeMateriel extends Model
     protected $fillable = [
         'agence_id',
         'chef_agence_id',
-        'type_mission',
-        'equipements_demandes',
-        'date_besoin',
+        'equipement_id',
+        'quantite',
+        'urgence',
+        'motif',
+        'date_souhaitee',
         'statut',
         'traite_par_id',
         'observations',
     ];
 
     protected $casts = [
-        'equipements_demandes' => 'array',
-        'date_besoin' => 'date',
+        'date_souhaitee' => 'date',
     ];
 
     // Relations
@@ -36,6 +37,11 @@ class DemandeMateriel extends Model
     public function chefAgence()
     {
         return $this->belongsTo(User::class, 'chef_agence_id');
+    }
+
+    public function equipement()
+    {
+        return $this->belongsTo(Equipement::class);
     }
 
     public function traitePar()
