@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('maintenances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipement_id')->constrained('equipements');
-            $table->enum('type_maintenance', ['preventive', 'corrective'])->default('corrective');
+            $table->foreignId('technicien_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->enum('type_maintenance', ['preventif', 'corrective'])->default('corrective');
             $table->dateTime('date_prevue')->nullable();
             $table->string('responsable')->nullable();
             $table->string('technicien')->nullable();
