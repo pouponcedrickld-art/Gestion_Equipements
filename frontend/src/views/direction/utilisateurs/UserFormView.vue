@@ -41,15 +41,9 @@
             <option v-for="a in agences" :key="a.id" :value="a.id">{{ a.nom }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
-        </div>
+      
       </div>
-      <div class="form-group">
-        <label>Poste</label>
-        <input v-model="formData.poste" placeholder="Poste occupé" />
-      </div>
+      
       <div class="form-actions">
         <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
         <button type="submit" class="btn-primary" :disabled="saving">
@@ -82,8 +76,7 @@ const formData = reactive({
   password: '',
   role: '',
   agence_id: null,
-  telephone: '',
-  poste: '',
+
   actif: true,
 })
 
@@ -93,8 +86,7 @@ watch(() => props.editData, (val) => {
       name: val.name || '',
       email: val.email || '',
       agence_id: val.agence_id || null,
-      telephone: val.telephone || '',
-      poste: val.poste || '',
+   
       actif: val.actif ?? true,
       role: val.role || '',
     })
