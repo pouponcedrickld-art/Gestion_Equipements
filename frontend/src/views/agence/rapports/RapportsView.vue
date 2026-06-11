@@ -1,118 +1,153 @@
 <template>
   <AgenceLayout>
-    <div class="rapports-page" ref="pageContainer">
-      <!-- En-tête Moderne -->
-      <div class="page-header animate-in">
-        <div class="header-left">
-          <div class="title-with-icon">
-            <div class="icon-wrapper">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="svg-icon">
-                <path d="M9 17V11M12 17V7M15 17V13M4 5H20C21.1046 5 22 5.89543 22 7V17C22 18.1046 21.1046 19 20 19H4C2.89543 19 2 18.1046 2 17V7C2 5.89543 2.89543 5 4 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+    <div class="p-6 max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-2xl">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-7 h-7">
+              <path d="M9 17V11M12 17V7M15 17V13M4 5H20C21.1046 5 22 5.89543 22 7V17C22 18.1046 21.1046 19 20 19H4C2.89543 19 2 18.1046 2 17V7C2 5.89543 2.89543 5 4 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-neutral-800">Centre de Rapports</h1>
+            <p class="text-neutral-500 mt-1">Analyse et extraction des données du parc</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button 
+            @click="exportPDF"
+            class="btn btn-secondary flex items-center gap-2"
+          >
+            <i class="pi pi-file-pdf"></i>
+            <span>Exporter PDF</span>
+          </button>
+          <button 
+            @click="exportExcel"
+            class="btn btn-success flex items-center gap-2"
+          >
+            <i class="pi pi-file-excel"></i>
+            <span>Exporter Excel</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="!stats" class="flex items-center justify-center py-20">
+        <div class="flex items-center gap-2">
+          <div class="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+          <span class="text-neutral-500">Chargement...</span>
+        </div>
+      </div>
+
+      <div v-else>
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          <div class="card p-6 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-success-100 text-success-600 flex items-center justify-center text-2xl">
+              <i class="pi pi-money-bill"></i>
             </div>
             <div>
-              <h1>Centre de Rapports</h1>
-              <p class="subtitle">Analyse et extraction des données du parc</p>
+              <div class="text-sm text-neutral-500">Valeur Totale du Parc</div>
+              <div class="text-2xl font-bold text-neutral-800 mt-1">{{ formatCurrency(stats.valeur_parc) }}</div>
+            </div>
+          </div>
+
+          <div class="card p-6 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center text-2xl">
+              <i class="pi pi-user-plus"></i>
+            </div>
+            <div>
+              <div class="text-sm text-neutral-500">Affectations Actives</div>
+              <div class="text-2xl font-bold text-neutral-800 mt-1">{{ stats.affectations_actives }}</div>
+            </div>
+          </div>
+
+          <div class="card p-6 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-warning-100 text-warning-600 flex items-center justify-center text-2xl">
+              <i class="pi pi-sync"></i>
+            </div>
+            <div>
+              <div class="text-sm text-neutral-500">Transferts en Cours</div>
+              <div class="text-2xl font-bold text-neutral-800 mt-1">{{ stats.transferts_en_cours }}</div>
+            </div>
+          </div>
+
+          <div class="card p-6 flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-danger-100 text-danger-600 flex items-center justify-center text-2xl">
+              <i class="pi pi-exclamation-circle"></i>
+            </div>
+            <div>
+              <div class="text-sm text-neutral-500">Équipements en Panne</div>
+              <div class="text-2xl font-bold text-neutral-800 mt-1">{{ stats.equipements_par_statut?.find(s => s.statut_global === 'en_panne')?.total || 0 }}</div>
             </div>
           </div>
         </div>
-        <div class="header-actions">
-          <Button 
-            label="Exporter PDF" 
-            icon="pi pi-file-pdf" 
-            class="p-button-outlined p-button-danger action-btn mr-2"
-            @click="exportPDF"
-          />
-          <Button 
-            label="Exporter Excel" 
-            icon="pi pi-file-excel" 
-            class="p-button-outlined p-button-success action-btn"
-            @click="exportExcel"
-          />
-        </div>
-      </div>
 
-      <!-- Résumé Analytique -->
-      <div class="grid animate-in" v-if="stats">
-        <div class="col-12 lg:col-8">
-          <Card class="chart-card">
-            <template #title>Répartition par Statut</template>
-            <template #content>
-              <div class="chart-container">
-                <Chart type="doughnut" :data="chartData" :options="chartOptions" class="w-full md:w-30rem" />
-              </div>
-            </template>
-          </Card>
+        <!-- Filters Bar -->
+        <div class="card p-6 mb-8">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex-1 min-w-[200px]">
+              <select v-model="filters.agence_id" class="input">
+                <option value="">Toutes les agences</option>
+                <option v-for="agence in agences" :key="agence.id" :value="agence.id">{{ agence.nom }}</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[200px]">
+              <select v-model="filters.categorie_id" class="input">
+                <option value="">Toutes les catégories</option>
+                <option v-for="categorie in categories" :key="categorie.id" :value="categorie.id">{{ categorie.nom }}</option>
+              </select>
+            </div>
+            <button 
+              @click="loadReport" 
+              :disabled="loading"
+              class="btn btn-primary flex items-center gap-2"
+            >
+              <i v-if="loading" class="pi pi-spin pi-spinner"></i>
+              <i v-else class="pi pi-refresh"></i>
+              <span>Générer l'inventaire</span>
+            </button>
+          </div>
         </div>
-        <div class="col-12 lg:col-4">
-          <div class="stats-stack">
-            <div class="mini-stat-card">
-              <span class="label">Valeur Totale du Parc</span>
-              <span class="value">{{ formatCurrency(stats.valeur_parc) }}</span>
-              <div class="stat-icon"><i class="pi pi-money-bill"></i></div>
-            </div>
-            <div class="mini-stat-card">
-              <span class="label">Affectations Actives</span>
-              <span class="value">{{ stats.affectations_actives }}</span>
-              <div class="stat-icon"><i class="pi pi-user-plus"></i></div>
-            </div>
-            <div class="mini-stat-card">
-              <span class="label">Transferts en Cours</span>
-              <span class="value">{{ stats.transferts_en_cours }}</span>
-              <div class="stat-icon"><i class="pi pi-sync"></i></div>
-            </div>
+
+        <!-- Data Table -->
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full table">
+              <thead class="bg-neutral-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Référence</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Marque/Modèle</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Catégorie</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Agence</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">Statut</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-neutral-200">
+                <tr v-for="item in reportData" :key="item.id" class="hover:bg-neutral-50 transition-colors">
+                  <td class="px-4 py-4 text-sm text-neutral-800 font-medium">{{ item.reference }}</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">{{ item.marque }} {{ item.modele }}</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">{{ item.categorie?.nom || 'N/A' }}</td>
+                  <td class="px-4 py-4 text-sm text-neutral-600">{{ item.agence_actuelle?.nom || 'N/A' }}</td>
+                  <td class="px-4 py-4">
+                    <span class="badge" :class="getStatutBadgeClass(item.statut_global)">{{ item.statut_global }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-
-      <!-- Filtres de Rapport -->
-      <div class="filters-bar animate-in">
-        <div class="dropdown-filters">
-          <Dropdown v-model="filters.agence_id" :options="agences" optionLabel="nom" optionValue="id" placeholder="Filtrer par Agence" class="modern-dropdown" showClear />
-          <Dropdown v-model="filters.categorie_id" :options="categories" optionLabel="nom" optionValue="id" placeholder="Filtrer par Catégorie" class="modern-dropdown" showClear />
-          <Button label="Générer l'inventaire" icon="pi pi-refresh" @click="loadReport" :loading="loading" />
-        </div>
-      </div>
-
-      <!-- Aperçu des données -->
-      <Card class="table-card animate-in" v-if="reportData.length">
-        <template #content>
-          <DataTable :value="reportData" stripedRows paginator :rows="10" responsiveLayout="scroll">
-            <Column field="reference" header="Référence" sortable></Column>
-            <Column field="marque" header="Marque/Modèle">
-              <template #body="{data}">{{ data.marque }} {{ data.modele }}</template>
-            </Column>
-            <Column field="categorie.nom" header="Catégorie"></Column>
-            <Column field="agence_actuelle.nom" header="Agence"></Column>
-            <Column field="statut_global" header="Statut">
-              <template #body="{data}">
-                <Tag :value="data.statut_global" :severity="getStatutSeverity(data.statut_global)" />
-              </template>
-            </Column>
-          </DataTable>
-        </template>
-      </Card>
     </div>
   </AgenceLayout>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
-import axios from '@/api/axiosConfig'
-import { useToast } from 'primevue/usetoast'
-import gsap from 'gsap'
+import api from '@/api/axiosConfig'
+import { toast } from 'vue3-toastify'
 
-// PrimeVue
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Dropdown from 'primevue/dropdown'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Chart from 'primevue/chart'
-
-const toast = useToast()
 const stats = ref(null)
 const reportData = ref([])
 const loading = ref(false)
@@ -123,49 +158,48 @@ const filters = ref({
   categorie_id: null
 })
 
-const chartData = computed(() => {
-  if (!stats.value) return null
-  return {
-    labels: stats.value.equipements_par_statut.map(s => s.statut_global.replace('_', ' ').toUpperCase()),
-    datasets: [{
-      data: stats.value.equipements_par_statut.map(s => s.total),
-      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1'],
-      hoverBackgroundColor: ['#2563eb', '#059669', '#d97706', '#dc2626', '#4f46e5']
-    }]
-  }
-})
+const formatCurrency = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(val || 0)
 
-const chartOptions = {
-  plugins: { legend: { position: 'bottom' } },
-  cutout: '60%'
+const getStatutBadgeClass = (s) => {
+  switch (s) {
+    case 'en_stock_general':
+    case 'en_stock_local':
+      return 'badge-success'
+    case 'affecte':
+      return 'badge-primary'
+    case 'en_panne':
+    case 'en_maintenance':
+      return 'badge-warning'
+    case 'hors_service':
+      return 'badge-danger'
+    default:
+      return 'badge-neutral'
+  }
 }
 
 const loadStats = async () => {
   try {
-    const res = await axios.get('/rapports/global')
+    const res = await api.get('/rapports/global')
     stats.value = res.data.data
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les statistiques' })
+    toast.error('Impossible de charger les statistiques')
   }
 }
 
 const loadReport = async () => {
   loading.value = true
   try {
-    const res = await axios.get('/rapports/inventaire', { params: filters.value })
+    const res = await api.get('/rapports/inventaire', { params: filters.value })
     reportData.value = res.data.data
-    gsap.from('.table-card', { opacity: 0, y: 20, duration: 0.5 })
+  } catch (err) {
+    toast.error('Erreur lors du chargement du rapport')
   } finally {
     loading.value = false
   }
 }
 
-const formatCurrency = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(val || 0)
-const getStatutSeverity = (s) => s === 'en_stock_general' ? 'success' : 'info'
-
-// Fonctions d'exportation
 const exportPDF = () => {
-  toast.add({ severity: 'info', summary: 'Préparation', detail: 'Génération du rapport PDF en cours...' })
+  toast.info('Génération du rapport PDF en cours...')
   setTimeout(() => {
     window.print()
   }, 500)
@@ -173,7 +207,7 @@ const exportPDF = () => {
 
 const exportExcel = () => {
   if (reportData.value.length === 0) {
-    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Aucune donnée à exporter' })
+    toast.warn('Aucune donnée à exporter')
     return
   }
   
@@ -199,76 +233,17 @@ const exportExcel = () => {
   link.click()
   document.body.removeChild(link)
   
-  toast.add({ severity: 'success', summary: 'Succès', detail: 'Export Excel (CSV) réussi' })
+  toast.success('Export Excel (CSV) réussi')
 }
 
 onMounted(async () => {
   loadStats()
+  loadReport()
   const [resAg, resCat] = await Promise.all([
-    axios.get('/agences'),
-    axios.get('/categories/list')
+    api.get('/agences'),
+    api.get('/categories/list')
   ])
   agences.value = resAg.data.data || resAg.data
   categories.value = resCat.data.data || resCat.data
-  
-  gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
 })
 </script>
-
-<style scoped lang="scss">
-.rapports-page {
-  padding: 2rem;
-  min-height: 100vh;
-}
-
-.title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  .icon-wrapper {
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    color: white; box-shadow: 0 8px 16px rgba(225, 29, 72, 0.2);
-    .svg-icon { width: 32px; height: 32px; }
-  }
-  h1 { font-size: 2rem; font-weight: 800; color: #1e293b; margin: 0; }
-  .subtitle { color: #64748b; margin-top: 0.25rem; }
-}
-
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; }
-
-.chart-card {
-  border-radius: 24px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  background: white; height: 100%;
-}
-
-.stats-stack {
-  display: flex; flex-direction: column; gap: 1.5rem;
-}
-
-.mini-stat-card {
-  background: white; padding: 1.5rem; border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  position: relative; overflow: hidden;
-  
-  .label { color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-  .value { display: block; font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-top: 0.5rem; }
-  .stat-icon {
-    position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%);
-    font-size: 2rem; opacity: 0.1; color: #e11d48;
-  }
-}
-
-.filters-bar {
-  background: white; padding: 1.5rem; border-radius: 16px; margin: 2rem 0;
-  display: flex; justify-content: space-between; align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  
-  .dropdown-filters { display: flex; gap: 1.5rem; width: 100%; }
-  .modern-dropdown { flex: 1; border: none; background: #f8fafc; border-radius: 10px; }
-}
-
-.table-card { border-radius: 24px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-</style>

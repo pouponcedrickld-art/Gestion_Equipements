@@ -1,74 +1,136 @@
 <template>
   <AgenceLayout>
-    <div class="dashboard">
-      <div class="welcome-bar">
+    <div class="p-6 max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
         <div>
-          <h2>Tableau de bord</h2>
-          <p>Bienvenue, <strong>{{ authStore.user?.name }}</strong></p>
+          <h2 class="text-2xl font-bold text-neutral-800">Tableau de bord</h2>
+          <p class="text-neutral-500 mt-1">Bienvenue, <strong>{{ authStore.user?.name }}</strong></p>
         </div>
-        <span class="role-badge" :class="authStore.userRole">{{ roleLabel }}</span>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase" :class="roleBadgeClass">
+          {{ roleLabel }}
+        </span>
       </div>
 
-    <div v-if="loading" class="loading">
-      <i class="pi pi-spin pi-spinner"></i> Chargement...
-    </div>
-
-    <div v-else>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon"><i class="pi pi-box"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.total_equipements || 0 }}</h3>
-            <p>Total</p>
-          </div>
-        </div>
-        <div class="stat-card success">
-          <div class="stat-icon"><i class="pi pi-check-circle"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.en_stock_general || stats.en_stock_local || 0 }}</h3>
-            <p>En stock</p>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon"><i class="pi pi-user"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.affectes || 0 }}</h3>
-            <p>Affectés</p>
-          </div>
-        </div>
-        <div class="stat-card warning">
-          <div class="stat-icon"><i class="pi pi-exclamation-triangle"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.en_panne || 0 }}</h3>
-            <p>En panne</p>
-          </div>
-        </div>
-        <div class="stat-card info">
-          <div class="stat-icon"><i class="pi pi-send"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.transferts_en_cours || stats.transferts_recus || 0 }}</h3>
-            <p>Transferts</p>
-          </div>
-        </div>
-        <div class="stat-card info">
-          <div class="stat-icon"><i class="pi pi-clock"></i></div>
-          <div class="stat-info">
-            <h3>{{ stats.demandes_en_attente || 0 }}</h3>
-            <p>Demandes</p>
-          </div>
+      <div v-if="loading" class="flex items-center justify-center py-20">
+        <div class="flex items-center gap-2">
+          <div class="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+          <span class="text-neutral-500">Chargement...</span>
         </div>
       </div>
 
-      <div v-if="authStore.isSuperAdmin || authStore.isGestionnaireGeneral" class="president-section">
-        <h3><i class="pi pi-chart-bar"></i> Vue Président</h3>
-        <div class="agences-stats">
-          <div class="mini-card"><span class="big">{{ stats.agences_count || 0 }}</span><span>Sous-agences</span></div>
-          <div class="mini-card"><span class="big">{{ stats.agents_actifs || 0 }}</span><span>Agents</span></div>
-          <div class="mini-card"><span class="big">{{ stats.pannes_non_resolues || 0 }}</span><span>Pannes</span></div>
-          <div class="mini-card"><span class="big">{{ stats.maintenances_planifiees || 0 }}</span><span>Maintenances</span></div>
+      <div v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="card stat-card">
+            <div class="stat-icon bg-primary-100 text-primary-600">
+              <i class="pi pi-box text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.total_equipements || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">Équipements</p>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon bg-success-100 text-success-600">
+              <i class="pi pi-check-circle text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.en_stock_general || stats.en_stock_local || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">En stock</p>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon bg-warning-100 text-warning-600">
+              <i class="pi pi-user text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.affectes || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">Affectés</p>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon bg-danger-100 text-danger-600">
+              <i class="pi pi-exclamation-triangle text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.en_panne || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">En panne</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div class="card">
+            <div class="stat-icon bg-primary-100 text-primary-600">
+              <i class="pi pi-send text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.transferts_en_cours || stats.transferts_recus || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">Transferts en cours</p>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="stat-icon bg-neutral-100 text-neutral-600">
+              <i class="pi pi-clock text-2xl"></i>
+            </div>
+            <div class="stat-info">
+              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.demandes_en_attente || 0 }}</h3>
+              <p class="text-neutral-500 text-sm mt-1">Demandes en attente</p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="authStore.isSuperAdmin || authStore.isGestionnaireGeneral" class="card p-6">
+          <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <i class="pi pi-chart-bar text-primary-500"></i> Vue Président
+          </h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.agences_count || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Sous-agences</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.agents_actifs || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Agents</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.pannes_non_resolues || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Pannes</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.maintenances_planifiees || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Maintenances</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="stats.activite_recente" class="card p-6">
+          <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <i class="pi pi-history text-primary-500"></i> Activité récente (7 jours)
+          </h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.activite_recente.transferts || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Transferts</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.activite_recente.affectations || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Affectations</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.activite_recente.pannes || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Pannes</div>
+            </div>
+            <div class="p-4 bg-neutral-50 rounded-lg text-center">
+              <div class="text-2xl font-bold text-neutral-800">{{ stats.activite_recente.maintenances || 0 }}</div>
+              <div class="text-sm text-neutral-500 mt-1">Maintenances</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   </AgenceLayout>
 </template>
@@ -92,6 +154,15 @@ const roleLabel = computed(() => ({
   agent: 'Agent'
 }[authStore.userRole] || authStore.userRole))
 
+const roleBadgeClass = computed(() => ({
+  super_admin: 'bg-danger-100 text-danger-700',
+  gestionnaire_stock_general: 'bg-warning-100 text-warning-700',
+  chef_agence: 'bg-primary-100 text-primary-700',
+  gestionnaire_stock: 'bg-success-100 text-success-700',
+  technicien_maintenance: 'bg-primary-100 text-primary-700',
+  agent: 'bg-neutral-100 text-neutral-700'
+}[authStore.userRole] || 'bg-neutral-100 text-neutral-700'))
+
 onMounted(async () => {
   loading.value = true
   try {
@@ -107,172 +178,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dashboard {
-  padding: 20px;
-}
-
-.welcome-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.welcome-bar h2 {
-  margin: 0;
-  color: #e2e8f0;
-}
-
-.welcome-bar p {
-  margin: 5px 0 0 0;
-  color: #94a3b8;
-}
-
-.role-badge {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: white;
-}
-
-.role-badge.super_admin {
-  background: #ef4444;
-}
-
-.role-badge.gestionnaire_stock_general {
-  background: #f59e0b;
-}
-
-.role-badge.chef_agence {
-  background: #8b5cf6;
-}
-
-.role-badge.gestionnaire_stock {
-  background: #06b6d4;
-}
-
-.role-badge.technicien_maintenance {
-  background: #10b981;
-}
-
-.role-badge.agent {
-  background: #64748b;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
-}
-
 .stat-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.stat-card.success {
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.stat-card.warning {
-  border-color: rgba(245, 158, 11, 0.3);
-}
-
-.stat-card.info {
-  border-color: rgba(6, 182, 212, 0.3);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  background: #334155;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  color: #3b82f6;
-}
-
-.stat-card.success .stat-icon {
-  color: #10b981;
-}
-
-.stat-card.warning .stat-icon {
-  color: #f59e0b;
-}
-
-.stat-card.info .stat-icon {
-  color: #06b6d4;
-}
-
-.stat-info h3 {
-  margin: 0;
-  font-size: 1.6rem;
-  color: #e2e8f0;
-}
-
-.stat-info p {
-  margin: 4px 0 0 0;
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
-
-.president-section {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 20px;
-}
-
-.president-section h3 {
-  margin: 0 0 15px 0;
-  color: #e2e8f0;
-  font-size: 1rem;
-}
-
-.president-section h3 i {
-  color: #3b82f6;
-  margin-right: 8px;
-}
-
-.agences-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 15px;
-}
-
-.mini-card {
-  background: #0f172a;
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.mini-card .big {
-  display: block;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #e2e8f0;
-  margin-bottom: 5px;
-}
-
-.mini-card span {
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
-
-.loading {
-  text-align: center;
-  color: #94a3b8;
-  padding: 40px;
+  gap: 16px;
 }
 </style>
