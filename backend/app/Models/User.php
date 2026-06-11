@@ -19,8 +19,7 @@ class User extends Authenticatable
         'email',
         'password',
         'agence_id',
-        'telephone',
-        'poste',
+        
         'actif',
     ];
 
