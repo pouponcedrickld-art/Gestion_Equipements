@@ -365,11 +365,12 @@ const selectedCategoryName = computed(() => {
 const photoPreview = ref(null)
 
 const etatOptions = [
-  { label: 'Nouveau', value: 'nouveau' },
-  { label: 'Actif', value: 'actif' },
+  { label: 'Neuf', value: 'neuf' },
+  { label: 'En service', value: 'en_service' },
   { label: 'Maintenance', value: 'en_maintenance' },
-  { label: 'Hors service', value: 'hors_service' },
-  { label: 'Archivé', value: 'archive' }
+  { label: 'En panne', value: 'en_panne' },
+  { label: 'Réformé', value: 'reforme' },
+  { label: 'Perdu', value: 'perdu' }
 ]
 
 const categories = computed(() => categorieStore.categories)

@@ -133,7 +133,7 @@ class EquipementController extends Controller
                 'date_acquisition' => 'nullable|date',
                 'prix_achat' => 'nullable|numeric|min:0',
                 'garantie_date_fin' => 'nullable|date|after_or_equal:date_acquisition',
-                'etat' => 'required|string|in:nouveau,actif,en_maintenance,hors_service,archive',
+                'etat' => 'required|string|in:neuf,en_service,en_maintenance,en_panne,reforme,perdu',
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -262,10 +262,14 @@ class EquipementController extends Controller
 
 
         } catch (\Exception $e) {
+            \Log::error('STORE EQUIPEMENT ERROR: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }
