@@ -19,29 +19,34 @@ class UserController extends Controller
 
     public function store(Request $r)
     {
-        $r->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role' => 'required|string|exists:roles,name',
-            'agence_id' => 'required|exists:agences,id',
-            'telephone' => 'nullable|string|max:30',
-            'poste' => 'nullable|string|max:100',
-            'actif' => 'boolean',
-        ]);
-        $u = User::create([
-            'name' => $r->name,
-            'email' => $r->email,
-            'password' => Hash::make($r->password),
-            'agence_id' => $r->agence_id,
-            'telephone' => $r->telephone,
-            'poste' => $r->poste,
-            'actif' => $r->boolean('actif', true),
-        ]);
-        $u->assignRole($r->role);
-        return $u->load(['agence', 'roles']);
-    }
+        try {
+            $r->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:6',
+                'role' => 'required|string|exists:roles,name',
+                'agence_id' => 'required|exists:agences,id',
+                'actif' => 'boolean',
+            ]);
 
+            $u = User::create([
+                'name' => $r->name,
+                'email' => $r->email,
+                'password' => Hash::make($r->password),
+                'agence_id' => $r->agence_id,
+                'actif' => $r->boolean('actif', true),
+            ]);
+            $u->assignRole($r->role);
+            return $u->load(['agence', 'roles']);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $e->errors()
+            ], 422);
+        }
+    }
     public function show(User $user)
     {
         return $user->load(['agence', 'roles', 'permissions']);
