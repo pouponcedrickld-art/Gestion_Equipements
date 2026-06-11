@@ -36,9 +36,9 @@ class DashboardAgenceController extends Controller
             ];
 
             $stats['equipements_par_agence'] = Agence::where('type', 'sous_agence')
-                ->withCount(['equipements as total' => fn($q) => $q->where('agence_actuelle_id', DB::raw('agences.id'))])
-                ->get(['id', 'nom', 'total']);
-
+                ->withCount('equipementsActuels as total')
+                ->get(['id', 'nom']);
+                
             $stats['equipements_par_categorie'] = \App\Models\Categorie::withCount('equipements')->get(['id', 'nom', 'equipements_count']);
 
             $stats['activite_recente'] = [
