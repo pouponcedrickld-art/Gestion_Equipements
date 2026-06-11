@@ -1,6 +1,5 @@
 <?php
 
-// database/seeders/TestKanbanSeeder.php
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -14,8 +13,8 @@ class TestKanbanSeeder extends Seeder
     public function run(): void
     {
         $equip = Equipement::first();
-        $chef = User::where('email', 'cheflome@gestpark.local')->first();
-        $agence = Agence::where('nom', 'Agence Lomé-Centre')->first();
+        $chef = User::where('id', 3)->first(); // Chef Agence Lomé
+        $agence = Agence::where('id', 2)->first(); // Agence Lomé
 
         if ($equip && $chef && $agence) {
             DemandeMateriel::create([
@@ -24,12 +23,10 @@ class TestKanbanSeeder extends Seeder
                 'equipement_id' => $equip->id,
                 'quantite' => 2,
                 'urgence' => 'Haute',
-                'motif' => 'Besoin urgent pour nouveau projet de collecte de données dans la région des plateaux',
+                'motif' => 'Besoin urgent pour nouveau projet',
                 'date_souhaitee' => now()->addDays(5),
-                'statut' => 'approuve',
+                'statut' => 'approuvé',
             ]);
         }
-
-        echo "✅ Données Kanban de test créées !\n";
     }
 }
