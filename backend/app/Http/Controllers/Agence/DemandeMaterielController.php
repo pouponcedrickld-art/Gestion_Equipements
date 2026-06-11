@@ -19,14 +19,19 @@ class DemandeMaterielController extends Controller
         $query = DemandeMateriel::with(['equipement', 'chefAgence', 'agence']);
 
         // Si c'est un rôle global, il voit tout
-        if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance'])) {
+        // Utilisation de hasAnyRole pour être plus robuste si User.php a des soucis d'override
+        if (!$user->hasAnyRole(['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance'])) {
             // Sinon, il ne voit que les demandes de son agence
             $query->where('agence_id', $user->agence_id);
         }
 
         $demandes = $query->latest()->get();
 
-        return response()->json($demandes);
+        return response()->json([
+            'success' => true,
+            'data' => $demandes,
+            'message' => 'Demandes de matériel récupérées avec succès'
+        ]);
     }
 
     /**
@@ -34,15 +39,15 @@ class DemandeMaterielController extends Controller
      */
     public function store(StoreDemandeMaterielRequest $request)
     {
+        $user = Auth::user();
+
+        if (!$user->agence_id) {
+            return response()->json([
+                'message' => 'Votre compte n\'est rattaché à aucune agence. Veuillez contacter l\'administrateur.'
+            ], 403);
+        }
+
         try {
-            $user = Auth::user();
-
-            if (!$user->agence_id) {
-                return response()->json([
-                    'message' => 'Votre compte n\'est rattaché à aucune agence. Veuillez contacter l\'administrateur.'
-                ], 403);
-            }
-
             // Crée la demande avec les données validées
             $demande = DemandeMateriel::create([
                 'agence_id' => $user->agence_id,
@@ -60,6 +65,7 @@ class DemandeMaterielController extends Controller
                 'data' => $demande->load('equipement')
             ], 201);
         } catch (\Exception $e) {
+            \Log::error('Erreur creation demande materiel: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Erreur technique lors de la création : ' . $e->getMessage(),
             ], 500);

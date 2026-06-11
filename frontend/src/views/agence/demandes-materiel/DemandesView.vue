@@ -305,12 +305,20 @@ const selectedDemande = ref(null)
 // --- Logique de filtrage réactive ---
 // Cette fonction calcule la liste filtrée sans modifier les données originales 'demandes'
 const filteredDemandes = computed(() => {
+  if (!demandes.value) return []
+  
   return demandes.value.filter(demande => {
     // 1. Filtrage par nom d'équipement (insensible à la casse)
-    const matchesSearch = !searchQuery.value || 
-      demande.equipement?.nom?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      demande.equipement?.marque?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      demande.equipement?.modele?.toLowerCase().includes(searchQuery.value.toLowerCase())
+    // Ajout de sécurités pour éviter les crashs si equipement ou ses propriétés sont nulls
+    const nom = demande.equipement?.nom?.toLowerCase() || ''
+    const marque = demande.equipement?.marque?.toLowerCase() || ''
+    const modele = demande.equipement?.modele?.toLowerCase() || ''
+    const search = searchQuery.value?.toLowerCase() || ''
+
+    const matchesSearch = !search || 
+      nom.includes(search) ||
+      marque.includes(search) ||
+      modele.includes(search)
 
     // 2. Filtrage par statut exact
     const matchesStatus = !selectedStatus.value || demande.statut === selectedStatus.value
@@ -349,8 +357,13 @@ const submittingDelete = ref(false)
 const fetchDemandes = async () => {
   loading.value = true
   try {
-    const { data } = await demandeAgenceApi.index()
-    demandes.value = data
+    const res = await demandeAgenceApi.index()
+    // Support both direct array and { success, data } structures
+    if (res.data && res.data.success) {
+      demandes.value = res.data.data
+    } else {
+      demandes.value = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+    }
   } catch (error) {
     console.error('Erreur chargement demandes', error)
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les demandes', life: 3000 })

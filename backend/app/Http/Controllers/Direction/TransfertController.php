@@ -84,13 +84,13 @@ class TransfertController extends Controller
     {
         // 1. À expédier (Demandes approuvées)
         $a_expedier = Transfert::with(['equipement', 'agenceDestination'])
-            ->where('statut', 'en_attente_expedition')
+            ->whereIn('statut', ['approuve', 'demande'])
             ->get()
             ->map(fn($t) => $this->mapForKanban($t, 'transfert'));
 
         // 2. En transit
         $en_transit = Transfert::with(['equipement', 'agenceDestination'])
-            ->where('statut', 'en_transit')
+            ->where('statut', 'expedie')
             ->get()
             ->map(fn($t) => $this->mapForKanban($t, 'transfert'));
 
@@ -176,9 +176,18 @@ class TransfertController extends Controller
     public function refuser(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->refuser($request->user()->id, $request->observations);
-            return response()->json(['success' => true, 'message' => 'Transfert annulé']);
+            
+            // Sécurité : Une agence ne peut refuser que ses propres transferts (source ou destination)
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_source_id && $user->agence_id !== $transfert->agence_destination_id) {
+                    return response()->json(['success' => false, 'message' => 'Non autorisé'], 403);
+                }
+            }
+
+            $transfert->refuser($user->id, $request->observations);
+            return response()->json(['success' => true, 'message' => 'Transfert refusé / annulé']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -187,8 +196,17 @@ class TransfertController extends Controller
     public function expedier(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->expedier($request->user()->id);
+
+            // Sécurité : Seul l'expéditeur (source) ou GSG peut expédier
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_source_id) {
+                    return response()->json(['success' => false, 'message' => 'Non autorisé'], 403);
+                }
+            }
+
+            $transfert->expedier($user->id);
             return response()->json(['success' => true, 'message' => 'Équipement expédié (En transit)']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -198,8 +216,17 @@ class TransfertController extends Controller
     public function recevoir(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->recevoir($request->user()->id);
+
+            // Sécurité : Seul le destinataire ou GSG peut recevoir
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_destination_id) {
+                    return response()->json(['success' => false, 'message' => 'Seul le destinataire peut confirmer la réception'], 403);
+                }
+            }
+
+            $transfert->recevoir($user->id);
             return response()->json(['success' => true, 'message' => 'Transfert reçu, stock agence mis à jour']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);

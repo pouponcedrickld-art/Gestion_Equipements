@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\StockAgenceService;
+use Illuminate\Support\Facades\App;
 
 class Transfert extends Model
 {
@@ -108,11 +111,19 @@ class Transfert extends Model
 
     public function refuser($userId, $observations = null)
     {
+        $oldStatus = $this->statut;
+
         $this->update([
             'statut' => 'refuse',
             'valide_par_id' => $userId,
-            'observations' => $this->observations . "\nRefusé par admin: " . $observations
+            'observations' => $this->observations . "\nRefusé/Annulé : " . $observations
         ]);
+
+        // Si le transfert a déjà été expédié ou reçu, on ajuste le stock si nécessaire
+        if ($oldStatus === 'expedie' || $oldStatus === 'recu') {
+            $stockService = App::make(StockAgenceService::class);
+            $stockService->decrementerStock($this, 'rejet');
+        }
     }
 
     public function expedier($userId)
@@ -143,6 +154,10 @@ class Transfert extends Model
                 $userId
             );
         }
+
+        // Incrémenter le stock de l'agence destinataire
+        $stockService = App::make(StockAgenceService::class);
+        $stockService->incrementerStockReception($this);
     }
 
     public static function getStatusDisponibles()

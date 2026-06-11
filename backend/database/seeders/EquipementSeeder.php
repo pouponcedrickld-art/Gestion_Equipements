@@ -14,6 +14,7 @@ class EquipementSeeder extends Seeder
     {
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
+        
         $categories = Categorie::all();
 
         $equipements = [
@@ -30,7 +31,7 @@ class EquipementSeeder extends Seeder
                 'date_acquisition' => '2024-01-15',
                 'prix_achat' => 850.00,
                 'garantie_date_fin' => '2026-01-15',
-                'etat' => 'neuf',
+                'etat' => 'en_service',
                 'statut_global' => 'en_stock_general',
                 'localisation' => 'Stock Central',
                 'agence_proprietaire_id' => $agenceGenerale->id,
@@ -166,6 +167,6 @@ class EquipementSeeder extends Seeder
             }
         }
 
-        echo "✅ " . count($equipements) . " équipements de test créés/mis à jour avec mouvements initiaux !\n";
+        echo "✅ " . count($equipements) . " équipements de test créés avec mouvements initiaux !\n";
     }
 }

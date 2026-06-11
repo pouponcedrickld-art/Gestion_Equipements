@@ -95,6 +95,12 @@ const routes = [
         meta: { requiresAuth: true }
       },
   {
+    path: '/receptions',
+    name: 'Receptions',
+    component: () => import('@/views/agence/stock/ReceptionView.vue'),
+    meta: { requiresAuth: true, roles: ['chef_agence', 'gestionnaire_stock'] }
+  },
+  {
     path: '/transferts',
     name: 'Transferts',
     component: () => import('@/views/direction/transferts/TransfertsView.vue'),

@@ -14,277 +14,199 @@
             </div>
             <div>
               <h1>Stock de l'Agence</h1>
-              <p class="subtitle">Gestion des transferts entrants et équipements reçus</p>
+              <p class="subtitle">Inventaire des équipements affectés à votre agence</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Filtres et Recherche -->
-      <div class="filters-bar animate-in">
-        <div class="search-box">
-          <i class="pi pi-search"></i>
-          <InputText v-model="searchQuery" placeholder="Rechercher par équipement, agence..." class="search-input" />
+      <!-- Contenu Stock -->
+      <div class="tab-content animate-in">
+        <!-- Filtres et Recherche -->
+        <div class="filters-bar">
+          <div class="search-box">
+            <i class="pi pi-search"></i>
+            <InputText v-model="searchQueryEquipements" placeholder="Rechercher un équipement..." class="search-input" />
+          </div>
+          <div class="dropdown-filters">
+            <Dropdown v-model="selectedStatutEquipement" :options="statutEquipementOptions" optionLabel="label" optionValue="value" placeholder="État" class="modern-dropdown" showClear />
+          </div>
         </div>
-        <div class="dropdown-filters">
-          <Dropdown v-model="selectedStatut" :options="statutOptions" optionLabel="label" optionValue="value" placeholder="Statut" class="modern-dropdown" showClear />
-        </div>
-      </div>
 
-      <!-- Liste des Transferts (Cartes) -->
-      <div class="transferts-grid" v-if="!loading">
-        <div v-for="(trans, index) in filteredTransferts" :key="trans.id" class="transfert-card animate-card" :style="`--index: ${index}`">
-          <div class="card-status-line" :class="trans.statut"></div>
+        <!-- Liste des Équipements (Grille de Cartes) -->
+        <div class="equipements-grid" v-if="!loadingEquipements">
+          <div v-for="(equipement, index) in filteredEquipements" :key="equipement.id" class="equipement-card animate-card" :style="`--index: ${index}`">
+            <div class="card-status-line" :class="`equipement-${equipement.etat}`"></div>
+            
+            <div class="card-body">
+              <div class="card-header-top">
+                <span class="code-inventaire">{{ equipement.code_inventaire }}</span>
+                <Tag :value="equipement.statut_global" :severity="getEquipementStatutSeverity(equipement.statut_global)" />
+              </div>
+
+              <div class="equipement-name">
+                <strong>{{ equipement.nom || equipement.marque }} {{ equipement.modele }}</strong>
+              </div>
+
+              <div class="equipement-meta">
+                <div class="meta-item">
+                  <i class="pi pi-tag"></i>
+                  <span>{{ equipement.categorie?.nom || '-' }}</span>
+                </div>
+                <div class="meta-item">
+                  <i class="pi pi-barcode"></i>
+                  <span>{{ equipement.numero_serie || '-' }}</span>
+                </div>
+                <div class="meta-item">
+                  <i class="pi pi-home"></i>
+                  <span>{{ equipement.localisation || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          <div class="card-body">
-            <div class="card-header-top">
-              <span class="trans-no">{{ trans.numero_transfert || '#' + trans.id }}</span>
-              <Tag :value="trans.statut" :severity="getStatutSeverity(trans.statut)" />
-            </div>
-
-            <div class="route-display">
-              <div class="node">
-                <i class="pi pi-building"></i>
-                <span>{{ trans.agence_origine?.nom || 'Origine' }}</span>
-              </div>
-              <div class="path">
-                <div class="line"></div>
-                <i class="pi pi-chevron-right"></i>
-              </div>
-              <div class="node">
-                <i class="pi pi-map-marker"></i>
-                <span>{{ trans.agence_destination?.nom || 'Destination' }}</span>
-              </div>
-            </div>
-
-            <div class="equipement-info-box">
-              <div class="equip-icon"><i class="pi pi-desktop"></i></div>
-              <div class="equip-details">
-                <strong>{{ trans.equipement?.marque }} {{ trans.equipement?.modele }}</strong>
-                <span>SN: {{ trans.equipement?.numero_serie }}</span>
-              </div>
-            </div>
-
-            <div class="card-meta">
-              <div class="meta-item">
-                <i class="pi pi-calendar"></i>
-                <span>{{ formatDate(trans.date_demande) }}</span>
-              </div>
-            </div>
+          <div v-if="filteredEquipements.length === 0" class="empty-state">
+            <i class="pi pi-box"></i>
+            <p>Aucun équipement trouvé dans votre stock.</p>
           </div>
+        </div>
 
-          <div class="card-actions-bar">
-            <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(trans)" />
-            <!-- Boutons d'action pour les transferts en statut "expedie" -->
-            <Button v-if="trans.statut === 'expedie'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="recevoirTransfert(trans)" label="Recevoir" />
-            <Button v-if="trans.statut === 'expedie'" icon="pi pi-times" class="p-button-text p-button-rounded p-button-danger" @click="ouvrirRefusDialog(trans)" label="Refuser" />
+        <!-- Skeleton loading -->
+        <div class="equipements-grid" v-else>
+          <div v-for="n in 8" :key="n" class="equipement-card skeleton">
+            <div class="skeleton-body"></div>
           </div>
         </div>
       </div>
-
-      <!-- Skeleton loading -->
-      <div class="transferts-grid" v-else>
-        <div v-for="n in 6" :key="n" class="transfert-card skeleton">
-          <div class="skeleton-body"></div>
-        </div>
-      </div>
-
-      <!-- Dialogue de refus -->
-      <Dialog v-model:visible="refusDialogVisible" header="Refuser le transfert" :modal="true" :style="{ width: '400px' }">
-        <div class="form-group">
-          <label for="observations">Observations *</label>
-          <Textarea id="observations" v-model="refusObservations" placeholder="Veuillez indiquer la raison du refus..." rows="4" />
-        </div>
-        <template #footer>
-          <Button icon="pi pi-times" label="Annuler" class="p-button-text" @click="fermerRefusDialog" />
-          <Button icon="pi pi-check" label="Confirmer" class="p-button-danger" @click="confirmerRefus" />
-        </template>
-      </Dialog>
     </div>
   </AgenceLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useToast } from 'primevue/usetoast'
-import { useTransfertStore } from '@/stores/transfertStore'
+import { useEquipementStore } from '@/stores/equipementStore'
 import { useAuthStore } from '@/stores/authStore'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import gsap from 'gsap'
 
 // PrimeVue Components
-import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
-import Textarea from 'primevue/textarea'
 
-const router = useRouter()
-const toast = useToast()
-const transfertStore = useTransfertStore()
+const equipementStore = useEquipementStore()
 const authStore = useAuthStore()
 
-const loading = ref(false)
-const selectedStatut = ref(null)
-const searchQuery = ref('')
-const refusDialogVisible = ref(false)
-const refusObservations = ref('')
-const transfertARefuser = ref(null)
+// États pour les équipements (stock)
+const loadingEquipements = ref(false)
+const selectedStatutEquipement = ref(null)
+const searchQueryEquipements = ref('')
 
-// Statut options (Expédié, Reçu, Refusé)
-const statutOptions = [
-  { label: 'Expédié', value: 'expedie' },
-  { label: 'Reçu', value: 'recu' },
-  { label: 'Refusé', value: 'refuse' }
+// Options de statut pour les équipements
+const statutEquipementOptions = [
+  { label: 'Nouveau', value: 'nouveau' },
+  { label: 'En service', value: 'en_service' },
+  { label: 'En maintenance', value: 'en_maintenance' },
+  { label: 'Hors service', value: 'hors_service' },
+  { label: 'Archivé', value: 'archive' }
 ]
 
-// Transferts entrants (pour l'agence de l'utilisateur connecté)
-const transfertsEntrants = computed(() => {
-  return transfertStore.transferts.filter(t => t.agence_destination_id === authStore.userAgence)
+// Computed pour les équipements
+const equipementsAgence = computed(() => {
+  const list = Array.isArray(equipementStore.equipements) 
+    ? equipementStore.equipements 
+    : (equipementStore.equipements?.data || [])
+    
+  return list.filter(e => e.agence_actuelle_id === authStore.userAgence)
 })
 
-// Filtrage des transferts
-const filteredTransferts = computed(() => {
-  let list = transfertsEntrants.value
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    list = list.filter(t => 
-      t.numero_transfert?.toLowerCase().includes(q) || 
-      t.equipement?.marque?.toLowerCase().includes(q) ||
-      t.agence_origine?.nom?.toLowerCase().includes(q) ||
-      t.agence_destination?.nom?.toLowerCase().includes(q)
+const filteredEquipements = computed(() => {
+  const list = equipementsAgence.value || []
+  if (searchQueryEquipements.value) {
+    const q = searchQueryEquipements.value.toLowerCase()
+    list = list.filter(e => 
+      e.nom?.toLowerCase().includes(q) || 
+      e.marque?.toLowerCase().includes(q) ||
+      e.modele?.toLowerCase().includes(q) ||
+      e.code_inventaire?.toLowerCase().includes(q) ||
+      e.categorie?.nom?.toLowerCase().includes(q)
     )
   }
-  if (selectedStatut.value) {
-    list = list.filter(t => t.statut === selectedStatut.value)
+  if (selectedStatutEquipement.value) {
+    list = list.filter(e => e.etat === selectedStatutEquipement.value)
   }
   return list
 })
 
-// Récupération de la sévérité pour le tag
-const getStatutSeverity = (s) => {
+// Récupération de la sévérité pour le tag statut équipement
+const getEquipementStatutSeverity = (s) => {
   switch(s) {
-    case 'demande': return 'warning'
-    case 'approuve': return 'info'
-    case 'expedie': return 'primary'
-    case 'recu': return 'success'
-    case 'refuse': return 'danger'
+    case 'en_stock_general': return 'success'
+    case 'en_service': return 'primary'
+    case 'en_maintenance': return 'warning'
+    case 'hors_service': return 'danger'
+    case 'affecte': return 'info'
     default: return 'secondary'
   }
 }
 
-// Formatage de date
-const formatDate = (date) => date ? new Date(date).toLocaleDateString('fr-FR') : 'N/A'
-
-// Actions
-const viewDetails = (trans) => {
-  // Rediriger vers la page de détails du transfert
-  // Pour l'instant, on affiche un toast
-  toast.add({ severity: 'info', summary: 'Détails', detail: `Voir détails du transfert #${trans.id}` })
-}
-
-const recevoirTransfert = async (trans) => {
+const fetchEquipements = async () => {
+  loadingEquipements.value = true
   try {
-    await transfertStore.recevoirTransfert(trans.id)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert reçu avec succès', life: 3000 })
-    // Recharger les transferts
-    await transfertStore.fetchTransferts()
+    await equipementStore.fetchEquipements()
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de recevoir le transfert', life: 3000 })
-  }
-}
-
-const ouvrirRefusDialog = (trans) => {
-  transfertARefuser.value = trans
-  refusObservations.value = ''
-  refusDialogVisible.value = true
-}
-
-const fermerRefusDialog = () => {
-  refusDialogVisible.value = false
-  transfertARefuser.value = null
-  refusObservations.value = ''
-}
-
-const confirmerRefus = async () => {
-  if (!refusObservations.value.trim()) {
-    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez indiquer une raison de refus', life: 3000 })
-    return
-  }
-  
-  try {
-    await transfertStore.refuserTransfert(transfertARefuser.value.id, refusObservations.value)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert refusé avec succès', life: 3000 })
-    fermerRefusDialog()
-    // Recharger les transferts
-    await transfertStore.fetchTransferts()
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de refuser le transfert', life: 3000 })
+    console.error('Erreur lors du chargement des équipements:', err)
+  } finally {
+    loadingEquipements.value = false
   }
 }
 
 // Chargement initial
 onMounted(async () => {
-  loading.value = true
-  try {
-    await transfertStore.fetchTransferts()
-  } catch (err) {
-    console.error('Erreur lors du chargement des transferts:', err)
-  } finally {
-    loading.value = false
-  }
-  
+  await fetchEquipements()
   gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
   gsap.from('.animate-card', { opacity: 0, y: 20, duration: 0.6, stagger: 0.05, ease: 'power2.out' })
 })
 </script>
 
 <style scoped lang="scss">
-.stock-agences-view { padding: 1rem; }
+.stock-agences-view { padding: 2rem; }
 .title-with-icon {
-  display: flex; align-items: center; gap: 1rem;
+  display: flex; align-items: center; gap: 1.5rem;
   .icon-wrapper {
-    width: 40px; height: 40px;
+    width: 60px; height: 60px;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    color: white; box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
-    .svg-icon { width: 20px; height: 20px; }
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    color: white; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+    .svg-icon { width: 32px; height: 32px; }
   }
-  h1 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; }
-  .subtitle { color: #64748b; font-size: 0.85rem; }
+  h1 { font-size: 2rem; font-weight: 800; color: #1e293b; margin: 0; }
+  .subtitle { color: #64748b; }
 }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 
 .filters-bar {
-  display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem;
-  .search-box { flex: 1; position: relative; i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.85rem; } .search-input { width: 100%; padding-left: 2.25rem; border-radius: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-size: 0.85rem; height: 36px; } }
-  .dropdown-filters { display: flex; gap: 0.75rem; align-items: center; .modern-dropdown { border-radius: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-size: 0.85rem; height: 36px; } }
+  display: flex; justify-content: space-between; gap: 1.5rem; margin-bottom: 2rem;
+  .search-box { flex: 1; position: relative; i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; } .search-input { width: 100%; padding-left: 2.5rem; border-radius: 12px; border: 1px solid #e2e8f0; } }
+  .dropdown-filters { :deep(.modern-dropdown) { border-radius: 12px; border: 1px solid #e2e8f0; min-width: 200px; } }
 }
 
-.transferts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-.transfert-card {
-  background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.05); position: relative;
-  .card-status-line { height: 4px; width: 100%; &.demande { background: #f59e0b; } &.approuve { background: #3b82f6; } &.expedie { background: #2563eb; } &.recu { background: #10b981; } &.refuse { background: #ef4444; } }
-  .card-body { padding: 1rem; .card-header-top { display: flex; justify-content: space-between; .trans-no { font-family: monospace; font-weight: bold; color: #64748b; } } }
-  .card-actions-bar { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #f1f5f9; }
+.equipements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.equipement-card {
+  background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;
+  .card-status-line { height: 4px; width: 100%; 
+    &.equipement-nouveau { background: #3b82f6; } &.equipement-en_service { background: #10b981; } &.equipement-en_maintenance { background: #f59e0b; } &.equipement-hors_service { background: #ef4444; } &.equipement-archive { background: #64748b; }
+  }
+  .card-body { padding: 1.5rem; .card-header-top { display: flex; justify-content: space-between; .code-inventaire { font-family: monospace; font-weight: bold; color: #64748b; } } }
 }
 
-.route-display {
-  display: flex; align-items: center; justify-content: space-between; margin: 1rem 0; padding: 0.75rem; background: #f8fafc; border-radius: 10px;
-  .node { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; i { color: #3b82f6; } span { font-size: 0.75rem; font-weight: 600; } }
-  .path { flex: 1; display: flex; align-items: center; padding: 0 0.75rem; .line { height: 2px; flex: 1; background: #e2e8f0; } i { color: #cbd5e1; margin-left: -5px; } }
+.equipement-name { margin: 1rem 0; strong { font-size: 1.1rem; color: #1e293b; } }
+.equipement-meta { display: flex; flex-direction: column; gap: 0.75rem;
+  .meta-item { display: flex; align-items: center; gap: 0.75rem; color: #64748b; i { color: #94a3b8; width: 20px; } }
 }
 
-.equipement-info-box {
-  display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 1rem;
-  .equip-icon { width: 36px; height: 36px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3b82f6; }
-  .equip-details { display: flex; flex-direction: column; strong { font-size: 0.85rem; } span { font-size: 0.7rem; color: #64748b; } }
-}
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem; color: #94a3b8; i { font-size: 3rem; margin-bottom: 1rem; } }
 
-.form-group {
-  display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;
-  label { font-size: 0.85rem; font-weight: 600; color: #475569; }
-}
+.skeleton { .skeleton-body { padding: 5rem; border-radius: 20px; background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; } }
+@keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 </style>
