@@ -137,14 +137,21 @@ class EquipementSeeder extends Seeder
         ];
 
         foreach ($equipements as $equipementData) {
+            // Utiliser updateOrCreate pour éviter les duplications
             $equipement = Equipement::updateOrCreate(
-                ['reference' => $equipementData['reference']],
-                $equipementData
+                ['reference' => $equipementData['reference']], // Clé unique
+                $equipementData // Données à créer ou mettre à jour
             );
-
-            Mouvement::updateOrCreate(
-                ['equipement_id' => $equipement->id, 'type_mouvement' => 'creation'],
-                [
+            
+            // Créer le mouvement seulement s'il n'existe pas déjà
+            $mouvementExists = Mouvement::where('equipement_id', $equipement->id)
+                ->where('type_mouvement', 'creation')
+                ->exists();
+            
+            if (!$mouvementExists) {
+                Mouvement::create([
+                    'equipement_id' => $equipement->id,
+                    'type_mouvement' => 'creation',
                     'agent_id' => null,
                     'user_id' => 1,
                     'date_mouvement' => $equipement->date_acquisition,
@@ -155,8 +162,8 @@ class EquipementSeeder extends Seeder
                         'agence_actuelle' => $equipement->agence_actuelle_id,
                     ]),
                     'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
-                ]
-            );
+                ]);
+            }
         }
 
         echo "✅ " . count($equipements) . " équipements de test créés/mis à jour avec mouvements initiaux !\n";
