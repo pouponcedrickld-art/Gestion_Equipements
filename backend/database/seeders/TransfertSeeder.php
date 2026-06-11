@@ -97,7 +97,8 @@ class TransfertSeeder extends Seeder
         ];
 
         foreach ($transferts as $transfertData) {
-            Transfert::create($transfertData);        }
+            Transfert::create($transfertData);
+        }
 
         echo "✅ " . count($transferts) . " transferts de test créés avec différents statuts !\n";
     }
