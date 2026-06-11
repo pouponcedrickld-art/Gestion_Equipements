@@ -510,14 +510,14 @@ class TransfertController extends Controller
             }
 
             $stats = [
-                'total' => $query->count(),
-                'par_statut' => $query->selectRaw('statut, COUNT(*) as count')
+                'total' => (clone $query)->count(),
+                'par_statut' => (clone $query)->selectRaw('statut, COUNT(*) as count')
                     ->groupBy('statut')->pluck('count', 'statut'),
-                'par_type' => $query->selectRaw('type_transfert, COUNT(*) as count')
+                'par_type' => (clone $query)->selectRaw('type_transfert, COUNT(*) as count')
                     ->groupBy('type_transfert')->pluck('count', 'type_transfert'),
-                'en_attente_approbation' => $query->byStatut('demande')->count(),
-                'en_transit' => $query->byStatut('expedie')->count(),
-                'termines_ce_mois' => $query->whereIn('statut', ['recu', 'refuse'])
+                'en_attente_approbation' => (clone $query)->byStatut('demande')->count(),
+                'en_transit' => (clone $query)->byStatut('expedie')->count(),
+                'termines_ce_mois' => (clone $query)->whereIn('statut', ['recu', 'refuse'])
                     ->whereMonth('updated_at', now()->month)->count(),
             ];
 
