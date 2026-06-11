@@ -231,15 +231,20 @@ export const useConsommableStore = defineStore('consommable', () => {
   /**
    * Ajuster le stock d'un consommable
    */
-  async function ajusterStock(id, action, quantite, description = '') {
+  async function ajusterStock(id, dataOrAction, quantite = null, description = '') {
     loading.value = true
     error.value = null
     
     try {
-      const data = {
-        action, // 'ajouter' ou 'retirer'
-        quantite,
-        description
+      let data;
+      if (typeof dataOrAction === 'object') {
+        data = dataOrAction;
+      } else {
+        data = {
+          action: dataOrAction, // 'ajouter' ou 'retirer'
+          quantite,
+          description
+        }
       }
       
       const response = await consommableApi.ajusterStock(id, data)

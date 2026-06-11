@@ -26,8 +26,41 @@
         </div>
       </div>
 
-      <!-- Statistiques Glassmorphism -->
-      <div class="stats-container animate-in">
+      <!-- Section des demandes approuvées à transférer -->
+      <div class="approved-demandes-section animate-in" v-if="approvedDemandes.length > 0">
+        <div class="section-header">
+          <i class="pi pi-verified"></i>
+          <h3>Demandes de matériel approuvées à transférer</h3>
+          <span class="count-badge">{{ approvedDemandes.length }}</span>
+        </div>
+        
+        <div class="demandes-horizontal-scroll">
+          <div v-for="demande in approvedDemandes" :key="demande.id" class="approved-demande-card">
+            <div class="demande-header">
+              <span class="agence-name">{{ demande.agence?.nom }}</span>
+              <span class="date">{{ formatDate(demande.created_at) }}</span>
+            </div>
+            <div class="demande-body">
+              <strong>{{ demande.equipement?.nom }}</strong>
+              <div class="demande-meta">
+                <span>Qté: {{ demande.quantite }}</span>
+                <span class="urgency" :class="demande.urgence.toLowerCase()">{{ demande.urgence }}</span>
+              </div>
+            </div>
+            <div class="demande-footer">
+              <Button 
+                label="Lancer le transfert" 
+                icon="pi pi-external-link" 
+                class="p-button-sm p-button-outlined"
+                @click="createTransfertFromDemande(demande)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistiques Glassmorphism (commenté sur demande) -->
+      <!-- <div class="stats-container animate-in">
         <div class="stat-glass-card warning">
           <div class="stat-icon-box"><i class="pi pi-clock"></i></div>
           <div class="stat-details">
@@ -49,7 +82,7 @@
             <span class="label">Terminés</span>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Filtres et Recherche -->
       <div class="filters-bar animate-in">
@@ -62,62 +95,72 @@
         </div>
       </div>
 
-      <!-- Liste des Transferts (Cards) -->
-      <div class="transferts-grid" v-if="!loading">
-        <div v-for="(trans, index) in filteredTransferts" :key="trans.id" class="transfert-card animate-card" :style="`--index: ${index}`">
-          <div class="card-status-line" :class="trans.statut"></div>
-          
-          <div class="card-body">
-            <div class="card-header-top">
-              <span class="trans-no">{{ trans.numero_transfert || '#' + trans.id }}</span>
-              <Tag :value="trans.statut" :severity="getStatutSeverity(trans.statut)" />
-            </div>
+      <!-- Liste des Transferts (Tableau) -->
+      <div class="table-container animate-in" v-if="!loading">
+        <DataTable 
+          :value="filteredTransferts" 
+          responsiveLayout="stack" 
+          breakpoint="960px"
+          stripedRows
+          class="modern-table"
+          :paginator="true" 
+          :rows="10"
+        >
+          <Column field="id" header="ID" sortable>
+            <template #body="slotProps">
+              <span class="trans-id">#{{ slotProps.data.id }}</span>
+            </template>
+          </Column>
 
-            <div class="route-display">
-              <div class="node">
-                <i class="pi pi-building"></i>
-                <span>{{ trans.agence_origine?.nom || 'Origine' }}</span>
+          <Column header="Équipement" sortable sortField="equipement.nom">
+            <template #body="slotProps">
+              <div class="equipement-cell">
+                <span class="equip-name">{{ slotProps.data.equipement?.nom || slotProps.data.equipement?.marque + ' ' + slotProps.data.equipement?.modele }}</span>
+                <small class="equip-sn">SN: {{ slotProps.data.equipement?.numero_serie || 'N/A' }}</small>
               </div>
-              <div class="path">
-                <div class="line"></div>
-                <i class="pi pi-chevron-right"></i>
-              </div>
-              <div class="node">
-                <i class="pi pi-map-marker"></i>
-                <span>{{ trans.agence_destination?.nom || 'Destination' }}</span>
-              </div>
-            </div>
+            </template>
+          </Column>
 
-            <div class="equipement-info-box">
-              <div class="equip-icon"><i class="pi pi-desktop"></i></div>
-              <div class="equip-details">
-                <strong>{{ trans.equipement?.marque }} {{ trans.equipement?.modele }}</strong>
-                <span>SN: {{ trans.equipement?.numero_serie }}</span>
-              </div>
-            </div>
+          <Column header="Source" sortable sortField="agence_source.nom">
+            <template #body="slotProps">
+              <span class="agence-cell source">{{ slotProps.data.agence_source?.nom || 'Siège' }}</span>
+            </template>
+          </Column>
 
-            <div class="card-meta">
-              <div class="meta-item">
-                <i class="pi pi-calendar"></i>
-                <span>{{ formatDate(trans.date_demande) }}</span>
-              </div>
-            </div>
-          </div>
+          <Column header="Destination" sortable sortField="agence_destination.nom">
+            <template #body="slotProps">
+              <span class="agence-cell destination">{{ slotProps.data.agence_destination?.nom }}</span>
+            </template>
+          </Column>
 
-          <div class="card-actions-bar">
-            <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(trans)" />
-            <Button v-if="trans.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(trans)" />
-            <Button v-if="trans.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(trans)" />
-            <Button v-if="trans.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(trans)" />
-          </div>
-        </div>
+          <Column field="date_demande" header="Date Demande" sortable>
+            <template #body="slotProps">
+              {{ formatDate(slotProps.data.date_demande) }}
+            </template>
+          </Column>
+
+          <Column field="statut" header="Statut" sortable>
+            <template #body="slotProps">
+              <Tag :value="slotProps.data.statut" :severity="getStatutSeverity(slotProps.data.statut)" />
+            </template>
+          </Column>
+
+          <Column header="Actions">
+            <template #body="slotProps">
+              <div class="actions-cell">
+                <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(slotProps.data)" v-tooltip.top="'Voir détails'" />
+                <Button v-if="slotProps.data.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(slotProps.data)" v-tooltip.top="'Approuver'" />
+                <Button v-if="slotProps.data.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(slotProps.data)" v-tooltip.top="'Expédier'" />
+                <Button v-if="slotProps.data.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(slotProps.data)" v-tooltip.top="'Recevoir'" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
       <!-- Skeleton loading -->
-      <div class="transferts-grid" v-else>
-        <div v-for="n in 6" :key="n" class="transfert-card skeleton">
-          <div class="skeleton-body"></div>
-        </div>
+      <div class="table-container skeleton" v-else>
+        <div v-for="n in 5" :key="n" class="skeleton-row"></div>
       </div>
     </div>
   </DirectionLayout>
@@ -129,6 +172,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTransfertStore } from '@/stores/transfertStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
+import transfertApi from '@/api/transfertApi' 
 import gsap from 'gsap'
 
 // PrimeVue Components
@@ -136,14 +180,50 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 
 const router = useRouter()
 const toast = useToast()
 const transfertStore = useTransfertStore()
 
 const loading = ref(false)
+const loadingApprovedDemandes = ref(false) // État chargement demandes
+const approvedDemandes = ref([]) // Liste des demandes approuvées
 const selectedStatut = ref(null)
 const searchQuery = ref('')
+
+// Récupérer les demandes approuvées prêtes pour transfert
+const fetchApprovedDemandes = async () => {
+  loadingApprovedDemandes.value = true
+  try {
+    const res = await transfertApi.getDemandesApprouvees()
+    if (res.data && res.data.success) {
+      approvedDemandes.value = res.data.data
+    }
+  } catch (err) {
+    console.error('Erreur lors de la récupération des demandes approuvées', err)
+  } finally {
+    loadingApprovedDemandes.value = false
+  }
+}
+
+// Créer un transfert depuis une demande
+const createTransfertFromDemande = async (demande) => {
+  try {
+    const res = await transfertApi.creerDepuisDemande(demande.id)
+    if (res.data && res.data.success) {
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert généré avec succès' })
+      // Rafraîchir les données
+      await Promise.all([
+        fetchApprovedDemandes(),
+        transfertStore.fetchTransferts()
+      ])
+    }
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: err.response?.data?.message || 'Échec de la création du transfert' })
+  }
+}
 
 const transfertsEnAttente = computed(() => transfertStore.transfertsEnAttente)
 const transfertsEnTransit = computed(() => transfertStore.transfertsEnTransit)
@@ -153,7 +233,13 @@ const filteredTransferts = computed(() => {
   let list = transfertStore.transferts
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    list = list.filter(t => t.numero_transfert?.toLowerCase().includes(q) || t.equipement?.marque?.toLowerCase().includes(q))
+    list = list.filter(t => 
+      t.numero_transfert?.toLowerCase().includes(q) || 
+      t.equipement?.nom?.toLowerCase().includes(q) ||
+      t.equipement?.marque?.toLowerCase().includes(q) ||
+      t.agence_source?.nom?.toLowerCase().includes(q) ||
+      t.agence_destination?.nom?.toLowerCase().includes(q)
+    )
   }
   if (selectedStatut.value) {
     list = list.filter(t => t.statut === selectedStatut.value)
@@ -162,7 +248,7 @@ const filteredTransferts = computed(() => {
 })
 
 const statutOptions = [
-  { label: 'Demande', value: 'demande' },
+  { label: 'En attente', value: 'demande' },
   { label: 'Approuvé', value: 'approuve' },
   { label: 'Expédié', value: 'expedie' },
   { label: 'Reçu', value: 'recu' },
@@ -192,9 +278,30 @@ const approveTransfert = async (trans) => {
   }
 }
 
+const shipTransfert = async (trans) => {
+  try {
+    await transfertStore.expedierTransfert(trans.id)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement expédié' })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'expédition' })
+  }
+}
+
+const receiveTransfert = async (trans) => {
+  try {
+    await transfertStore.recevoirTransfert(trans.id)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement reçu' })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la réception' })
+  }
+}
+
 onMounted(async () => {
   loading.value = true
-  await transfertStore.fetchTransferts()
+  await Promise.all([
+    transfertStore.fetchTransferts(),
+    fetchApprovedDemandes()
+  ])
   loading.value = false
   
   gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
@@ -218,32 +325,125 @@ onMounted(async () => {
 }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 
-.stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-.stat-glass-card {
-  background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  display: flex; align-items: center; gap: 1rem;
-  .stat-icon-box { font-size: 1.5rem; color: #6366f1; }
-  .value { display: block; font-size: 1.5rem; font-weight: 800; }
-  .label { color: #64748b; font-size: 0.8rem; }
+.approved-demandes-section {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    color: #6366f1;
+    
+    i { font-size: 1.2rem; }
+    h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+    .count-badge {
+      background: #6366f1;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+  }
 }
 
-.route-display {
-  display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px;
-  .node { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; i { color: #6366f1; } span { font-size: 0.8rem; font-weight: 600; } }
-  .path { flex: 1; display: flex; align-items: center; padding: 0 1rem; .line { height: 2px; flex: 1; background: #e2e8f0; } i { color: #cbd5e1; margin-left: -5px; } }
+.demandes-horizontal-scroll {
+  display: flex;
+  gap: 1.2rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 }
 
-.equipement-info-box {
-  display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 1rem;
-  .equip-icon { width: 40px; height: 40px; background: #eef2ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6366f1; }
-  .equip-details { display: flex; flex-direction: column; strong { font-size: 0.9rem; } span { font-size: 0.75rem; color: #64748b; } }
+.approved-demande-card {
+  min-width: 280px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #f1f5f9;
 }
 
-.transferts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-.transfert-card {
-  background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;
-  .card-status-line { height: 4px; width: 100%; &.demande { background: #f59e0b; } &.expedie { background: #3b82f6; } &.recu { background: #10b981; } }
-  .card-body { padding: 1.5rem; .card-header-top { display: flex; justify-content: space-between; .trans-no { font-family: monospace; font-weight: bold; color: #64748b; } } }
-  .card-actions-bar { display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid #f1f5f9; }
+.filters-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+  
+  .search-box {
+    position: relative;
+    flex: 1;
+    i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1; }
+    :deep(.search-input) { width: 100%; padding-left: 2.5rem; border-radius: 12px; border: 1px solid #e2e8f0; }
+  }
+  
+  .dropdown-filters {
+    display: flex;
+    gap: 1rem;
+    :deep(.modern-dropdown) { border-radius: 12px; border: 1px solid #e2e8f0; min-width: 180px; }
+  }
 }
+
+.table-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+  
+  &.skeleton {
+    padding: 1rem;
+    .skeleton-row {
+      height: 60px;
+      background: #f8fafc;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      animation: pulse 1.5s infinite;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.modern-table {
+  :deep(.p-datatable-thead > tr > th) {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+  }
+  
+  :deep(.p-datatable-tbody > tr) {
+    transition: background 0.2s;
+    &:hover { background: #f8fafc; }
+    > td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
+  }
+}
+
+.trans-id { font-family: monospace; font-weight: 700; color: #64748b; }
+.equipement-cell {
+  display: flex; flex-direction: column;
+  .equip-name { font-weight: 600; color: #1e293b; }
+  .equip-sn { color: #94a3b8; font-size: 0.75rem; }
+}
+
+.agence-cell {
+  font-weight: 600;
+  &.source { color: #6366f1; }
+  &.destination { color: #8b5cf6; }
+}
+
+.actions-cell { display: flex; gap: 0.25rem; }
 </style>

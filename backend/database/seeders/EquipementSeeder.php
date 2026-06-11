@@ -138,22 +138,33 @@ class EquipementSeeder extends Seeder
         ];
 
         foreach ($equipements as $equipementData) {
-            $equipement = Equipement::create($equipementData);
+            // Utiliser updateOrCreate pour éviter les duplications
+            $equipement = Equipement::updateOrCreate(
+                ['reference' => $equipementData['reference']], // Clé unique
+                $equipementData // Données à créer ou mettre à jour
+            );
             
-            Mouvement::create([
-                'equipement_id' => $equipement->id,
-                'type_mouvement' => 'creation',
-                'agent_id' => null,
-                'user_id' => 1,
-                'date_mouvement' => $equipement->date_acquisition,
-                'ancienne_valeur' => null,
-                'nouvelle_valeur' => json_encode([
-                    'etat' => $equipement->etat,
-                    'statut_global' => $equipement->statut_global,
-                    'agence_actuelle' => $equipement->agence_actuelle_id,
-                ]),
-                'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
-            ]);
+            // Créer le mouvement seulement s'il n'existe pas déjà
+            $mouvementExists = Mouvement::where('equipement_id', $equipement->id)
+                ->where('type_mouvement', 'creation')
+                ->exists();
+            
+            if (!$mouvementExists) {
+                Mouvement::create([
+                    'equipement_id' => $equipement->id,
+                    'type_mouvement' => 'creation',
+                    'agent_id' => null,
+                    'user_id' => 1,
+                    'date_mouvement' => $equipement->date_acquisition,
+                    'ancienne_valeur' => null,
+                    'nouvelle_valeur' => json_encode([
+                        'etat' => $equipement->etat,
+                        'statut_global' => $equipement->statut_global,
+                        'agence_actuelle' => $equipement->agence_actuelle_id,
+                    ]),
+                    'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
+                ]);
+            }
         }
 
         echo "✅ " . count($equipements) . " équipements de test créés avec mouvements initiaux !\n";

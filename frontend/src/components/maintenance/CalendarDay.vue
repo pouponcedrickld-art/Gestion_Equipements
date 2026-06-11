@@ -66,7 +66,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['event-click', 'show-more', 'day-click'])
+const emit = defineEmits(['event-click', 'show-more', 'day-click'])
 
 // Classes dynamiques pour la cellule
 const cellClasses = computed(() => {
@@ -99,8 +99,6 @@ function handleDayClick(event) {
     }
   })
 }
-
-const emit = defineEmits(['event-click', 'show-more', 'day-click'])
 
 // Classes pour le numéro du jour
 const dayNumberClasses = computed(() => {

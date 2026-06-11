@@ -115,6 +115,11 @@
             showClear
             @change="handleSearch"
           />
+          <SelectButton v-model="viewMode" :options="viewOptions" optionLabel="icon" optionValue="value" class="view-toggle">
+            <template #option="slotProps">
+              <i :class="slotProps.option.icon"></i>
+            </template>
+          </SelectButton>
           <Button 
             icon="pi pi-filter-slash" 
             label="Réinitialiser"
@@ -124,15 +129,19 @@
         </div>
       </div>
 
-      <!-- Liste des Équipements (DataTable structurée) -->
+      <!-- Liste des Équipements -->
       <div class="equipements-container" v-if="!loading">
+        <!-- Vue Table -->
         <DataTable 
+          v-if="viewMode === 'table' && equipementStore.equipements.length > 0"
           :value="equipementStore.equipements" 
           responsiveLayout="scroll" 
           class="modern-table"
           :rows="10" 
-          v-if="equipementStore.equipements.length > 0"
+          paginator
+          :rowsPerPageOptions="[10, 20, 50]"
         >
+          <!-- ... colonnes existantes ... -->
           <Column field="code_inventaire" header="Code Inventaire" sortable>
             <template #body="{ data }">
               <code class="code-badge">{{ data.code_inventaire }}</code>
@@ -142,7 +151,10 @@
           <Column field="nom" header="Désignation" sortable>
             <template #body="{ data }">
               <div class="flex flex-column">
-                <span class="font-bold text-gray-800">{{ data.nom }}</span>
+                <div class="flex align-items-center gap-2">
+                  <span class="font-bold text-gray-800">{{ data.nom }}</span>
+                  <Tag v-if="data.is_lot" :value="`Lot x${data.quantite}`" severity="info" class="text-xs" />
+                </div>
                 <small class="text-gray-500">{{ data.marque }} {{ data.modele }}</small>
               </div>
             </template>
@@ -194,20 +206,64 @@
           </Column>
         </DataTable>
 
-        <!-- Vue vide -->
-        <div v-else class="empty-state animate-in">
-          <i class="pi pi-desktop"></i>
-          <h3>Aucun équipement trouvé</h3>
-          <p>Enregistrez votre premier matériel pour commencer le suivi.</p>
-          <Button label="Ajouter un équipement" icon="pi pi-plus" @click="$router.push('/equipements/nouveau')" class="p-button-raised mt-3" />
+        <!-- Vue Cartes (Grille) -->
+        <div v-else-if="viewMode === 'grid' && equipementStore.equipements.length > 0" class="equipements-grid">
+          <div v-for="eq in equipementStore.equipements" :key="eq.id" class="equipement-card animate-card" :class="{ 'is-lot-card': eq.is_lot }">
+            <div class="card-badge-lot" v-if="eq.is_lot">LOT x{{ eq.quantite }}</div>
+            <div class="card-image">
+              <img v-if="eq.photo" :src="`${apiBaseUrl}/storage/${eq.photo}`" alt="Photo" />
+              <div v-else class="image-placeholder">
+                <i class="pi pi-desktop"></i>
+              </div>
+              <div class="card-status" :class="`bg-${getStatutColor(eq.etat)}`">
+                {{ getStatutLabel(eq.etat) }}
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="card-category">{{ eq.categorie?.nom }}</div>
+              <h3 class="card-title">{{ eq.nom }}</h3>
+              <p class="card-subtitle">{{ eq.marque }} {{ eq.modele }}</p>
+              
+              <div class="card-info">
+                <div class="info-row">
+                  <i class="pi pi-barcode"></i>
+                  <span>{{ eq.code_inventaire }}</span>
+                </div>
+                <div class="info-row" v-if="eq.numero_serie">
+                  <i class="pi pi-tag"></i>
+                  <span>{{ eq.numero_serie }}</span>
+                </div>
+                <div class="info-row">
+                  <i class="pi pi-map-marker"></i>
+                  <span>{{ eq.localisation || 'Non défini' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <Button icon="pi pi-eye" class="p-button-text p-button-rounded" @click="viewDetails(eq)" v-tooltip.top="'Détails'" />
+              <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" @click="editEquipement(eq)" v-tooltip.top="'Modifier'" />
+              <Button icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger" @click="handleDelete(eq)" v-tooltip.top="'Supprimer'" />
+            </div>
+          </div>
+        </div>
+
+        <!-- État vide -->
+        <div v-else-if="equipementStore.equipements.length === 0" class="empty-state-grid">
+          <i class="pi pi-box"></i>
+          <p>Aucun équipement trouvé</p>
+          <Button label="Ajouter un équipement" icon="pi pi-plus" class="p-button-outlined" @click="$router.push('/equipements/ajouter')" />
         </div>
       </div>
 
       <!-- Skeleton loading -->
       <div class="equipements-grid" v-else>
-        <div v-for="n in 8" :key="n" class="equip-card skeleton">
-          <div class="skeleton-img"></div>
-          <div class="skeleton-body"></div>
+        <div v-for="n in 8" :key="n" class="equipement-card skeleton">
+          <div class="card-image skeleton-animate"></div>
+          <div class="card-content">
+            <div class="skeleton-line w-40"></div>
+            <div class="skeleton-line w-full h-2"></div>
+            <div class="skeleton-line w-60"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -227,7 +283,9 @@ import gsap from 'gsap'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
+import SelectButton from 'primevue/selectbutton'
 import Tag from 'primevue/tag'
+import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tooltip from 'primevue/tooltip'
@@ -241,7 +299,12 @@ const loading = ref(false)
 const searchQuery = ref('')
 const selectedCategorie = ref(null)
 const selectedStatut = ref(null)
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const viewMode = ref('grid')
+const viewOptions = ref([
+  { icon: 'pi pi-list', value: 'table' },
+  { icon: 'pi pi-th-large', value: 'grid' }
+])
+const apiBaseUrl = import.meta.env.VITE_API_URL?.split('/api')[0] || 'http://localhost:8000'
 
 const statutOptions = [
   { label: 'Nouveau', value: 'nouveau' },
@@ -283,7 +346,7 @@ const getStatutColor = (s) => {
 }
 
 const viewDetails = (equip) => router.push(`/equipements/${equip.id}`)
-const editEquipement = (equip) => router.push(`/equipements/modifier/${equip.id}`)
+const editEquipement = (equip) => router.push(`/equipements/${equip.id}/modifier`)
 const showQRCode = (equip) => toast.add({ severity: 'info', summary: 'QR Code', detail: `Génération pour ${equip.code_inventaire}` })
 
 const handleDelete = async (equip) => {
@@ -306,11 +369,18 @@ const resetFilters = () => {
 
 onMounted(async () => {
   loading.value = true
-  await Promise.all([
-    equipementStore.fetchEquipements(),
-    categorieStore.fetchCategories()
-  ])
-  loading.value = false
+  console.log('Fetching equipments...')
+  try {
+    await Promise.all([
+      equipementStore.fetchEquipements(),
+      categorieStore.fetchCategories()
+    ])
+    console.log('Equipments loaded:', equipementStore.equipements)
+  } catch (err) {
+    console.error('Error loading data:', err)
+  } finally {
+    loading.value = false
+  }
   
   gsap.from('.animate-in', { opacity: 0, y: 30, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
   gsap.from('.animate-card', { opacity: 0, scale: 0.9, duration: 0.5, stagger: 0.05, delay: 0.4 })
@@ -318,34 +388,200 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.equipements-page { padding: 2rem; }
+.equipements-page { padding: 1rem; }
 .title-with-icon {
-  display: flex; align-items: center; gap: 1.5rem;
-  .icon-wrapper {
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 16px; display: flex; align-items: center; justify-content: center;
-    color: white; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
-    .svg-icon { width: 32px; height: 32px; }
-  }
-  h1 { font-size: 2rem; font-weight: 800; color: #1e293b; margin: 0; }
-  .subtitle { color: #64748b; }
-}
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-
-.stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-.stat-glass-card {
-  background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   display: flex; align-items: center; gap: 1rem;
-  .stat-icon-box { font-size: 1.5rem; color: #3b82f6; }
-  .value { display: block; font-size: 1.5rem; font-weight: 800; }
-  .label { color: #64748b; font-size: 0.8rem; }
+  .icon-wrapper {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    color: white; box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+    .svg-icon { width: 20px; height: 20px; }
+  }
+  h1 { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; }
+  .subtitle { color: #64748b; font-size: 0.85rem; }
+}
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+
+.stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-glass-card {
+  background: white; padding: 0.75rem 1rem; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  display: flex; align-items: center; gap: 0.75rem;
+  .stat-icon-box { font-size: 1.2rem; color: #3b82f6; }
+  .value { display: block; font-size: 1.2rem; font-weight: 800; }
+  .label { color: #64748b; font-size: 0.75rem; }
 }
 
 .filters-bar {
-  display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 2rem;
-  .search-box { flex: 1; position: relative; i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b; } .search-input { width: 100%; padding-left: 3rem; border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); } }
-  .dropdown-filters { display: flex; gap: 1rem; .modern-dropdown { border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); } }
+  display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem;
+  .search-box { flex: 1; position: relative; i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.85rem; } .search-input { width: 100%; padding-left: 2.25rem; border-radius: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-size: 0.85rem; height: 36px; } }
+  .dropdown-filters { display: flex; gap: 0.75rem; align-items: center; .modern-dropdown { border-radius: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-size: 0.85rem; height: 36px; } }
+  :deep(.p-selectbutton) { .p-button { padding: 0.5rem; } }
+  .action-btn { font-size: 0.85rem; padding: 0.5rem 0.75rem; }
+}
+
+.header-actions {
+  display: flex; gap: 0.5rem;
+  .action-btn { font-size: 0.85rem; padding: 0.5rem 0.75rem; }
+}
+
+.equipements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.equipement-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+
+  &.is-lot-card {
+    border: 1.5px solid #3b82f6;
+  }
+}
+
+.card-badge-lot {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  z-index: 2;
+}
+
+.card-image {
+  height: 120px;
+  position: relative;
+  background: #f8fafc;
+  
+  img { width: 100%; height: 100%; object-fit: contain; }
+  
+  .image-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #cbd5e1;
+  }
+
+  .card-status {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 600;
+  }
+}
+
+.card-content {
+  padding: 0.75rem;
+  flex: 1;
+
+  .card-category {
+    font-size: 0.6rem;
+    color: #3b82f6;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.15rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      color: #475569;
+      
+      i { color: #94a3b8; width: 12px; font-size: 0.7rem; }
+    }
+  }
+}
+
+.card-footer {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  .p-button { width: 28px; height: 28px; }
+}
+
+/* Skeleton */
+.skeleton-animate {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-line {
+  height: 1rem;
+  background: #f1f5f9;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  &.w-40 { width: 40%; }
+  &.w-60 { width: 60%; }
+  &.w-full { width: 100%; }
+  &.h-2 { height: 1.5rem; }
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-state-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  text-align: center;
+  
+  i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
+  p { font-size: 1.1rem; color: #64748b; margin-bottom: 1.5rem; }
 }
 
 .modern-table {

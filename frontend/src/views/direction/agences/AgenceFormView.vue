@@ -115,22 +115,7 @@ const formData = reactive({
 
 onMounted(() => userStore.fetchUsers())
 
-watch(() => props.editData, (val) => {
-  if (val) {
-    formData.type = val.type || 'sous_agence'
-    formData.nom = val.nom || ''
-    formData.ville = val.ville || ''
-    formData.adresse = val.adresse || ''
-    formData.code_postal = val.code_postal || ''
-    formData.telephone = val.telephone || ''
-    formData.email = val.email || ''
-    formData.parent_id = val.parent_id || null
-    formData.responsable_id = val.responsable_id || null
-    formData.gestionnaire_stock_id = val.gestionnaire_stock_id || null
-  } else {
-    resetForm()
-  }
-}, { immediate: true, deep: true })
+
 
 const resetForm = () => {
   Object.assign(formData, {
@@ -147,6 +132,23 @@ const resetForm = () => {
   })
   error.value = null
 }
+
+watch(() => props.editData, (val) => {
+  if (val) {
+    formData.type = val.type || 'sous_agence'
+    formData.nom = val.nom || ''
+    formData.ville = val.ville || ''
+    formData.adresse = val.adresse || ''
+    formData.code_postal = val.code_postal || ''
+    formData.telephone = val.telephone || ''
+    formData.email = val.email || ''
+    formData.parent_id = val.parent_id || null
+    formData.responsable_id = val.responsable_id || null
+    formData.gestionnaire_stock_id = val.gestionnaire_stock_id || null
+  } else {
+    resetForm()
+  }
+}, { immediate: true, deep: true })
 
 const handleSubmit = async () => {
   saving.value = true

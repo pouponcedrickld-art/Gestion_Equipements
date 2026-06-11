@@ -1,141 +1,74 @@
 <?php
 
+// database/seeders/MaintenanceSeeder.php
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
 use App\Models\Maintenance;
 use App\Models\Equipement;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 
 class MaintenanceSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Récupérer quelques équipements existants
-        $equipements = Equipement::limit(10)->get();
+        $equipements = Equipement::all();
+        $technicien = User::role('technicien_maintenance')->first();
+        $gestionnaire = User::role('gestionnaire_stock_general')->first();
 
         if ($equipements->isEmpty()) {
-            $this->command->warn('Aucun équipement trouvé. Veuillez d\'abord exécuter le seeder des équipements.');
+            echo "⚠️ Aucun équipement trouvé.\n";
             return;
         }
 
-        // Récupérer des utilisateurs pour les techniciens
-        $users = User::limit(5)->get();
-
-        $this->command->info('Création de maintenances de test pour juin 2026...');
-
-        // Maintenances pour juin 2026
         $maintenances = [
             [
-                'equipement_id' => $equipements[0]->id,
-                'type_maintenance' => 'preventive',
-                'date_prevue' => '2026-06-08 09:00:00',
-                'responsable' => 'Sophie Lambert',
-                'statut' => 'terminee',
-                'date_debut' => '2026-06-08 09:00:00',
-                'date_fin' => '2026-06-08 10:30:00',
-                'cout' => 150.00,
-                'observations' => 'Maintenance trimestrielle effectuée avec succès',
-                'diagnostic' => 'RAS - Équipement en bon état',
-            ],
-            [
-                'equipement_id' => $equipements[1]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'preventive',
-                'date_prevue' => '2026-06-10 14:00:00',
-                'responsable' => 'Jean Dupont',
-                'statut' => 'planifiee',
-                'cout' => 200.00,
-                'observations' => 'Vérification complète du système',
-            ],
-            [
-                'equipement_id' => $equipements[2]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'corrective',
-                'date_prevue' => '2026-06-12 10:30:00',
-                'responsable' => 'Marie Martin',
-                'statut' => 'en_cours',
-                'date_debut' => '2026-06-12 10:30:00',
-                'cout' => 450.00,
-                'observations' => 'Réparation écran endommagé',
-                'diagnostic' => 'Écran cassé suite à une chute',
-            ],
-            [
-                'equipement_id' => $equipements[3]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'preventive',
-                'date_prevue' => '2026-06-15 08:30:00',
-                'responsable' => 'Pierre Dubois',
-                'statut' => 'planifiee',
-                'cout' => 180.00,
-                'observations' => 'Nettoyage et mise à jour logicielle',
-            ],
-            [
-                'equipement_id' => $equipements[4]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'corrective',
-                'date_prevue' => '2026-06-15 15:00:00',
-                'responsable' => 'Luc Bernard',
-                'statut' => 'planifiee',
-                'cout' => 320.00,
-                'observations' => 'Remplacement batterie défectueuse',
-            ],
-            [
-                'equipement_id' => $equipements[5]->id ?? $equipements[0]->id,
+                'equipement_id' => $equipements->where('reference', 'PDA-001')->first()->id,
                 'type_maintenance' => 'préventif',
-                'date_prevue' => '2026-06-18 11:00:00',
-                'responsable' => 'Anne Petit',
+                'date_prevue' => now()->addDays(7),
+                'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
+                'technicien_id' => $technicien?->id,
+                'diagnostic' => 'Vérification générale - batterie, connectique, mise à jour firmware',
+                'cout' => 0.00,
+                'date_debut' => null,
+                'date_fin' => null,
+                'observations' => 'Maintenance trimestrielle planifiée',
                 'statut' => 'planifiee',
-                'cout' => 150.00,
-                'observations' => 'Maintenance semestrielle',
             ],
             [
-                'equipement_id' => $equipements[6]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'préventif',
-                'date_prevue' => '2026-06-20 09:00:00',
-                'responsable' => 'Thomas Roux',
-                'statut' => 'planifiee',
-                'cout' => 175.00,
-                'observations' => 'Vérification et calibration',
-            ],
-            [
-                'equipement_id' => $equipements[7]->id ?? $equipements[0]->id,
+                'equipement_id' => $equipements->where('reference', 'TAB-001')->first()->id,
                 'type_maintenance' => 'correctif',
-                'date_prevue' => '2026-06-22 13:30:00',
-                'responsable' => 'Claire Moreau',
-                'statut' => 'planifiee',
-                'cout' => 380.00,
-                'observations' => 'Réparation connecteur USB',
+                'date_prevue' => now()->subDays(10),
+                'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
+                'technicien_id' => $technicien?->id,
+                'diagnostic' => 'RAS - Équipement en bon état après réparation',
+                'cout' => 350.00,
+                'date_debut' => now()->subDays(10)->setTime(9, 0),
+                'date_fin' => now()->subDays(10)->setTime(10, 30),
+                'observations' => 'Maintenance trimestrielle effectuée avec succès',
+                'statut' => 'terminee',
             ],
             [
-                'equipement_id' => $equipements[8]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'préventif',
-                'date_prevue' => '2026-06-25 10:00:00',
-                'responsable' => 'Marc Simon',
-                'statut' => 'planifiee',
-                'cout' => 160.00,
-                'observations' => 'Maintenance préventive standard',
-            ],
-            [
-                'equipement_id' => $equipements[9]->id ?? $equipements[0]->id,
-                'type_maintenance' => 'préventif',
-                'date_prevue' => '2026-06-28 14:30:00',
-                'responsable' => 'Julie Blanc',
-                'statut' => 'planifiee',
-                'cout' => 190.00,
-                'observations' => 'Révision complète avant fermeture mensuelle',
+                'equipement_id' => $equipements->where('reference', 'SPH-001')->first()->id,
+                'type_maintenance' => 'correctif',
+                'date_prevue' => now()->subDays(3),
+                'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
+                'technicien_id' => $technicien?->id,
+                'diagnostic' => 'Connecteur de charge et batterie à remplacer',
+                'cout' => 120.00,
+                'date_debut' => now()->subDays(3)->setTime(14, 0),
+                'date_fin' => null,
+                'observations' => 'En cours - pièces commandées',
+                'statut' => 'en_cours',
             ],
         ];
 
         foreach ($maintenances as $maintenanceData) {
-            // Ajouter un technicien si disponible
-            if ($users->isNotEmpty()) {
-                $maintenanceData['technicien_id'] = $users->random()->id;
+            if ($maintenanceData['equipement_id']) {
+                Maintenance::create($maintenanceData);
             }
-
-            Maintenance::create($maintenanceData);
         }
 
-        $this->command->info('✓ ' . count($maintenances) . ' maintenances créées avec succès pour juin 2026');
-        $this->command->info('Maintenances réparties sur plusieurs dates du mois pour tester le calendrier');
+        echo "✅ Maintenances de test créées avec succès !\n";
     }
 }

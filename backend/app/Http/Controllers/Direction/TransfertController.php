@@ -84,13 +84,13 @@ class TransfertController extends Controller
     {
         // 1. À expédier (Demandes approuvées)
         $a_expedier = Transfert::with(['equipement', 'agenceDestination'])
-            ->where('statut', 'en_attente_expedition')
+            ->whereIn('statut', ['approuve', 'demande'])
             ->get()
             ->map(fn($t) => $this->mapForKanban($t, 'transfert'));
 
         // 2. En transit
         $en_transit = Transfert::with(['equipement', 'agenceDestination'])
-            ->where('statut', 'en_transit')
+            ->where('statut', 'expedie')
             ->get()
             ->map(fn($t) => $this->mapForKanban($t, 'transfert'));
 
@@ -176,9 +176,18 @@ class TransfertController extends Controller
     public function refuser(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->refuser($request->user()->id, $request->observations);
-            return response()->json(['success' => true, 'message' => 'Transfert annulé']);
+            
+            // Sécurité : Une agence ne peut refuser que ses propres transferts (source ou destination)
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_source_id && $user->agence_id !== $transfert->agence_destination_id) {
+                    return response()->json(['success' => false, 'message' => 'Non autorisé'], 403);
+                }
+            }
+
+            $transfert->refuser($user->id, $request->observations);
+            return response()->json(['success' => true, 'message' => 'Transfert refusé / annulé']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
@@ -187,8 +196,17 @@ class TransfertController extends Controller
     public function expedier(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->expedier($request->user()->id);
+
+            // Sécurité : Seul l'expéditeur (source) ou GSG peut expédier
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_source_id) {
+                    return response()->json(['success' => false, 'message' => 'Non autorisé'], 403);
+                }
+            }
+
+            $transfert->expedier($user->id);
             return response()->json(['success' => true, 'message' => 'Équipement expédié (En transit)']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -198,9 +216,90 @@ class TransfertController extends Controller
     public function recevoir(Request $request, $id): JsonResponse
     {
         try {
+            $user = $request->user();
             $transfert = Transfert::findOrFail($id);
-            $transfert->recevoir($request->user()->id);
+
+            // Sécurité : Seul le destinataire ou GSG peut recevoir
+            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                if ($user->agence_id !== $transfert->agence_destination_id) {
+                    return response()->json(['success' => false, 'message' => 'Seul le destinataire peut confirmer la réception'], 403);
+                }
+            }
+
+            $transfert->recevoir($user->id);
             return response()->json(['success' => true, 'message' => 'Transfert reçu, stock agence mis à jour']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Liste des demandes approuvées à transférer
+     */
+    public function getApprovedDemandes(): JsonResponse
+    {
+        try {
+            $demandes = DemandeMateriel::with(['agence', 'equipement', 'chefAgence'])
+                
+                ->where('statut', 'approuvé')
+                ->whereDoesntHave('transferts', function($query) {
+                    $query->whereIn('statut', ['demande', 'approuve', 'expedie', 'recu']);
+                })
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $demandes
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Créer un transfert à partir d'une demande approuvée
+     */
+    public function createFromDemande(Request $request, $demandeId): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $demande = DemandeMateriel::findOrFail($demandeId);
+
+            if ($demande->statut !== 'approuvé') {
+                throw new \Exception("Seules les demandes approuvées peuvent être transférées.");
+            }
+
+            $existingTransfert = Transfert::where('demande_materiel_id', $demande->id)
+                ->whereIn('statut', ['demande', 'approuve', 'expedie', 'recu'])
+                ->first();
+
+            if ($existingTransfert) {
+                throw new \Exception("Un transfert existe déjà pour cette demande.");
+            }
+
+            $equipement = $demande->equipement;
+
+            DB::transaction(function () use ($demande, $equipement, $user) {
+                Transfert::create([
+                    'demande_materiel_id' => $demande->id,
+                    'equipement_id' => $equipement->id,
+                    'agence_source_id' => $equipement->agence_actuelle_id,
+                    'agence_destination_id' => $demande->agence_id,
+                    'type_transfert' => 'livraison_generale',
+                    'statut' => 'approuve',
+                    'demande_par_id' => $demande->chef_agence_id,
+                    'valide_par_id' => $user->id,
+                    'date_demande' => $demande->created_at,
+                    'quantite' => $demande->quantite,
+                    'observations' => "Transfert généré depuis la demande #" . $demande->id . ". Motif: " . $demande->motif,
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transfert généré avec succès. Vous pouvez maintenant l\'expédier.'
+            ]);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }

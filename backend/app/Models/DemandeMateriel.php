@@ -48,4 +48,9 @@ class DemandeMateriel extends Model
     {
         return $this->belongsTo(User::class, 'traite_par_id');
     }
+
+    public function transferts()
+    {
+        return $this->hasMany(Transfert::class, 'demande_materiel_id');
+    }
 }

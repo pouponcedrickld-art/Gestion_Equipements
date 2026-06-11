@@ -11,14 +11,42 @@
         </router-link>
       </div>
 
+      <!-- --- SECTION FILTRES (Ajoutée) --- -->
+      <!-- Cette section permet de filtrer dynamiquement la liste sans recharger la page -->
+      <div class="filters-container">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Rechercher par équipement, marque ou modèle..." 
+            class="filter-input search-input"
+          >
+        </div>
+        
+        <div class="status-filter-wrapper">
+          <select v-model="selectedStatus" class="filter-input status-select">
+            <option value="">Tous les statuts</option>
+            <option value="en attente">En attente</option>
+            <option value="approuvé">Approuvé</option>
+            <option value="rejeté">Rejeté</option>
+          </select>
+        </div>
+
+        <!-- Indicateur du nombre de résultats trouvés -->
+        <div class="results-count" v-if="searchQuery || selectedStatus">
+          {{ filteredDemandes.length }} résultat(s) trouvé(s)
+        </div>
+      </div>
+
       <div v-if="loading" class="loading-state">
         <i class="pi pi-spin pi-spinner"></i> Chargement des demandes...
       </div>
 
-      <div v-else-if="demandes.length === 0" class="empty-state">
+      <div v-else-if="filteredDemandes.length === 0" class="empty-state">
         <i class="pi pi-inbox"></i>
-        <p>Aucune demande de matériel trouvée.</p>
-        <router-link v-if="authStore.isChefAgence" to="/demandes-materiel/nouveau" class="link">Créer votre première demande</router-link>
+        <p>{{ (searchQuery || selectedStatus) ? 'Aucun résultat ne correspond à vos filtres.' : 'Aucune demande de matériel trouvée.' }}</p>
+        <router-link v-if="authStore.isChefAgence && !searchQuery && !selectedStatus" to="/demandes-materiel/nouveau" class="link">Créer votre première demande</router-link>
       </div>
 
       <div v-else class="table-wrapper">
@@ -35,7 +63,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="demande in demandes" :key="demande.id">
+            <!-- On boucle maintenant sur 'filteredDemandes' au lieu de 'demandes' -->
+            <tr v-for="demande in filteredDemandes" :key="demande.id">
               <td>{{ formatDate(demande.date_souhaitee) }}</td>
               <td v-if="authStore.isGestionnaireGeneral">
                 <span class="agence-name">{{ demande.agence?.nom }}</span>
@@ -59,12 +88,14 @@
               </td>
               <td>
                 <div class="actions-cell">
+                  <!-- Bouton de visualisation toujours disponible -->
                   <button class="view-btn" title="Voir détails" @click="showDetails(demande)">
                     <i class="pi pi-eye"></i>
                   </button>
                   
-                  <!-- Actions CRUD pour le Gestionnaire -->
-                  <template v-if="authStore.isGestionnaireGeneral">
+                  <!-- LOGIQUE POUR LES AGENCES (CHEF D'AGENCE) -->
+                  <!-- L'agence peut modifier ou supprimer sa demande TANT QU'ELLE EST EN ATTENTE -->
+                  <template v-if="!authStore.isGestionnaireGeneral && demande.statut === 'en attente'">
                     <button class="edit-btn" title="Modifier" @click="openEditModal(demande)">
                       <i class="pi pi-pencil"></i>
                     </button>
@@ -73,14 +104,30 @@
                     </button>
                   </template>
 
-                  <button 
-                    v-if="authStore.isGestionnaireGeneral && demande.statut === 'en attente'" 
-                    class="process-btn-table" 
-                    title="Traiter la demande"
-                    @click="openProcessModal(demande)"
-                  >
-                    <i class="pi pi-check-square"></i> Traiter
-                  </button>
+                  <!-- LOGIQUE POUR LE GESTIONNAIRE STOCK GÉNÉRAL -->
+                  <template v-if="authStore.isGestionnaireGeneral">
+                    <!-- Le gestionnaire peut éditer UNIQUEMENT les demandes déjà traitées (approuvé/rejeté) -->
+                    <!-- Pour le gestionnaire, l'édition utilise les mêmes champs que le traitement (Décision, Qté, Obs) -->
+                    <button 
+                      v-if="demande.statut !== 'en attente'" 
+                      class="edit-btn" 
+                      title="Modifier la décision" 
+                      @click="openProcessModal(demande)"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+
+                    <!-- Le gestionnaire traite les demandes 'en attente' via le bouton "Traiter" -->
+                    <!-- Le bouton "Supprimer" a été retiré pour ce rôle comme demandé -->
+                    <button 
+                      v-if="demande.statut === 'en attente'" 
+                      class="process-btn-table" 
+                      title="Traiter la demande"
+                      @click="openProcessModal(demande)"
+                    >
+                      <i class="pi pi-check-square"></i> Traiter
+                    </button>
+                  </template>
                 </div>
               </td>
             </tr>
@@ -112,7 +159,7 @@
       <div v-if="showProcessModal" class="modal-overlay" @click="showProcessModal = false">
         <div class="modal-content" @click.stop>
           <div class="modal-header">
-            <h3>Traiter la demande de {{ processingDemande?.agence?.nom }}</h3>
+            <h3>{{ processingDemande?.statut === 'en attente' ? 'Traiter' : 'Modifier le traitement' }} de la demande de {{ processingDemande?.agence?.nom }}</h3>
             <button @click="showProcessModal = false"><i class="pi pi-times"></i></button>
           </div>
           
@@ -128,8 +175,20 @@
 
             <div class="form-group" v-if="traitement.decision !== 'Refuser'">
               <label>Quantité validée</label>
-              <input type="number" v-model="traitement.quantite_validee" min="0" :max="processingDemande?.quantite" required>
-              <small>Demandé : {{ processingDemande?.quantite }}</small>
+              <!-- Limite min=1 et max=stock disponible de l'équipement -->
+              <input 
+                type="number" 
+                v-model="traitement.quantite_validee" 
+                min="1" 
+                :max="processingDemande?.equipement?.quantite" 
+                required
+              >
+              <div class="stock-info">
+                <small>Demandé : {{ processingDemande?.quantite }}</small>
+                <small class="stock-available" :class="{ 'text-danger': processingDemande?.equipement?.quantite < 1 }">
+                  Stock disponible : {{ processingDemande?.equipement?.quantite || 0 }}
+                </small>
+              </div>
             </div>
 
             <div class="form-group">
@@ -175,7 +234,8 @@
               <input type="date" v-model="editForm.date_souhaitee" required>
             </div>
 
-            <div class="form-group">
+            <!-- Le changement de statut est réservé au Gestionnaire Général -->
+            <div class="form-group" v-if="authStore.isGestionnaireGeneral">
               <label>Statut</label>
               <select v-model="editForm.statut" required>
                 <option value="en attente">En attente</option>
@@ -226,17 +286,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue' // Ajout de computed pour le filtrage
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'primevue/usetoast'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import demandeAgenceApi from '@/api/demandeAgenceApi'
+
+// --- États de filtrage (Ajoutés pour la recherche et le statut) ---
+const searchQuery = ref('') // Pour la barre de recherche par nom d'équipement
+const selectedStatus = ref('') // Pour le filtre par statut (en attente, approuvé, rejeté)
 
 const authStore = useAuthStore()
 const toast = useToast()
 const demandes = ref([])
 const loading = ref(true)
 const selectedDemande = ref(null)
+
+// --- Logique de filtrage réactive ---
+// Cette fonction calcule la liste filtrée sans modifier les données originales 'demandes'
+const filteredDemandes = computed(() => {
+  if (!demandes.value) return []
+  
+  return demandes.value.filter(demande => {
+    // 1. Filtrage par nom d'équipement (insensible à la casse)
+    // Ajout de sécurités pour éviter les crashs si equipement ou ses propriétés sont nulls
+    const nom = demande.equipement?.nom?.toLowerCase() || ''
+    const marque = demande.equipement?.marque?.toLowerCase() || ''
+    const modele = demande.equipement?.modele?.toLowerCase() || ''
+    const search = searchQuery.value?.toLowerCase() || ''
+
+    const matchesSearch = !search || 
+      nom.includes(search) ||
+      marque.includes(search) ||
+      modele.includes(search)
+
+    // 2. Filtrage par statut exact
+    const matchesStatus = !selectedStatus.value || demande.statut === selectedStatus.value
+
+    return matchesSearch && matchesStatus
+  })
+})
 
 // États pour le traitement (Gestionnaire)
 const showProcessModal = ref(false)
@@ -268,8 +357,13 @@ const submittingDelete = ref(false)
 const fetchDemandes = async () => {
   loading.value = true
   try {
-    const { data } = await demandeAgenceApi.index()
-    demandes.value = data
+    const res = await demandeAgenceApi.index()
+    // Support both direct array and { success, data } structures
+    if (res.data && res.data.success) {
+      demandes.value = res.data.data
+    } else {
+      demandes.value = Array.isArray(res.data) ? res.data : (res.data?.data || [])
+    }
   } catch (error) {
     console.error('Erreur chargement demandes', error)
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les demandes', life: 3000 })
@@ -299,10 +393,20 @@ const showDetails = (demande) => {
 // Logique de traitement
 const openProcessModal = (demande) => {
   processingDemande.value = demande
+  
+  // Déterminer la décision actuelle pour pré-remplir le formulaire si c'est une édition
+  let currentDecision = 'Approuver'
+  if (demande.statut === 'rejeté') {
+    currentDecision = 'Refuser'
+  } else if (demande.statut === 'approuvé') {
+    // Par défaut on met Approuver, le gestionnaire pourra changer en 'Partiel' si besoin
+    currentDecision = 'Approuver'
+  }
+
   traitement.value = {
-    decision: 'Approuver',
+    decision: currentDecision,
     quantite_validee: demande.quantite,
-    observations: ''
+    observations: demande.observations || ''
   }
   showProcessModal.value = true
 }
@@ -390,6 +494,63 @@ onMounted(fetchDemandes)
 .header-bar p {
   color: #94a3b8;
   margin: 4px 0 0 0;
+}
+
+/* --- Styles pour les Filtres --- */
+.filters-container {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+  background: #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.filter-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 36px;
+}
+
+.status-select {
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.results-count {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  white-space: nowrap;
 }
 
 .add-btn {
@@ -483,6 +644,21 @@ onMounted(fetchDemandes)
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.stock-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.stock-available {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.stock-available.text-danger {
+  color: #ef4444;
 }
 
 .view-btn {

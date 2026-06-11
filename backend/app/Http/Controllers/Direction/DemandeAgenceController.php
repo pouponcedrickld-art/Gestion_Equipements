@@ -27,13 +27,23 @@ class DemandeAgenceController extends Controller
      */
     public function traiter(Request $request, $id)
     {
+        $demande = DemandeMateriel::with('equipement')->findOrFail($id);
+        $stockDisponible = $demande->equipement->quantite ?? 0;
+
         $request->validate([
             'decision' => 'required|in:Approuver,Refuser,Partiel',
-            'quantite_validee' => 'required_if:decision,Approuver,Partiel|integer|min:1',
+            'quantite_validee' => [
+                'required_if:decision,Approuver,Partiel',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request, $stockDisponible) {
+                    if (in_array($request->decision, ['Approuver', 'Partiel']) && $value > $stockDisponible) {
+                        $fail("La quantité validée ({$value}) ne peut pas dépasser le stock disponible ({$stockDisponible}).");
+                    }
+                },
+            ],
             'observations' => 'required_if:decision,Refuser|string|nullable',
         ]);
-
-        $demande = DemandeMateriel::findOrFail($id);
         
         $statutMapping = [
             'Approuver' => 'approuvé',

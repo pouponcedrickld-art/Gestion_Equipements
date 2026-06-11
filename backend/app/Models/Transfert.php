@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\StockAgenceService;
+use Illuminate\Support\Facades\App;
 
 class Transfert extends Model
 {
-    use HasFactory, SoftDeletes;
+    
 
     protected $fillable = [
+        'demande_materiel_id',
         'equipement_id',
         'agence_source_id',
         'agence_destination_id',
@@ -65,6 +68,11 @@ class Transfert extends Model
     /**
      * Relations
      */
+    public function demandeMateriel()
+    {
+        return $this->belongsTo(DemandeMateriel::class, 'demande_materiel_id');
+    }
+
     public function equipement()
     {
         return $this->belongsTo(Equipement::class);
@@ -96,24 +104,32 @@ class Transfert extends Model
     public function approuver($userId)
     {
         $this->update([
-            'statut' => 'en_attente_expedition',
+            'statut' => 'approuve',
             'valide_par_id' => $userId
         ]);
     }
 
     public function refuser($userId, $observations = null)
     {
+        $oldStatus = $this->statut;
+
         $this->update([
-            'statut' => 'annule',
+            'statut' => 'refuse',
             'valide_par_id' => $userId,
-            'observations' => $this->observations . "\nRefusé par admin: " . $observations
+            'observations' => $this->observations . "\nRefusé/Annulé : " . $observations
         ]);
+
+        // Si le transfert a déjà été expédié ou reçu, on ajuste le stock si nécessaire
+        if ($oldStatus === 'expedie' || $oldStatus === 'recu') {
+            $stockService = App::make(StockAgenceService::class);
+            $stockService->decrementerStock($this, 'rejet');
+        }
     }
 
     public function expedier($userId)
     {
         $this->update([
-            'statut' => 'en_transit',
+            'statut' => 'expedie',
             'date_expedition' => now()
         ]);
     }
@@ -134,20 +150,24 @@ class Transfert extends Model
             
             $this->equipement->createMouvement(
                 'transfert_recu',
-                "Réception transfert depuis " . $this->agenceSource->nom,
+                "Réception transfert depuis " . ($this->agenceSource->nom ?? 'Origine'),
                 $userId
             );
         }
+
+        // Incrémenter le stock de l'agence destinataire
+        $stockService = App::make(StockAgenceService::class);
+        $stockService->incrementerStockReception($this);
     }
 
     public static function getStatusDisponibles()
     {
         return [
-            'brouillon' => 'Brouillon',
-            'en_attente_expedition' => 'En attente d\'expédition',
-            'en_transit' => 'En transit',
+            'demande' => 'En attente de validation',
+            'approuve' => 'Approuvé / Prêt à expédier',
+            'expedie' => 'En transit',
             'recu' => 'Reçu',
-            'annule' => 'Annulé'
+            'refuse' => 'Refusé'
         ];
     }
 

@@ -19,6 +19,8 @@ use App\Http\Controllers\Agence\MaintenanceController;
 use App\Http\Controllers\Agence\PerteController;
 use App\Http\Controllers\Direction\NotificationController;
 use App\Http\Controllers\Direction\RapportGlobalController;
+use App\Http\Controllers\Agence\StockAgenceController as AgenceStockController;
+use App\Http\Controllers\Direction\StockAgenceController as DirectionStockController;
 
 // ROUTES PUBLIQUES
 Route::post('/login', [AuthController::class, 'login']);
@@ -79,11 +81,13 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Transferts
     Route::get('transferts-kanban', [TransfertController::class, 'index']);
     Route::post('transferts-kanban/update-status', [TransfertController::class, 'updateStatus']);
+    Route::get('transferts/demandes-approuvees', [TransfertController::class, 'getApprovedDemandes'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/creer-depuis-demande/{demandeId}', [TransfertController::class, 'createFromDemande'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::apiResource('transferts', TransfertController::class);
     Route::post('transferts/{id}/approuver', [TransfertController::class, 'approuver'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock');
     Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:gestionnaire_stock');
+    Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:super_admin|gestionnaire_stock|chef_agence');
     Route::get('transferts/statistiques', [TransfertController::class, 'statistiques']);
     Route::get('transferts/options', [TransfertController::class, 'getOptions']);
 
@@ -114,6 +118,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::patch('notifications/{id}/lu', [NotificationController::class, 'markAsRead']);
+    Route::patch('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 
     // Rapports
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock|technicien_maintenance')->group(function () {
@@ -121,5 +126,20 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
         Route::get('rapports/inventaire', [RapportGlobalController::class, 'inventaire']);
         Route::get('rapports/pannes', [RapportGlobalController::class, 'pannes']);
         Route::get('rapports/export/{type}', [RapportGlobalController::class, 'export']);
+    });
+
+    // Stock des Agences
+    Route::prefix('stock-agences')->group(function () {
+        // Routes pour la direction
+        Route::middleware('role:super_admin|gestionnaire_stock_general')->group(function () {
+            Route::get('/', [DirectionStockController::class, 'index']);
+            Route::get('/agence/{agenceId}', [DirectionStockController::class, 'showByAgence']);
+        });
+
+        // Routes pour l'agence
+        Route::middleware('role:chef_agence|gestionnaire_stock')->group(function () {
+            Route::get('/mon-stock', [AgenceStockController::class, 'index']);
+            Route::get('/mon-stock/{id}', [AgenceStockController::class, 'show']);
+        });
     });
 });

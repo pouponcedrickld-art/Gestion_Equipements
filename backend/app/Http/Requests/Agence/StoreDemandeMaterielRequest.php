@@ -24,17 +24,7 @@ class StoreDemandeMaterielRequest extends FormRequest
     {
         return [
             'equipement_id' => 'required|exists:equipements,id',
-            'quantite' => [
-                'required',
-                'integer',
-                'min:1',
-                function ($attribute, $value, $fail) {
-                    $equipement = \App\Models\Equipement::find($this->equipement_id);
-                    if ($equipement && $value > $equipement->quantite) {
-                        $fail("La quantité demandée ({$value}) dépasse la quantité disponible en stock ({$equipement->quantite}).");
-                    }
-                },
-            ],
+            'quantite' => 'required|integer|min:1',
             'urgence' => 'required|in:Basse,Moyenne,Haute',
             'motif' => 'required|string',
             'date_souhaitee' => 'required|date|after_or_equal:today',
