@@ -11,12 +11,15 @@ export const getMenuItems = () => {
     const authStore = useAuthStore()
     const role = authStore.userRole
     
+    // Déterminer le label du menu en fonction du rôle
+    const menuEquipementLabel = (role === 'super_admin' || role === 'gestionnaire_stock_general') ? 'Équipements' : 'Stocks'
+    
     const items = [
         { label: 'Dashboard', icon: 'pi pi-home', route: '/', visible: true },
         { label: 'Agences', icon: 'pi pi-building', route: '/agences', visible: role === 'super_admin' },
         { label: 'Agents', icon: 'pi pi-users', route: '/agents', visible: role !== 'agent' },
         { label: 'Catégories', icon: 'pi pi-tags', route: '/categories', visible: true },
-        { label: 'Équipements', icon: 'pi pi-mobile', route: '/equipements', visible: true },
+        { label: menuEquipementLabel, icon: 'pi pi-mobile', route: '/equipements', visible: true },
         { label: 'Consommables', icon: 'pi pi-box', route: '/consommables', visible: true },
         { label: 'Transferts', icon: 'pi pi-send', route: '/transferts', visible: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'].includes(role) },
         { label: 'Demandes', icon: 'pi pi-shopping-cart', route: '/demandes-materiel', visible: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'].includes(role) },
