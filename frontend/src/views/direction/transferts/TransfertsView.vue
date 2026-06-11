@@ -95,62 +95,72 @@
         </div>
       </div>
 
-      <!-- Liste des Transferts (Cards) -->
-      <div class="transferts-grid" v-if="!loading">
-        <div v-for="(trans, index) in filteredTransferts" :key="trans.id" class="transfert-card animate-card" :style="`--index: ${index}`">
-          <div class="card-status-line" :class="trans.statut"></div>
-          
-          <div class="card-body">
-            <div class="card-header-top">
-              <span class="trans-no">{{ trans.numero_transfert || '#' + trans.id }}</span>
-              <Tag :value="trans.statut" :severity="getStatutSeverity(trans.statut)" />
-            </div>
+      <!-- Liste des Transferts (Tableau) -->
+      <div class="table-container animate-in" v-if="!loading">
+        <DataTable 
+          :value="filteredTransferts" 
+          responsiveLayout="stack" 
+          breakpoint="960px"
+          stripedRows
+          class="modern-table"
+          :paginator="true" 
+          :rows="10"
+        >
+          <Column field="id" header="ID" sortable>
+            <template #body="slotProps">
+              <span class="trans-id">#{{ slotProps.data.id }}</span>
+            </template>
+          </Column>
 
-            <div class="route-display">
-              <div class="node">
-                <i class="pi pi-building"></i>
-                <span>{{ trans.agence_origine?.nom || 'Origine' }}</span>
+          <Column header="Équipement" sortable sortField="equipement.nom">
+            <template #body="slotProps">
+              <div class="equipement-cell">
+                <span class="equip-name">{{ slotProps.data.equipement?.nom || slotProps.data.equipement?.marque + ' ' + slotProps.data.equipement?.modele }}</span>
+                <small class="equip-sn">SN: {{ slotProps.data.equipement?.numero_serie || 'N/A' }}</small>
               </div>
-              <div class="path">
-                <div class="line"></div>
-                <i class="pi pi-chevron-right"></i>
-              </div>
-              <div class="node">
-                <i class="pi pi-map-marker"></i>
-                <span>{{ trans.agence_destination?.nom || 'Destination' }}</span>
-              </div>
-            </div>
+            </template>
+          </Column>
 
-            <div class="equipement-info-box">
-              <div class="equip-icon"><i class="pi pi-desktop"></i></div>
-              <div class="equip-details">
-                <strong>{{ trans.equipement?.marque }} {{ trans.equipement?.modele }}</strong>
-                <span>SN: {{ trans.equipement?.numero_serie }}</span>
-              </div>
-            </div>
+          <Column header="Source" sortable sortField="agence_source.nom">
+            <template #body="slotProps">
+              <span class="agence-cell source">{{ slotProps.data.agence_source?.nom || 'Siège' }}</span>
+            </template>
+          </Column>
 
-            <div class="card-meta">
-              <div class="meta-item">
-                <i class="pi pi-calendar"></i>
-                <span>{{ formatDate(trans.date_demande) }}</span>
-              </div>
-            </div>
-          </div>
+          <Column header="Destination" sortable sortField="agence_destination.nom">
+            <template #body="slotProps">
+              <span class="agence-cell destination">{{ slotProps.data.agence_destination?.nom }}</span>
+            </template>
+          </Column>
 
-          <div class="card-actions-bar">
-            <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(trans)" />
-            <Button v-if="trans.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(trans)" />
-            <Button v-if="trans.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(trans)" />
-            <Button v-if="trans.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(trans)" />
-          </div>
-        </div>
+          <Column field="date_demande" header="Date Demande" sortable>
+            <template #body="slotProps">
+              {{ formatDate(slotProps.data.date_demande) }}
+            </template>
+          </Column>
+
+          <Column field="statut" header="Statut" sortable>
+            <template #body="slotProps">
+              <Tag :value="slotProps.data.statut" :severity="getStatutSeverity(slotProps.data.statut)" />
+            </template>
+          </Column>
+
+          <Column header="Actions">
+            <template #body="slotProps">
+              <div class="actions-cell">
+                <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(slotProps.data)" v-tooltip.top="'Voir détails'" />
+                <Button v-if="slotProps.data.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(slotProps.data)" v-tooltip.top="'Approuver'" />
+                <Button v-if="slotProps.data.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(slotProps.data)" v-tooltip.top="'Expédier'" />
+                <Button v-if="slotProps.data.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(slotProps.data)" v-tooltip.top="'Recevoir'" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
       <!-- Skeleton loading -->
-      <div class="transferts-grid" v-else>
-        <div v-for="n in 6" :key="n" class="transfert-card skeleton">
-          <div class="skeleton-body"></div>
-        </div>
+      <div class="table-container skeleton" v-else>
+        <div v-for="n in 5" :key="n" class="skeleton-row"></div>
       </div>
     </div>
   </DirectionLayout>
@@ -162,7 +172,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTransfertStore } from '@/stores/transfertStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
-import transfertApi from '@/api/transfertApi' // Ajout de l'API transfert
+import transfertApi from '@/api/transfertApi' 
 import gsap from 'gsap'
 
 // PrimeVue Components
@@ -170,6 +180,8 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 
 const router = useRouter()
 const toast = useToast()
@@ -223,8 +235,9 @@ const filteredTransferts = computed(() => {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(t => 
       t.numero_transfert?.toLowerCase().includes(q) || 
+      t.equipement?.nom?.toLowerCase().includes(q) ||
       t.equipement?.marque?.toLowerCase().includes(q) ||
-      t.agence_origine?.nom?.toLowerCase().includes(q) ||
+      t.agence_source?.nom?.toLowerCase().includes(q) ||
       t.agence_destination?.nom?.toLowerCase().includes(q)
     )
   }
@@ -235,6 +248,8 @@ const filteredTransferts = computed(() => {
 })
 
 const statutOptions = [
+  { label: 'En attente', value: 'demande' },
+  { label: 'Approuvé', value: 'approuve' },
   { label: 'Expédié', value: 'expedie' },
   { label: 'Reçu', value: 'recu' },
   { label: 'Refusé', value: 'refuse' }
@@ -310,10 +325,9 @@ onMounted(async () => {
 }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 
-/* Styles pour la section des demandes approuvées */
 .approved-demandes-section {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -323,12 +337,12 @@ onMounted(async () => {
     align-items: center;
     gap: 0.8rem;
     margin-bottom: 1.2rem;
-    color: #10b981;
+    color: #6366f1;
     
     i { font-size: 1.2rem; }
     h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b; }
     .count-badge {
-      background: #10b981;
+      background: #6366f1;
       color: white;
       padding: 2px 8px;
       border-radius: 12px;
@@ -343,7 +357,6 @@ onMounted(async () => {
   gap: 1.2rem;
   overflow-x: auto;
   padding-bottom: 1rem;
-  
   &::-webkit-scrollbar { height: 6px; }
   &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 }
@@ -355,72 +368,82 @@ onMounted(async () => {
   padding: 1.2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   border: 1px solid #f1f5f9;
-  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.filters-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
   
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  .search-box {
+    position: relative;
+    flex: 1;
+    i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1; }
+    :deep(.search-input) { width: 100%; padding-left: 2.5rem; border-radius: 12px; border: 1px solid #e2e8f0; }
   }
   
-  .demande-header {
+  .dropdown-filters {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.8rem;
-    .agence-name { font-weight: 700; color: #6366f1; font-size: 0.9rem; }
-    .date { color: #94a3b8; font-size: 0.75rem; }
+    gap: 1rem;
+    :deep(.modern-dropdown) { border-radius: 12px; border: 1px solid #e2e8f0; min-width: 180px; }
   }
+}
+
+.table-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
   
-  .demande-body {
-    margin-bottom: 1rem;
-    strong { display: block; font-size: 1rem; color: #1e293b; margin-bottom: 0.4rem; }
-    .demande-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      span { font-size: 0.85rem; color: #64748b; }
-      .urgency {
-        font-weight: bold;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        &.basse { color: #10b981; }
-        &.moyenne { color: #f59e0b; }
-        &.haute { color: #ef4444; }
-      }
+  &.skeleton {
+    padding: 1rem;
+    .skeleton-row {
+      height: 60px;
+      background: #f8fafc;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      animation: pulse 1.5s infinite;
     }
   }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.modern-table {
+  :deep(.p-datatable-thead > tr > th) {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 1rem;
+    border-bottom: 2px solid #f1f5f9;
+  }
   
-  .demande-footer {
-    display: flex;
-    justify-content: flex-end;
+  :deep(.p-datatable-tbody > tr) {
+    transition: background 0.2s;
+    &:hover { background: #f8fafc; }
+    > td { padding: 1rem; border-bottom: 1px solid #f1f5f9; }
   }
 }
 
-.stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-.stat-glass-card {
-  background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  display: flex; align-items: center; gap: 1rem;
-  .stat-icon-box { font-size: 1.5rem; color: #6366f1; }
-  .value { display: block; font-size: 1.5rem; font-weight: 800; }
-  .label { color: #64748b; font-size: 0.8rem; }
+.trans-id { font-family: monospace; font-weight: 700; color: #64748b; }
+.equipement-cell {
+  display: flex; flex-direction: column;
+  .equip-name { font-weight: 600; color: #1e293b; }
+  .equip-sn { color: #94a3b8; font-size: 0.75rem; }
 }
 
-.route-display {
-  display: flex; align-items: center; justify-content: space-between; margin: 1.5rem 0; padding: 1rem; background: #f8fafc; border-radius: 12px;
-  .node { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; i { color: #6366f1; } span { font-size: 0.8rem; font-weight: 600; } }
-  .path { flex: 1; display: flex; align-items: center; padding: 0 1rem; .line { height: 2px; flex: 1; background: #e2e8f0; } i { color: #cbd5e1; margin-left: -5px; } }
+.agence-cell {
+  font-weight: 600;
+  &.source { color: #6366f1; }
+  &.destination { color: #8b5cf6; }
 }
 
-.equipement-info-box {
-  display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 1rem;
-  .equip-icon { width: 40px; height: 40px; background: #eef2ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6366f1; }
-  .equip-details { display: flex; flex-direction: column; strong { font-size: 0.9rem; } span { font-size: 0.75rem; color: #64748b; } }
-}
-
-.transferts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-.transfert-card {
-  background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;
-  .card-status-line { height: 4px; width: 100%; &.demande { background: #f59e0b; } &.expedie { background: #3b82f6; } &.recu { background: #10b981; } }
-  .card-body { padding: 1.5rem; .card-header-top { display: flex; justify-content: space-between; .trans-no { font-family: monospace; font-weight: bold; color: #64748b; } } }
-  .card-actions-bar { display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid #f1f5f9; }
-}
+.actions-cell { display: flex; gap: 0.25rem; }
 </style>

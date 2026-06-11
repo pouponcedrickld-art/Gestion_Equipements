@@ -93,15 +93,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(DemandeMateriel::class, 'traite_par_id');
     }
-
-    /**
-     * Vérifie si l'utilisateur a un rôle spécifique
-     * 
-     * @param string $role
-     * @return bool
-     */
-    public function hasRole($role): bool
-    {
-        return $this->roles()->where('name', $role)->exists();
-    }
 }

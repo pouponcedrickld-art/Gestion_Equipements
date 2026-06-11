@@ -181,10 +181,14 @@ const submitForm = async () => {
 
   submitting.value = true
   
-  // Formatage de la date pour l'API
-  const dateFormatted = form.value.date_souhaitee instanceof Date 
-    ? form.value.date_souhaitee.toISOString().split('T')[0]
-    : form.value.date_souhaitee
+  // Formatage de la date pour l'API (en évitant les problèmes de fuseau horaire de toISOString)
+  let dateFormatted = form.value.date_souhaitee
+  if (form.value.date_souhaitee instanceof Date) {
+    const year = form.value.date_souhaitee.getFullYear()
+    const month = String(form.value.date_souhaitee.getMonth() + 1).padStart(2, '0')
+    const day = String(form.value.date_souhaitee.getDate()).padStart(2, '0')
+    dateFormatted = `${year}-${month}-${day}`
+  }
 
   try {
     await demandeAgenceApi.store({
