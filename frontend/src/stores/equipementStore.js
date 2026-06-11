@@ -41,7 +41,8 @@ export const useEquipementStore = defineStore('equipement', {
 
       try {
         const response = await equipementApi.index(filters)
-        this.equipements = response.data?.data || response.data || []
+        const result = response.data?.data
+        this.equipements = result?.data || result || []
 
         this.cache.set(cacheKey, {
           data: this.equipements,
