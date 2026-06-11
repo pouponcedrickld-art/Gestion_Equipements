@@ -1,31 +1,24 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Agence;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
-class UpdatePanneTransmettreMaintenanceRequest extends FormRequest
+class TransmettreMaintenanceRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
+        // Autorisation via Policy sur la ressource Panne (optionnel ici)
         return true;
     }
 
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
             'technicien_id' => ['required', 'integer', 'exists:users,id'],
         ];
     }
-
 }
+

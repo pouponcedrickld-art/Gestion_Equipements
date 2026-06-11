@@ -108,8 +108,10 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::apiResource('pannes', PanneController::class);
     Route::post('pannes/{id}/transmettre-maintenance', [PanneController::class, 'transmettreMaintenance'])->middleware('role:gestionnaire_stock');
     Route::post('pannes/{id}/diagnostiquer', [PanneController::class, 'diagnostiquer'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/decider', [PanneController::class, 'decider'])->middleware('role:technicien_maintenance|super_admin');
 
     // Maintenances
+
     Route::apiResource('maintenances', MaintenanceController::class)->middleware('role:super_admin|gestionnaire_stock_general|technicien_maintenance|gestionnaire_stock');
 
     // Pertes

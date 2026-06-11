@@ -11,8 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // SQLite (tests) ne supporte pas MODIFY sur enum.
+        // On ne fait rien en environnement sqlite.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Modifier l'enum pour utiliser les valeurs françaises
         DB::statement("ALTER TABLE maintenances MODIFY type_maintenance ENUM('préventif', 'correctif') DEFAULT 'correctif'");
+
     }
 
     /**
