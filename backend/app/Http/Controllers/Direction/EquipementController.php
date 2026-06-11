@@ -169,7 +169,7 @@ class EquipementController extends Controller
                     'is_lot' => true,
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
-                    'quantite' => $quantite_par_item,
+                    'quantite' => $quantite,
                     'categorie_id' => $validated['categorie_id'],
                     'fournisseur' => $validated['fournisseur'] ?? null,
                     'date_acquisition' => $validated['date_acquisition'] ?? null,

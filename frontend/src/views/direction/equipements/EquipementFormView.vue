@@ -348,7 +348,7 @@ const form = ref({
   photo: null,
   specifications: {},
   quantite_a_creer: 1,
-  mode_enregistrement: 'lot'
+  mode_enregistrement: 'individuel'
 })
 
 const selectedCategoryAttributes = computed(() => {
