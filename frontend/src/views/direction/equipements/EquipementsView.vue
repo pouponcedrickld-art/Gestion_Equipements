@@ -314,10 +314,10 @@ const statutOptions = [
   { label: 'Archivé', value: 'archive' }
 ]
 
-// Stats
-const statsDispo = computed(() => equipementStore.equipements.filter(e => e.etat === 'nouveau' || e.etat === 'actif').length)
-const statsAffectes = computed(() => equipementStore.equipements.filter(e => e.statut_global === 'affecte').length)
-const statsMaintenance = computed(() => equipementStore.equipements.filter(e => e.etat === 'en_maintenance').length)
+// Stats from store
+const statsDispo = computed(() => equipementStore.equipementsEnStock)
+const statsAffectes = computed(() => equipementStore.equipementsAffectes)
+const statsMaintenance = computed(() => equipementStore.equipementsEnMaintenance)
 
 const categories = computed(() => categorieStore.categories)
 

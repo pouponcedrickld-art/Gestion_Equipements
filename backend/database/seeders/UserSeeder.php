@@ -53,10 +53,25 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Technicien Maintenance',
                 'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
         );
         $technicien->syncRoles(['technicien_maintenance']);
+        
+        // Créer Agent lié au Technicien
+        \App\Models\Agent::updateOrCreate(
+            ['user_id' => $technicien->id],
+            [
+                'matricule' => \App\Models\Agent::generateMatricule(),
+                'nom' => 'Koffi',
+                'prenom' => 'Maxime',
+                'telephone' => '+228 90 00 00 00',
+                'email' => $technicien->email,
+                'poste' => 'Technicien Maintenance',
+                'statut' => 'actif',
+            ]
+        );
 
         // Agent
         $agent = User::updateOrCreate(
@@ -64,10 +79,25 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Agent Terrain',
                 'password' => bcrypt('password123'),
+                'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
         );
         $agent->syncRoles(['agent']);
+        
+        // Créer Agent lié à l'Agent Terrain
+        \App\Models\Agent::updateOrCreate(
+            ['user_id' => $agent->id],
+            [
+                'matricule' => \App\Models\Agent::generateMatricule(),
+                'nom' => 'Amedegbe',
+                'prenom' => 'Kodjo',
+                'telephone' => '+228 91 11 11 11',
+                'email' => $agent->email,
+                'poste' => 'Agent Terrain',
+                'statut' => 'actif',
+            ]
+        );
 
         echo "✅ Utilisateurs de test créés ou mis à jour avec succès !\n";
     }
