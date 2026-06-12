@@ -1,7 +1,7 @@
 <template>
   <div class="login-box">
     <h1>GESTPARK</h1>
-    <p class="subtitle">Gestion du Parc Matériel</p>
+    <p class="subtitle">Gestion de Matériel</p>
 
     <form @submit.prevent="handleLogin">
       <div class="form-group">
