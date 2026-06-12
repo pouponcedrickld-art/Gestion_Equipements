@@ -41,44 +41,44 @@
       </div>
 
       <!-- Statistiques Modernes -->
-      <div class="stats-container animate-in">
-        <div class="stat-glass-card total">
-          <div class="stat-icon-box">
+      <div class="stats-grid animate-in">
+        <div class="stat-card">
+          <div class="stat-icon">
             <i class="pi pi-desktop"></i>
           </div>
-          <div class="stat-details">
-            <span class="value">{{ equipementStore.equipements.length }}</span>
-            <span class="label">Total Parc</span>
+          <div>
+            <h3 class="text-2xl font-bold">{{ equipementStore.equipements.length }}</h3>
+            <p class="text-muted text-sm">Total Parc</p>
           </div>
         </div>
         
-        <div class="stat-glass-card success">
-          <div class="stat-icon-box">
+        <div class="stat-card" style="border-left-color: var(--success)">
+          <div class="stat-icon" style="color: var(--success); background: #dcfce7">
             <i class="pi pi-check-circle"></i>
           </div>
-          <div class="stat-details">
-            <span class="value">{{ statsDispo }}</span>
-            <span class="label">En Stock</span>
+          <div>
+            <h3 class="text-2xl font-bold">{{ statsDispo }}</h3>
+            <p class="text-muted text-sm">En Stock</p>
           </div>
         </div>
 
-        <div class="stat-glass-card warning">
-          <div class="stat-icon-box">
+        <div class="stat-card" style="border-left-color: var(--warning)">
+          <div class="stat-icon" style="color: var(--warning); background: #fef3c7">
             <i class="pi pi-user"></i>
           </div>
-          <div class="stat-details">
-            <span class="value">{{ statsAffectes }}</span>
-            <span class="label">Affectés</span>
+          <div>
+            <h3 class="text-2xl font-bold">{{ statsAffectes }}</h3>
+            <p class="text-muted text-sm">Affectés</p>
           </div>
         </div>
 
-        <div class="stat-glass-card danger">
-          <div class="stat-icon-box">
+        <div class="stat-card" style="border-left-color: var(--error)">
+          <div class="stat-icon" style="color: var(--error); background: #fee2e2">
             <i class="pi pi-wrench"></i>
           </div>
-          <div class="stat-details">
-            <span class="value">{{ statsMaintenance }}</span>
-            <span class="label">Maintenance</span>
+          <div>
+            <h3 class="text-2xl font-bold">{{ statsMaintenance }}</h3>
+            <p class="text-muted text-sm">Maintenance</p>
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@
           v-if="viewMode === 'table' && equipementStore.equipements.length > 0"
           :value="equipementStore.equipements" 
           responsiveLayout="scroll" 
-          class="modern-table"
+          class="professional-table"
           :rows="10" 
           paginator
           :rowsPerPageOptions="[10, 20, 50]"

@@ -471,8 +471,7 @@ onMounted(async () => {
  
 <style scoped lang="scss">
 .equipement-form-container {
-  padding: 1.25rem;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
  
@@ -480,28 +479,28 @@ onMounted(async () => {
 .form-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
  
 .page-title {
-  font-size: 1.4rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--text-dark);
   margin: 0;
 }
  
 .back-btn {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
  
 /* ── Layout deux colonnes ── */
 .two-col-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 1rem;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
   align-items: start;
 }
  
@@ -509,16 +508,15 @@ onMounted(async () => {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: 1rem;
+  gap: 1.5rem;
 }
  
 .sidebar-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
  
 /* ── Cartes principale ── */
@@ -528,56 +526,58 @@ onMounted(async () => {
 }
  
 .main-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
  
 /* ── Label de section ── */
 .card-section-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #64748b;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.85rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
  
   i {
-    color: #3b82f6;
-    font-size: 0.85rem;
+    color: var(--primary-hover);
+    font-size: 1rem;
   }
 }
  
 /* ── Photo ── */
 .photo-upload-placeholder {
-  height: 160px;
+  height: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   cursor: pointer;
-  color: #94a3b8;
-  border: 2px dashed #e2e8f0;
-  border-radius: 10px;
-  background: #f8fafc;
-  transition: border-color 0.2s;
+  color: var(--text-muted);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  transition: all 0.2s;
  
   &:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--primary);
+    color: var(--text-dark);
+    background: var(--bg-card);
   }
 }
  
 .photo-preview-wrapper {
-  height: 160px;
+  height: 200px;
   position: relative;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #000;
  
@@ -589,9 +589,9 @@ onMounted(async () => {
  
   .photo-delete-btn {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    top: 0.75rem;
+    right: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
  
@@ -599,42 +599,43 @@ onMounted(async () => {
 .status-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
 }
  
 .status-badge {
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
-  transition: all 0.15s;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  transition: all 0.2s;
   user-select: none;
  
   &:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--primary);
+    color: var(--text-dark);
   }
  
   &--active {
-    background: #eff6ff;
-    border-color: #3b82f6;
-    color: #1d4ed8;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-sm);
   }
 }
  
 /* ── Badge catégorie dans specs ── */
 .category-badge {
-  font-size: 0.68rem;
-  font-weight: 600;
-  background: #eff6ff;
-  color: #1d4ed8;
-  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--secondary-light);
+  color: var(--text-dark);
+  padding: 4px 12px;
   border-radius: 20px;
-  margin-left: 6px;
+  margin-left: 10px;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -643,72 +644,48 @@ onMounted(async () => {
 .specs-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
+  gap: 1rem;
 }
  
 .specs-empty {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px dashed #e2e8f0;
-  border-radius: 10px;
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
- 
-/* ── Grid tight ── */
-.grid-tight {
-  margin: -0.4rem;
- 
-  > [class*="col"] {
-    padding: 0.4rem;
-  }
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: 600;
 }
  
 /* ── Footer ── */
 .form-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 0.25rem;
-}
- 
-/* ── PrimeVue overrides ── */
-:deep(.p-inputtext-sm) {
-  padding: 0.45rem 0.75rem;
-}
- 
-:deep(.p-dropdown),
-:deep(.p-inputnumber-input),
-:deep(.p-calendar .p-inputtext) {
-  border: 1.5px solid #e2e8f0;
-  border-radius: 8px;
- 
-  &:enabled:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-  }
-}
- 
-.hidden {
-  display: none;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  margin-top: 1rem;
 }
  
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .two-col-layout {
     grid-template-columns: 1fr;
   }
  
   .sidebar {
-    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
- 
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
   .specs-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 </style>

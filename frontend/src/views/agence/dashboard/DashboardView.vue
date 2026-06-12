@@ -23,44 +23,44 @@
 
       <div v-else>
         <!-- Cartes Statistiques Principales -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="card stat-card border-l-4 border-primary-500">
-            <div class="stat-icon bg-primary-50 text-primary-600">
-              <i class="pi pi-box text-2xl"></i>
+        <div class="stats-grid mb-8">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="pi pi-box"></i>
             </div>
-            <div class="stat-info">
-              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.total_equipements || 0 }}</h3>
-              <p class="text-neutral-500 text-sm mt-1">Équipements</p>
-            </div>
-          </div>
-          
-          <div class="card stat-card border-l-4 border-success-500">
-            <div class="stat-icon bg-success-50 text-success-600">
-              <i class="pi pi-check-circle text-2xl"></i>
-            </div>
-            <div class="stat-info">
-              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.en_stock_general || stats.en_stock_local || 0 }}</h3>
-              <p class="text-neutral-500 text-sm mt-1">En stock</p>
+            <div>
+              <h3 class="text-2xl font-bold">{{ stats.total_equipements || 0 }}</h3>
+              <p class="text-muted text-sm">Équipements</p>
             </div>
           </div>
           
-          <div class="card stat-card border-l-4 border-warning-500">
-            <div class="stat-icon bg-warning-50 text-warning-600">
-              <i class="pi pi-user text-2xl"></i>
+          <div class="stat-card" style="border-left-color: var(--success)">
+            <div class="stat-icon" style="color: var(--success); background: #dcfce7">
+              <i class="pi pi-check-circle"></i>
             </div>
-            <div class="stat-info">
-              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.affectes || 0 }}</h3>
-              <p class="text-neutral-500 text-sm mt-1">Affectés</p>
+            <div>
+              <h3 class="text-2xl font-bold">{{ stats.en_stock_general || stats.en_stock_local || 0 }}</h3>
+              <p class="text-muted text-sm">En stock</p>
             </div>
           </div>
           
-          <div class="card stat-card border-l-4 border-danger-500">
-            <div class="stat-icon bg-danger-50 text-danger-600">
-              <i class="pi pi-exclamation-triangle text-2xl"></i>
+          <div class="stat-card" style="border-left-color: var(--warning)">
+            <div class="stat-icon" style="color: var(--warning); background: #fef3c7">
+              <i class="pi pi-user"></i>
             </div>
-            <div class="stat-info">
-              <h3 class="text-2xl font-bold text-neutral-800">{{ stats.en_panne || 0 }}</h3>
-              <p class="text-neutral-500 text-sm mt-1">En panne</p>
+            <div>
+              <h3 class="text-2xl font-bold">{{ stats.affectes || 0 }}</h3>
+              <p class="text-muted text-sm">Affectés</p>
+            </div>
+          </div>
+          
+          <div class="stat-card" style="border-left-color: var(--error)">
+            <div class="stat-icon" style="color: var(--error); background: #fee2e2">
+              <i class="pi pi-exclamation-triangle"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold">{{ stats.en_panne || 0 }}</h3>
+              <p class="text-muted text-sm">En panne</p>
             </div>
           </div>
         </div>

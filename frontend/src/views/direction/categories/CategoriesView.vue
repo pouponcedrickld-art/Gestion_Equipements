@@ -60,7 +60,7 @@
       <div class="categories-container" v-if="!categorieStore.loading">
         <!-- Vue Table -->
         <DataTable v-if="viewMode === 'table' && categorieStore.categories.length > 0" 
-          :value="categorieStore.categories" responsiveLayout="scroll" class="modern-table" :rows="10">
+          :value="categorieStore.categories" responsiveLayout="scroll" class="professional-table" :rows="10">
           <!-- ... colonnes ... -->
           <Column field="nom" header="Nom de la catégorie" sortable>
             <template #body="{ data }">

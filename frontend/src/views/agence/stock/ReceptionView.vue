@@ -34,7 +34,7 @@
           responsiveLayout="stack" 
           breakpoint="960px"
           stripedRows
-          class="modern-table"
+          class="professional-table"
           :paginator="true" 
           :rows="10"
           emptyMessage="Aucun transfert en attente de réception"

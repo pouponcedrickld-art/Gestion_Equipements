@@ -86,7 +86,7 @@
           v-if="viewMode === 'table' && consommableStore.consommables.length > 0"
           :value="consommableStore.consommables" 
           responsiveLayout="scroll" 
-          class="modern-table"
+          class="professional-table"
           :rows="10" 
           paginator
         >
