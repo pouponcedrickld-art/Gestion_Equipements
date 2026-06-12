@@ -21,9 +21,23 @@ class AgentController extends Controller
 
     public function postes()
     {
-        return Agent::whereNotNull('poste')
+        $defaultPostes = [
+            'Agent de Terrain',
+            'Superviseur',
+            'Technicien de Maintenance',
+            'Chef de Service',
+            'Comptable',
+            'Gestionnaire de Stock',
+            'Secrétaire',
+            'Chauffeur'
+        ];
+
+        $existingPostes = Agent::whereNotNull('poste')
             ->distinct()
-            ->pluck('poste');
+            ->pluck('poste')
+            ->toArray();
+
+        return array_values(array_unique(array_merge($defaultPostes, $existingPostes)));
     }
 
     public function store(StoreAgentRequest $r)

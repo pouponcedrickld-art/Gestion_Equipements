@@ -24,7 +24,7 @@ class MaintenanceSeeder extends Seeder
         $maintenances = [
             [
                 'equipement_id' => $equipements->where('reference', 'PDA-001')->first()->id,
-                'type_maintenance' => 'preventive',
+                'type_maintenance' => 'preventif',
                 'date_prevue' => now()->addDays(7),
                 'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
                 'technicien_id' => $technicien?->id,
@@ -37,7 +37,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements->where('reference', 'TAB-001')->first()->id,
-                'type_maintenance' => 'corrective',
+                'type_maintenance' => 'correctif',
                 'date_prevue' => now()->subDays(10),
                 'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
                 'technicien_id' => $technicien?->id,
@@ -50,7 +50,7 @@ class MaintenanceSeeder extends Seeder
             ],
             [
                 'equipement_id' => $equipements->where('reference', 'SPH-001')->first()->id,
-                'type_maintenance' => 'corrective',
+                'type_maintenance' => 'correctif',
                 'date_prevue' => now()->subDays(3),
                 'responsable' => $gestionnaire?->name ?? 'Gestionnaire Stock',
                 'technicien_id' => $technicien?->id,

@@ -28,9 +28,10 @@ class UserController extends Controller
             'agence_id' => 'required|exists:agences,id',
             'telephone' => 'nullable|string|max:30',
             'poste' => 'nullable|string|max:100',
-            'actif' => 'boolean',
+            'actif' => 'sometimes|boolean',
             'agent_id' => 'nullable|exists:agents,id',
         ]);
+        
         $u = User::create([
             'name' => $r->name,
             'email' => $r->email,
@@ -43,8 +44,10 @@ class UserController extends Controller
 
         if ($r->agent_id) {
             $agent = Agent::find($r->agent_id);
-            $agent->user_id = $u->id;
-            $agent->save();
+            if ($agent) {
+                $agent->user_id = $u->id;
+                $agent->save();
+            }
         }
 
         $u->assignRole($r->role);

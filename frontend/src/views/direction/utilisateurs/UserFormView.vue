@@ -5,6 +5,7 @@
       <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
     </div>
     <form @submit.prevent="handleSubmit">
+      <!-- Section Liaison Agent -->
       <div class="form-group" v-if="!editData">
         <label>Lier à un agent (optionnel)</label>
         <div class="search-select">
@@ -18,23 +19,26 @@
         </div>
       </div>
 
+      <!-- Informations de base -->
       <div class="form-row">
         <div class="form-group">
-          <label>Nom complet</label>
+          <label>Nom complet *</label>
           <input v-model="formData.name" required placeholder="Nom et prénom" />
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <label>Email *</label>
           <input v-model="formData.email" type="email" required placeholder="Email" />
         </div>
       </div>
+
+      <!-- Mot de passe et Rôle -->
       <div class="form-row" v-if="!editData">
         <div class="form-group">
-          <label>Mot de passe</label>
-          <input v-model="formData.password" type="password" required placeholder="••••••••" />
+          <label>Mot de passe *</label>
+          <input v-model="formData.password" type="password" required placeholder="Min. 6 caractères" />
         </div>
         <div class="form-group">
-          <label>Rôle</label>
+          <label>Rôle *</label>
           <select v-model="formData.role" required>
             <option value="">-- Choisir --</option>
             <option value="super_admin">Super Admin</option>
@@ -46,9 +50,29 @@
           </select>
         </div>
       </div>
+      <div class="form-row" v-else>
+        <div class="form-group">
+          <label>Nouveau mot de passe (optionnel)</label>
+          <input v-model="formData.password" type="password" placeholder="Laisser vide pour ne pas changer" />
+        </div>
+        <div class="form-group">
+          <label>Rôle *</label>
+          <select v-model="formData.role" required>
+            <option value="">-- Choisir --</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="gestionnaire_stock_general">G. Stock Général</option>
+            <option value="chef_agence">Chef d'Agence</option>
+            <option value="gestionnaire_stock">G. Stock Local</option>
+            <option value="technicien_maintenance">Technicien</option>
+            <option value="agent">Agent</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Agence et Téléphone -->
       <div class="form-row">
         <div class="form-group">
-          <label>Agence</label>
+          <label>Agence *</label>
           <select v-model="formData.agence_id" required>
             <option value="">-- Choisir --</option>
             <option v-for="a in agences" :key="a.id" :value="a.id">{{ a.nom }}</option>
@@ -59,10 +83,14 @@
           <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
         </div>
       </div>
+
+      <!-- Poste -->
       <div class="form-group">
-        <label>Poste</label>
+        <label>Poste occupé</label>
         <input v-model="formData.poste" placeholder="Poste occupé" />
       </div>
+
+      <!-- Actions -->
       <div class="form-actions">
         <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
         <button type="submit" class="btn-primary" :disabled="saving">
@@ -104,6 +132,22 @@ const formData = reactive({
   actif: true,
   agent_id: null,
 })
+
+const resetForm = () => {
+  Object.assign(formData, {
+    name: '',
+    email: '',
+    password: '',
+    role: '',
+    agence_id: null,
+    telephone: '',
+    poste: '',
+    actif: true,
+    agent_id: null,
+  })
+  error.value = null
+  agentSearch.value = ''
+}
 
 const filteredAgents = computed(() => {
   if (!agentSearch.value) return availableAgents.value
@@ -148,27 +192,12 @@ watch(() => props.editData, (val) => {
       poste: val.poste || '',
       actif: val.actif ?? true,
       role: val.roles?.[0]?.name || '',
+      password: '', // On ne pré-remplit jamais le mot de passe
     })
   } else {
     resetForm()
   }
 }, { immediate: true })
-
-const resetForm = () => {
-  Object.assign(formData, {
-    name: '',
-    email: '',
-    password: '',
-    role: '',
-    agence_id: null,
-    telephone: '',
-    poste: '',
-    actif: true,
-    agent_id: null,
-  })
-  error.value = null
-  agentSearch.value = ''
-}
 
 const handleSubmit = async () => {
   saving.value = true

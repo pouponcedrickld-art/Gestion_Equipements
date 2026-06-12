@@ -12,9 +12,6 @@ class AgentSeeder extends Seeder
 {
     public function run(): void
     {
-        $agenceLome = Agence::where('nom', 'Agence Lomé-Centre')->first();
-        $agenceKara = Agence::where('nom', 'Agence Kara')->first();
-
         $agents = [
             [
                 'matricule' => 'AGT-001',
@@ -22,8 +19,6 @@ class AgentSeeder extends Seeder
                 'prenom' => 'Jean',
                 'telephone' => '+228 90 12 34 56',
                 'email' => 'jean.dupont@gestpark.tg',
-                'direction' => 'Opérations',
-                'service' => 'Terrain',
                 'poste' => 'Agent de collecte',
                 'statut' => 'actif',
                 'user_id' => User::where('email', 'agent@gestpark.local')->first()?->id,
@@ -34,8 +29,6 @@ class AgentSeeder extends Seeder
                 'prenom' => 'Marie',
                 'telephone' => '+228 90 23 45 67',
                 'email' => 'marie.koffi@gestpark.tg',
-                'direction' => 'Opérations',
-                'service' => 'Terrain',
                 'poste' => 'Agent de saisie',
                 'statut' => 'actif',
                 'user_id' => null,
@@ -46,8 +39,6 @@ class AgentSeeder extends Seeder
                 'prenom' => 'Kossi',
                 'telephone' => '+228 90 34 56 78',
                 'email' => 'kossi.amouzou@gestpark.tg',
-                'direction' => 'Technique',
-                'service' => 'Maintenance',
                 'poste' => 'Technicien terrain',
                 'statut' => 'actif',
                 'user_id' => User::where('email', 'technicien@gestpark.local')->first()?->id,
@@ -58,8 +49,6 @@ class AgentSeeder extends Seeder
                 'prenom' => 'Afi',
                 'telephone' => '+228 90 45 67 89',
                 'email' => 'afi.bodjona@gestpark.tg',
-                'direction' => 'Opérations',
-                'service' => 'Terrain',
                 'poste' => 'Agent de collecte',
                 'statut' => 'inactif',
                 'user_id' => null,
