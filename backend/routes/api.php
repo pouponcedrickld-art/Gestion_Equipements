@@ -50,6 +50,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
     // Agents
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock')->group(function () {
+        Route::get('agents/available', [AgentController::class, 'available']);
+        Route::get('agents/postes', [AgentController::class, 'postes']);
         Route::apiResource('agents', AgentController::class);
     });
 

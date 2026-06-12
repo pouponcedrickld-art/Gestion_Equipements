@@ -15,8 +15,6 @@ return new class extends Migration
             $table->string('prenom');
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
-            $table->string('direction')->nullable();
-            $table->string('service')->nullable();
             $table->string('poste')->nullable();
             $table->enum('statut', ['actif', 'inactif'])->default('actif');
             $table->string('photo')->nullable();

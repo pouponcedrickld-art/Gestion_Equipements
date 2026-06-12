@@ -5,23 +5,40 @@
       <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
     </div>
     <form @submit.prevent="handleSubmit">
+      <!-- Section Liaison Agent -->
+      <div class="form-group" v-if="!editData">
+        <label>Lier à un agent (optionnel)</label>
+        <div class="search-select">
+          <input v-model="agentSearch" placeholder="Rechercher un agent..." class="search-input" />
+          <select v-model="formData.agent_id" @change="onAgentSelect">
+            <option :value="null">-- Aucun / Nouvel utilisateur --</option>
+            <option v-for="a in filteredAgents" :key="a.id" :value="a.id">
+              {{ a.nom }} {{ a.prenom }} ({{ a.matricule }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Informations de base -->
       <div class="form-row">
         <div class="form-group">
-          <label>Nom complet</label>
+          <label>Nom complet *</label>
           <input v-model="formData.name" required placeholder="Nom et prénom" />
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <label>Email *</label>
           <input v-model="formData.email" type="email" required placeholder="Email" />
         </div>
       </div>
+
+      <!-- Mot de passe et Rôle -->
       <div class="form-row" v-if="!editData">
         <div class="form-group">
-          <label>Mot de passe</label>
-          <input v-model="formData.password" type="password" required placeholder="••••••••" />
+          <label>Mot de passe *</label>
+          <input v-model="formData.password" type="password" required placeholder="Min. 6 caractères" />
         </div>
         <div class="form-group">
-          <label>Rôle</label>
+          <label>Rôle *</label>
           <select v-model="formData.role" required>
             <option value="">-- Choisir --</option>
             <option value="super_admin">Super Admin</option>
@@ -33,17 +50,47 @@
           </select>
         </div>
       </div>
+      <div class="form-row" v-else>
+        <div class="form-group">
+          <label>Nouveau mot de passe (optionnel)</label>
+          <input v-model="formData.password" type="password" placeholder="Laisser vide pour ne pas changer" />
+        </div>
+        <div class="form-group">
+          <label>Rôle *</label>
+          <select v-model="formData.role" required>
+            <option value="">-- Choisir --</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="gestionnaire_stock_general">G. Stock Général</option>
+            <option value="chef_agence">Chef d'Agence</option>
+            <option value="gestionnaire_stock">G. Stock Local</option>
+            <option value="technicien_maintenance">Technicien</option>
+            <option value="agent">Agent</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Agence et Téléphone -->
       <div class="form-row">
         <div class="form-group">
-          <label>Agence</label>
+          <label>Agence *</label>
           <select v-model="formData.agence_id" required>
             <option value="">-- Choisir --</option>
             <option v-for="a in agences" :key="a.id" :value="a.id">{{ a.nom }}</option>
           </select>
         </div>
-      
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
+        </div>
       </div>
-      
+
+      <!-- Poste -->
+      <div class="form-group">
+        <label>Poste occupé</label>
+        <input v-model="formData.poste" placeholder="Poste occupé" />
+      </div>
+
+      <!-- Actions -->
       <div class="form-actions">
         <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
         <button type="submit" class="btn-primary" :disabled="saving">
@@ -56,8 +103,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/userStore.js'
+import { useAgentStore } from '@/stores/agentStore.js'
 
 const props = defineProps({
   editData: Object,
@@ -67,8 +115,11 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const userStore = useUserStore()
+const agentStore = useAgentStore()
 const saving = ref(false)
 const error = ref(null)
+const availableAgents = ref([])
+const agentSearch = ref('')
 
 const formData = reactive({
   name: '',
@@ -76,23 +127,10 @@ const formData = reactive({
   password: '',
   role: '',
   agence_id: null,
-
+  telephone: '',
+  poste: '',
   actif: true,
-})
-
-watch(() => props.editData, (val) => {
-  if (val) {
-    Object.assign(formData, {
-      name: val.name || '',
-      email: val.email || '',
-      agence_id: val.agence_id || null,
-   
-      actif: val.actif ?? true,
-      role: val.role || '',
-    })
-  } else {
-    resetForm()
-  }
+  agent_id: null,
 })
 
 const resetForm = () => {
@@ -105,9 +143,61 @@ const resetForm = () => {
     telephone: '',
     poste: '',
     actif: true,
+    agent_id: null,
   })
   error.value = null
+  agentSearch.value = ''
 }
+
+const filteredAgents = computed(() => {
+  if (!agentSearch.value) return availableAgents.value
+  const s = agentSearch.value.toLowerCase()
+  return availableAgents.value.filter(a => 
+    a.nom.toLowerCase().includes(s) || 
+    a.prenom.toLowerCase().includes(s) || 
+    a.matricule.toLowerCase().includes(s)
+  )
+})
+
+onMounted(async () => {
+  if (!props.editData) {
+    try {
+      const agents = await agentStore.fetchAvailableAgents()
+      availableAgents.value = agents
+    } catch (err) {
+      console.error('Erreur chargement agents dispo:', err)
+    }
+  }
+})
+
+const onAgentSelect = () => {
+  if (formData.agent_id) {
+    const agent = availableAgents.value.find(a => a.id === formData.agent_id)
+    if (agent) {
+      formData.name = `${agent.prenom} ${agent.nom}`
+      formData.email = agent.email || ''
+      formData.telephone = agent.telephone || ''
+      formData.poste = agent.poste || ''
+    }
+  }
+}
+
+watch(() => props.editData, (val) => {
+  if (val) {
+    Object.assign(formData, {
+      name: val.name || '',
+      email: val.email || '',
+      agence_id: val.agence_id || null,
+      telephone: val.telephone || '',
+      poste: val.poste || '',
+      actif: val.actif ?? true,
+      role: val.roles?.[0]?.name || '',
+      password: '', // On ne pré-remplit jamais le mot de passe
+    })
+  } else {
+    resetForm()
+  }
+}, { immediate: true })
 
 const handleSubmit = async () => {
   saving.value = true
@@ -223,5 +313,24 @@ const handleSubmit = async () => {
   color: #ef4444;
   margin-top: 10px;
   text-align: center;
+}
+
+.search-select {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.search-input {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom: none !important;
+  background: #0f172a !important;
+}
+
+.search-select select {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 </style>

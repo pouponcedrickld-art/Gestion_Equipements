@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Direction;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,7 +27,10 @@ class UserController extends Controller
                 'password' => 'required|string|min:6',
                 'role' => 'required|string|exists:roles,name',
                 'agence_id' => 'required|exists:agences,id',
-                'actif' => 'boolean',
+                'telephone' => 'nullable|string|max:30',
+                'poste' => 'nullable|string|max:100',
+                'actif' => 'sometimes|boolean',
+                'agent_id' => 'nullable|exists:agents,id',
             ]);
 
             $u = User::create([
@@ -34,8 +38,19 @@ class UserController extends Controller
                 'email' => $r->email,
                 'password' => Hash::make($r->password),
                 'agence_id' => $r->agence_id,
+                'telephone' => $r->telephone,
+                'poste' => $r->poste,
                 'actif' => $r->boolean('actif', true),
             ]);
+
+            if ($r->agent_id) {
+                $agent = Agent::find($r->agent_id);
+                if ($agent) {
+                    $agent->user_id = $u->id;
+                    $agent->save();
+                }
+            }
+
             $u->assignRole($r->role);
             return $u->load(['agence', 'roles']);
 
@@ -47,6 +62,7 @@ class UserController extends Controller
             ], 422);
         }
     }
+
     public function show(User $user)
     {
         return $user->load(['agence', 'roles', 'permissions']);

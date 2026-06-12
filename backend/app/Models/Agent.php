@@ -16,13 +16,58 @@ class Agent extends Model
         'prenom',
         'telephone',
         'email',
-        'direction',
-        'service',
         'poste',
         'statut',
         'photo',
         'user_id',
     ];
+
+    /**
+     * Génère un matricule dynamique lors de la création
+     */
+    protected static function booted()
+    {
+        static::creating(function ($agent) {
+            if (empty($agent->matricule)) {
+                $agent->matricule = static::generateMatricule();
+            }
+        });
+    }
+
+    public static function generateMatricule()
+    {
+        $prefix = 'AGT';
+        $year = date('Y');
+        
+        // On cherche le dernier matricule qui correspond au format AGT-YEAR-XXXX
+        $lastAgent = static::where('matricule', 'like', "$prefix-$year-%")
+            ->orderBy('matricule', 'desc')
+            ->first();
+        
+        $number = 1;
+        if ($lastAgent && $lastAgent->matricule) {
+            $parts = explode('-', $lastAgent->matricule);
+            if (count($parts) === 3) {
+                $number = (int) $parts[2] + 1;
+            }
+        } else {
+            // Si aucun matricule pour l'année en cours, on regarde le dernier globalement
+            // pour voir si on peut en déduire une suite, mais le format préconisé est par année.
+            $lastAny = static::where('matricule', 'like', "$prefix-%")
+                ->orderBy('id', 'desc')
+                ->first();
+            
+            if ($lastAny && $lastAny->matricule) {
+                $parts = explode('-', $lastAny->matricule);
+                // Si c'est l'ancien format AGT-XXX
+                if (count($parts) === 2) {
+                    $number = (int) $parts[1] + 1;
+                }
+            }
+        }
+
+        return sprintf('%s-%s-%04d', $prefix, $year, $number);
+    }
 
     // Relations
     public function user()
