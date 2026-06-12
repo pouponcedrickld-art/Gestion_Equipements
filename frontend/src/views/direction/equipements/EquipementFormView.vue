@@ -558,6 +558,6 @@ onMounted(async () => {
 
   .sidebar {
     position: static;
-  }
-}
+  }}
+
 </style>

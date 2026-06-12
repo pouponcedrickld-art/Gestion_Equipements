@@ -93,7 +93,7 @@ export const useEquipementStore = defineStore('equipement', {
         const response = await equipementApi.show(id)
         return response.data
       } catch (error) {
-        this.error = error.response?.data?.message || "Erreur lors du chargement de l'équipement"
+        this.error = error.response?.data?.message || "Erreur lors du chargement de l'équipement "
         console.error('Erreur fetchEquipementById:', error)
         throw error
       } finally {
