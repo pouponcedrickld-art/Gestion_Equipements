@@ -7,7 +7,7 @@
           <p>Affectez du matériel aux agents et suivez les retours</p>
         </div>
         <div class="header-right">
-          <button class="add-btn" @click="openAddModal">
+          <button class="btn btn-primary btn-md" @click="openAddModal">
             <i class="pi pi-plus"></i> Nouvelle Affectation
           </button>
         </div>
@@ -72,7 +72,7 @@
                 </td>
                 <td>
                   <div class="actions">
-                    <button v-if="a.statut === 'active'" class="return-btn" @click="openReturnModal(a)" v-tooltip.top="'Enregistrer le retour'">
+                    <button v-if="a.statut === 'active'" class="btn btn-outline btn-xs" @click="openReturnModal(a)" v-tooltip.top="'Enregistrer le retour'">
                       <i class="pi pi-sign-in"></i>
                     </button>
                   </div>
@@ -156,8 +156,13 @@
           </div>
 
           <div class="modal-footer mt-4 flex justify-end gap-2">
-            <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary" @click="showAddModal = false" />
-            <Button label="Enregistrer" icon="pi pi-check" type="submit" :loading="submitting" class="p-button-primary" />
+            <button type="button" class="btn btn-secondary btn-md" @click="showAddModal = false">
+              <i class="pi pi-times"></i> Annuler
+            </button>
+            <button type="submit" class="btn btn-primary btn-md" :disabled="submitting">
+              <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
+              <i v-else class="pi pi-check"></i> Enregistrer
+            </button>
           </div>
         </form>
       </Dialog>
@@ -193,8 +198,13 @@
           </div>
 
           <div class="modal-footer mt-4 flex justify-end gap-2">
-            <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary" @click="showReturnModal = false" />
-            <Button label="Confirmer le retour" icon="pi pi-check" type="submit" :loading="submitting" class="p-button-success" />
+            <button type="button" class="btn btn-secondary btn-md" @click="showReturnModal = false">
+              <i class="pi pi-times"></i> Annuler
+            </button>
+            <button type="submit" class="btn btn-success btn-md" :disabled="submitting">
+              <i v-if="submitting" class="pi pi-spin pi-spinner"></i>
+              <i v-else class="pi pi-check"></i> Confirmer le retour
+            </button>
           </div>
         </form>
       </Dialog>
@@ -235,7 +245,7 @@
                   <span class="badge-urgence" :class="d.urgence.toLowerCase()">{{ d.urgence }}</span>
                 </td>
                 <td>
-                  <button class="process-btn" @click="openProcessModal(d)">
+                  <button class="btn btn-primary btn-xs" @click="openProcessModal(d)">
                     Traiter
                   </button>
                 </td>
@@ -281,8 +291,13 @@
           </div>
 
           <div class="modal-footer mt-4 flex justify-end gap-2">
-            <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary" @click="showProcessModal = false" />
-            <Button label="Confirmer" icon="pi pi-check" type="submit" :loading="processing" class="p-button-primary" />
+            <button type="button" class="btn btn-secondary btn-md" @click="showProcessModal = false">
+              <i class="pi pi-times"></i> Annuler
+            </button>
+            <button type="submit" class="btn btn-primary btn-md" :disabled="processing">
+              <i v-if="processing" class="pi pi-spin pi-spinner"></i>
+              <i v-else class="pi pi-check"></i> Confirmer
+            </button>
           </div>
         </form>
       </Dialog>
@@ -304,7 +319,6 @@ import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
 import Calendar from 'primevue/calendar'
 import Textarea from 'primevue/textarea'
-import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 
 const authStore = useAuthStore()
@@ -524,13 +538,6 @@ onMounted(() => {
 .header-bar h2 { margin: 0; font-size: 1.5rem; }
 .header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
 
-.add-btn {
-  background: #3b82f6; color: white; border: none; padding: 10px 20px;
-  border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;
-  font-weight: 600; transition: background 0.2s;
-}
-.add-btn:hover { background: #2563eb; }
-
 .filters-card {
   background: #1e293b; border: 1px solid #334155; padding: 16px;
   border-radius: 12px; margin-bottom: 20px;
@@ -556,9 +563,6 @@ onMounted(() => {
 .status-badge.active { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 .status-badge.retournee { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
-.return-btn { background: #334155; color: #10b981; border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-.return-btn:hover { background: #10b981; color: white; }
-
 .section-divider { height: 1px; background: #334155; margin: 40px 0; }
 .section-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
 .section-header h3 { margin: 0; display: flex; align-items: center; gap: 10px; color: #f59e0b; }
@@ -567,8 +571,6 @@ onMounted(() => {
 .badge-urgence.basse { background: rgba(16, 185, 129, 0.2); color: #10b981; }
 .badge-urgence.moyenne { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
 .badge-urgence.haute { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-
-.process-btn { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
 .loading-state, .empty-state { padding: 60px; text-align: center; color: #94a3b8; }
 .loading-state i { font-size: 2rem; margin-bottom: 12px; color: #3b82f6; }

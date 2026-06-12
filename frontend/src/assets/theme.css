@@ -55,41 +55,105 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
 }
 
-/* Global Button Style */
+/* Global Button Styles - Unified & Professional */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 11px 20px;
+  font-weight: 700;
   border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
   gap: 8px;
+  text-decoration: none;
+  font-family: inherit;
+  white-space: nowrap;
 }
 
+/* Sizes */
+.btn-xs { padding: 4px 8px; font-size: 0.7rem; gap: 4px; }
+.btn-sm { padding: 8px 14px; font-size: 0.8rem; gap: 6px; }
+.btn-md { padding: 11px 20px; font-size: 0.95rem; }
+.btn-lg { padding: 14px 28px; font-size: 1.1rem; }
+.btn-xl { padding: 18px 36px; font-size: 1.25rem; }
+
+/* Variants */
 .btn-primary {
   background-color: var(--primary);
   color: var(--text-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 6px -1px rgba(250, 204, 21, 0.2), 0 2px 4px -1px rgba(250, 204, 21, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  box-shadow: 0 6px 16px rgba(250, 204, 21, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(250, 204, 21, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-secondary {
-  background-color: var(--bg-input);
+  background-color: var(--bg-card);
   color: var(--text-main);
-  border: 1px solid var(--border-color);
+  border-color: var(--border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--bg-card);
+  background-color: var(--bg-input);
   border-color: var(--primary);
+  color: var(--text-dark);
+}
+
+.btn-danger {
+  background-color: #fee2e2;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.btn-success {
+  background-color: #dcfce7;
+  color: #10b981;
+  border-color: #86efac;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--text-dark);
+  background: var(--primary-light);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Global Input Style */
