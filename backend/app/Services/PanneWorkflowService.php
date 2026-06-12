@@ -42,19 +42,23 @@ class PanneWorkflowService
             self::STATUT_EN_COURS,
             self::STATUT_EN_MAINTENANCE,
             self::STATUT_IRRECUPERABLE,
+            'cloturee',
         ],
         self::STATUT_EN_COURS => [
             self::STATUT_EN_MAINTENANCE,
             self::STATUT_RESOLUE,
             self::STATUT_IRRECUPERABLE,
+            'cloturee',
         ],
         self::STATUT_EN_MAINTENANCE => [
             self::STATUT_RESOLUE,
             self::STATUT_IRRECUPERABLE,
+            'cloturee',
         ],
         self::STATUT_RESOLUE => [],
         self::STATUT_IRRECUPERABLE => [],
     ];
+
 
     /**
      * Déclarer une panne.
@@ -118,6 +122,18 @@ class PanneWorkflowService
     {
         return $this->transition($panne, $actor, self::STATUT_IRRECUPERABLE, $payload);
     }
+
+    /**
+     * Clôturer une panne (statut final).
+     * Cette transition est “corrective” : historisation + mise à jour équipement.
+     */
+    public function cloturer(Panne $panne, User $actor, array $payload = []): Panne
+    {
+        // On force un statut final : resolue ou irrecuperable ne couvre pas la clôture administrative.
+        // Convention: cloturee.
+        return $this->transition($panne, $actor, 'cloturee', $payload);
+    }
+
 
     /**
      * Transition générique.
@@ -189,8 +205,10 @@ class PanneWorkflowService
             self::STATUT_EN_MAINTENANCE => ['statut_global' => 'en_maintenance'],
             self::STATUT_RESOLUE => ['statut_global' => 'en_stock_local', 'etat' => 'en_service'],
             self::STATUT_IRRECUPERABLE => ['statut_global' => 'reforme', 'etat' => 'hors_service'],
+            'cloturee' => ['statut_global' => 'en_stock_local', 'etat' => 'en_service'],
             default => null,
         };
+
 
         if (!$mapping) {
             return;

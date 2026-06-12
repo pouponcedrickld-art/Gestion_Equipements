@@ -111,10 +111,13 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::post('pannes/{id}/transmettre-maintenance', [PanneController::class, 'transmettreMaintenance'])->middleware('role:gestionnaire_stock');
     Route::post('pannes/{id}/diagnostiquer', [PanneController::class, 'diagnostiquer'])->middleware('role:technicien_maintenance|super_admin');
     Route::post('pannes/{id}/decider', [PanneController::class, 'decider'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/update-resultat', [PanneController::class, 'updateResultat'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/cloturer', [PanneController::class, 'cloturer'])->middleware('role:technicien_maintenance|super_admin|gestionnaire_stock');
 
     // Maintenances
-
     Route::apiResource('maintenances', MaintenanceController::class)->middleware('role:super_admin|gestionnaire_stock_general|technicien_maintenance|gestionnaire_stock');
+    Route::post('maintenances/{id}/start', [MaintenanceController::class, 'start'])->middleware('role:super_admin|technicien_maintenance');
+    Route::post('maintenances/{id}/complete', [MaintenanceController::class, 'complete'])->middleware('role:super_admin|technicien_maintenance');
 
     // Pertes
     Route::apiResource('pertes', PerteController::class);

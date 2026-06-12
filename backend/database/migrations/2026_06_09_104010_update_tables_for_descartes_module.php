@@ -38,17 +38,67 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('equipements', function (Blueprint $table) {
-            $table->dropForeign(['responsable_id']);
-            $table->dropColumn(['responsable_id', 'documents']);
+            $foreignKeyExists = function ($tableName, $column) {
+                $constraintName = $tableName . '_' . $column . '_foreign';
+                $result = \DB::select(
+                    "SELECT COUNT(*) as count FROM information_schema.TABLE_CONSTRAINTS 
+                    WHERE CONSTRAINT_SCHEMA = DATABASE() 
+                    AND TABLE_NAME = ? 
+                    AND CONSTRAINT_NAME = ?",
+                    [$tableName, $constraintName]
+                );
+                return $result[0]->count > 0;
+            };
+            
+            if (Schema::hasColumn('equipements', 'responsable_id') && $foreignKeyExists('equipements', 'responsable_id')) {
+                $table->dropForeign(['responsable_id']);
+            }
+            
+            $columnsToDrop = ['responsable_id', 'documents'];
+            $existingColumns = [];
+            foreach ($columnsToDrop as $column) {
+                if (Schema::hasColumn('equipements', $column)) {
+                    $existingColumns[] = $column;
+                }
+            }
+            if (!empty($existingColumns)) {
+                $table->dropColumn($existingColumns);
+            }
         });
 
         Schema::table('categories', function (Blueprint $table) {
-            $table->dropForeign(['parent_id']);
-            $table->dropColumn(['code', 'parent_id', 'frequence_maintenance', 'duree_vie', 'attributs_personnalises']);
+            $foreignKeyExists = function ($tableName, $column) {
+                $constraintName = $tableName . '_' . $column . '_foreign';
+                $result = \DB::select(
+                    "SELECT COUNT(*) as count FROM information_schema.TABLE_CONSTRAINTS 
+                    WHERE CONSTRAINT_SCHEMA = DATABASE() 
+                    AND TABLE_NAME = ? 
+                    AND CONSTRAINT_NAME = ?",
+                    [$tableName, $constraintName]
+                );
+                return $result[0]->count > 0;
+            };
+            
+            if (Schema::hasColumn('categories', 'parent_id') && $foreignKeyExists('categories', 'parent_id')) {
+                $table->dropForeign(['parent_id']);
+            }
+            
+            $columnsToDrop = ['code', 'parent_id', 'frequence_maintenance', 'duree_vie', 'attributs_personnalises'];
+            $existingColumns = [];
+            foreach ($columnsToDrop as $column) {
+                if (Schema::hasColumn('categories', $column)) {
+                    $existingColumns[] = $column;
+                }
+            }
+            if (!empty($existingColumns)) {
+                $table->dropColumn($existingColumns);
+            }
         });
 
         Schema::table('consommables', function (Blueprint $table) {
-            $table->dropColumn('seuil_alerte');
+            if (Schema::hasColumn('consommables', 'seuil_alerte')) {
+                $table->dropColumn('seuil_alerte');
+            }
         });
     }
 };
