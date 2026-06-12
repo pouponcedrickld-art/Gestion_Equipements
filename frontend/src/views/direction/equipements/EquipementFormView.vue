@@ -142,27 +142,16 @@
               </div>
 
               <div class="grid grid-tight">
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Marque</label>
                     <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" />
                   </div>
                 </div>
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Modèle</label>
                     <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" />
-                  </div>
-                </div>
-                <div class="col-12 md:col-4">
-                  <div class="field">
-                    <label class="font-bold text-sm">Numéro de série</label>
-                    <InputText
-                      v-model="form.numero_serie"
-                      :class="{ 'p-invalid': errors.numero_serie }"
-                      :placeholder="form.quantite_a_creer > 1 ? 'Auto' : 'S/N'"
-                      class="p-inputtext-sm"
-                    />
                   </div>
                 </div>
               </div>
@@ -175,12 +164,6 @@
               </div>
 
               <div class="grid grid-tight">
-                <div class="col-12 md:col-6">
-                  <div class="field mb-3">
-                    <label class="font-bold text-sm">Code inventaire</label>
-                    <InputText v-model="form.code_inventaire" placeholder="Ex : INV-2024" class="p-inputtext-sm" />
-                  </div>
-                </div>
                 <div class="col-12 md:col-6">
                   <div class="field mb-3">
                     <label class="font-bold text-sm">Date d'acquisition</label>
@@ -261,10 +244,8 @@ const errors = ref({})
 
 const form = ref({
   nom: '',
-  numero_serie: '',
   marque: '',
   modele: '',
-  code_inventaire: '',
   categorie_id: null,
   etat: 'nouveau',
   date_acquisition: null,

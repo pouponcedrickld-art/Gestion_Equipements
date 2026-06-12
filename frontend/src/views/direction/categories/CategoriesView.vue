@@ -19,7 +19,7 @@
           </div>
         </div>
 
-        <div class="page-actions" v-if="hasRole(['super_admin', 'gestionnaire_stock_general'])">
+        <div class="page-actions" v-if="canManageCategories">
           <Button label="Nouvelle Catégorie" icon="pi pi-plus" @click="openCreateDialog"
             class="p-button-success p-button-raised action-btn" />
         </div>
@@ -94,8 +94,9 @@
             <template #body="{ data }">
               <div class="flex justify-content-end gap-2">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" v-tooltip.top="'Détails'" @click="viewCategorie(data)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editCategorie(data)" />
+                <Button v-if="canManageCategories" icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editCategorie(data)" />
                 <Button 
+                  v-if="canManageCategories"
                   :icon="data.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
                   :class="['p-button-text p-button-rounded', data.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
                   v-tooltip.top="data.statut === 'archive' ? 'Désarchiver' : 'Supprimer / Archiver'"
@@ -133,8 +134,9 @@
             <div class="card-footer">
               <div class="flex gap-1">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-sm p-button-info" @click="viewCategorie(cat)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editCategorie(cat)" />
+                <Button v-if="canManageCategories" icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editCategorie(cat)" />
                 <Button 
+                  v-if="canManageCategories"
                   :icon="cat.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
                   :class="['p-button-text p-button-rounded p-button-sm', cat.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
                   @click="handleDeleteOrArchive(cat)"
@@ -284,11 +286,13 @@ import Tooltip from 'primevue/tooltip'
 
 // Stores
 import { useCategorieStore } from '@/stores/categorieStore'
+import { useAuthStore } from '@/stores/authStore'
 import { hasRole } from '@/utils/permissions'
 
 const router = useRouter()
 const toast = useToast()
 const categorieStore = useCategorieStore()
+const authStore = useAuthStore()
 
 const pageContainer = ref(null)
 const searchTerm = ref('')
@@ -303,6 +307,8 @@ const viewOptions = ref([
   { icon: 'pi pi-list', value: 'table' },
   { icon: 'pi pi-th-large', value: 'grid' }
 ])
+
+const canManageCategories = computed(() => authStore.isSuperAdmin || authStore.isGestionnaireGeneral)
 
 const statusOptions = [
   { label: 'Actif', value: 'actif' },
