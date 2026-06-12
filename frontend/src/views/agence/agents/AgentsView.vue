@@ -26,9 +26,7 @@
           </div>
           <div class="card-body">
             <p v-if="agent.poste"><i class="pi pi-briefcase"></i> {{ agent.poste }}</p>
-            <p v-if="agent.direction"><i class="pi pi-building"></i> {{ agent.direction }}</p>
-            <p v-if="agent.service"><i class="pi pi-sitemap"></i> {{ agent.service }}</p>
-            <p v-if="agent.telephone"><i class="pi pi-phone"></i> {{ agent.telephone }}</p>
+            <p v-if="agent.poste"><i class="pi pi-briefcase"></i> {{ agent.poste }}</p>
             <p v-if="agent.email"><i class="pi pi-envelope"></i> {{ agent.email }}</p>
           </div>
           <div class="card-footer">

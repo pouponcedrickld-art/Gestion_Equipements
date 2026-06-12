@@ -15,13 +15,11 @@ class StoreAgentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'matricule' => 'required|string|max:50|unique:agents,matricule',
+            'matricule' => 'nullable|string|max:50|unique:agents,matricule',
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
             'telephone' => 'nullable|string|max:30',
-            'email' => 'nullable|email|max:255',
-            'direction' => 'nullable|string|max:255',
-            'service' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:agents,email',
             'poste' => 'nullable|string|max:255',
             'statut' => 'sometimes|in:actif,inactif',
             'photo' => 'nullable|string|max:255',

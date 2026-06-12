@@ -70,8 +70,6 @@ class AgentSeeder extends Seeder
                 'prenom' => 'Kodjo',
                 'telephone' => '+228 90 56 78 90',
                 'email' => 'kodjo.tchala@gestpark.tg',
-                'direction' => 'Opérations',
-                'service' => 'Terrain',
                 'poste' => 'Superviseur terrain',
                 'statut' => 'actif',
                 'user_id' => null,

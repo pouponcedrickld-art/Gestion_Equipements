@@ -30,15 +30,7 @@
         <span class="label">Email:</span>
         <span class="value">{{ agent.email || '—' }}</span>
       </div>
-      <div class="detail-row">
-        <span class="label">Direction:</span>
-        <span class="value">{{ agent.direction || '—' }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="label">Service:</span>
-        <span class="value">{{ agent.service || '—' }}</span>
-      </div>
-      <div class="detail-row">
+      <div class="detail-item">
         <span class="label">Poste:</span>
         <span class="value">{{ agent.poste || '—' }}</span>
       </div>

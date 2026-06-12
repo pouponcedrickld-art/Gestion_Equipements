@@ -2,6 +2,8 @@ import api from './axiosConfig.js'
 
 export default {
     index: () => api.get('/agents'),
+    available: () => api.get('/agents/available'),
+    getPostes: () => api.get('/agents/postes'),
     show: (id) => api.get(`/agents/${id}`),
     store: (data) => api.post('/agents', data),
     update: (id, data) => api.put(`/agents/${id}`, data),

@@ -5,6 +5,19 @@
       <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
     </div>
     <form @submit.prevent="handleSubmit">
+      <div class="form-group" v-if="!editData">
+        <label>Lier à un agent (optionnel)</label>
+        <div class="search-select">
+          <input v-model="agentSearch" placeholder="Rechercher un agent..." class="search-input" />
+          <select v-model="formData.agent_id" @change="onAgentSelect">
+            <option :value="null">-- Aucun / Nouvel utilisateur --</option>
+            <option v-for="a in filteredAgents" :key="a.id" :value="a.id">
+              {{ a.nom }} {{ a.prenom }} ({{ a.matricule }})
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Nom complet</label>
@@ -62,8 +75,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/userStore.js'
+import { useAgentStore } from '@/stores/agentStore.js'
 
 const props = defineProps({
   editData: Object,
@@ -73,8 +87,11 @@ const props = defineProps({
 const emit = defineEmits(['saved', 'cancel'])
 
 const userStore = useUserStore()
+const agentStore = useAgentStore()
 const saving = ref(false)
 const error = ref(null)
+const availableAgents = ref([])
+const agentSearch = ref('')
 
 const formData = reactive({
   name: '',
@@ -85,7 +102,41 @@ const formData = reactive({
   telephone: '',
   poste: '',
   actif: true,
+  agent_id: null,
 })
+
+const filteredAgents = computed(() => {
+  if (!agentSearch.value) return availableAgents.value
+  const s = agentSearch.value.toLowerCase()
+  return availableAgents.value.filter(a => 
+    a.nom.toLowerCase().includes(s) || 
+    a.prenom.toLowerCase().includes(s) || 
+    a.matricule.toLowerCase().includes(s)
+  )
+})
+
+onMounted(async () => {
+  if (!props.editData) {
+    try {
+      const agents = await agentStore.fetchAvailableAgents()
+      availableAgents.value = agents
+    } catch (err) {
+      console.error('Erreur chargement agents dispo:', err)
+    }
+  }
+})
+
+const onAgentSelect = () => {
+  if (formData.agent_id) {
+    const agent = availableAgents.value.find(a => a.id === formData.agent_id)
+    if (agent) {
+      formData.name = `${agent.prenom} ${agent.nom}`
+      formData.email = agent.email || ''
+      formData.telephone = agent.telephone || ''
+      formData.poste = agent.poste || ''
+    }
+  }
+}
 
 watch(() => props.editData, (val) => {
   if (val) {
@@ -96,12 +147,12 @@ watch(() => props.editData, (val) => {
       telephone: val.telephone || '',
       poste: val.poste || '',
       actif: val.actif ?? true,
-      role: val.role || '',
+      role: val.roles?.[0]?.name || '',
     })
   } else {
     resetForm()
   }
-})
+}, { immediate: true })
 
 const resetForm = () => {
   Object.assign(formData, {
@@ -113,8 +164,10 @@ const resetForm = () => {
     telephone: '',
     poste: '',
     actif: true,
+    agent_id: null,
   })
   error.value = null
+  agentSearch.value = ''
 }
 
 const handleSubmit = async () => {
@@ -231,5 +284,24 @@ const handleSubmit = async () => {
   color: #ef4444;
   margin-top: 10px;
   text-align: center;
+}
+
+.search-select {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.search-input {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom: none !important;
+  background: #0f172a !important;
+}
+
+.search-select select {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 </style>

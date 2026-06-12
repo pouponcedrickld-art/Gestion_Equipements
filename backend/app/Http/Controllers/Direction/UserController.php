@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Direction;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -28,6 +29,7 @@ class UserController extends Controller
             'telephone' => 'nullable|string|max:30',
             'poste' => 'nullable|string|max:100',
             'actif' => 'boolean',
+            'agent_id' => 'nullable|exists:agents,id',
         ]);
         $u = User::create([
             'name' => $r->name,
@@ -38,6 +40,13 @@ class UserController extends Controller
             'poste' => $r->poste,
             'actif' => $r->boolean('actif', true),
         ]);
+
+        if ($r->agent_id) {
+            $agent = Agent::find($r->agent_id);
+            $agent->user_id = $u->id;
+            $agent->save();
+        }
+
         $u->assignRole($r->role);
         return $u->load(['agence', 'roles']);
     }
