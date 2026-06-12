@@ -67,6 +67,8 @@ import { useUserStore } from '@/stores/userStore'
 import { useAgenceStore } from '@/stores/agenceStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import UserFormView from './UserFormView.vue'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const userStore = useUserStore()
 const agenceStore = useAgenceStore()
@@ -74,6 +76,8 @@ const showForm = ref(false)
 const editingUser = ref(null)
 const search = ref('')
 const filterRole = ref('')
+const toast = useToast()
+const confirm = useConfirm()
 
 onMounted(() => { userStore.fetchUsers(); agenceStore.fetchAgences() })
 
@@ -85,9 +89,60 @@ const filteredUsers = computed(() => {
 })
 
 const editUser = (u) => { editingUser.value = { ...u, role: u.roles?.[0]?.name }; showForm.value = true }
-const toggleUser = async (u) => { await userStore.toggleActif(u.id) }
-const deleteUser = async (id) => { if (!confirm('Supprimer ?')) return; await userStore.deleteUser(id) }
-const onSaved = () => { showForm.value = false; editingUser.value = null; userStore.fetchUsers() }
+const toggleUser = async (u) => {
+  try {
+    await userStore.toggleActif(u.id)
+    toast.add({
+      severity: 'success',
+      summary: 'Succès',
+      detail: `Statut de ${u.name} mis à jour`,
+      life: 3000
+    })
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erreur',
+      detail: 'Impossible de mettre à jour le statut',
+      life: 3000
+    })
+  }
+}
+const deleteUser = async (id) => {
+  confirm.require({
+    message: 'Êtes-vous sûr de vouloir supprimer cet utilisateur ?',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await userStore.deleteUser(id)
+        toast.add({
+          severity: 'success',
+          summary: 'Succès',
+          detail: 'Utilisateur supprimé avec succès',
+          life: 3000
+        })
+      } catch (err) {
+        toast.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de supprimer l\'utilisateur',
+          life: 3000
+        })
+      }
+    }
+  })
+}
+const onSaved = () => {
+  showForm.value = false
+  editingUser.value = null
+  userStore.fetchUsers()
+  toast.add({
+    severity: 'success',
+    summary: 'Succès',
+    detail: 'Utilisateur enregistré avec succès',
+    life: 3000
+  })
+}
 </script>
 
 <style scoped>

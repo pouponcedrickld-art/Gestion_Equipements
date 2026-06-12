@@ -26,7 +26,6 @@
           </div>
           <div class="card-body">
             <p v-if="agent.poste"><i class="pi pi-briefcase"></i> {{ agent.poste }}</p>
-            <p v-if="agent.poste"><i class="pi pi-briefcase"></i> {{ agent.poste }}</p>
             <p v-if="agent.email"><i class="pi pi-envelope"></i> {{ agent.email }}</p>
           </div>
           <div class="card-footer">
@@ -37,7 +36,7 @@
               <button @click="editAgent(agent)" class="btn-icon" title="Modifier">
                 <i class="pi pi-pencil"></i>
               </button>
-              <button @click="deleteAgent(agent.id)" class="btn-icon btn-danger" title="Supprimer">
+              <button @click="deleteAgent(agent)" class="btn-icon btn-danger" title="Supprimer">
                 <i class="pi pi-trash"></i>
               </button>
             </div>
@@ -67,19 +66,57 @@ import { useAgentStore } from '@/stores/agentStore.js'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import AgentFormView from './AgentFormView.vue'
 import AgentDetailView from './AgentDetailView.vue'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const agentStore = useAgentStore()
 const showForm = ref(false)
 const showDetail = ref(false)
 const editingAgent = ref(null)
 const viewingAgent = ref(null)
+const toast = useToast()
+const confirm = useConfirm()
 
 onMounted(() => agentStore.fetchAgents())
 
 const showAgent = (agent) => { viewingAgent.value = agent; showDetail.value = true }
 const editAgent = (agent) => { editingAgent.value = { ...agent }; showForm.value = true }
-const deleteAgent = async (id) => { if (!confirm('Supprimer cet agent ?')) return; await agentStore.deleteAgent(id) }
-const onSaved = () => { showForm.value = false; editingAgent.value = null; agentStore.fetchAgents() }
+const deleteAgent = async (agent) => {
+  confirm.require({
+    message: 'Êtes-vous sûr de vouloir supprimer cet agent ?',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await agentStore.deleteAgent(agent.id)
+        toast.add({
+          severity: 'success',
+          summary: 'Succès',
+          detail: 'Agent supprimé avec succès',
+          life: 3000
+        })
+      } catch (err) {
+        toast.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de supprimer l\'agent',
+          life: 3000
+        })
+      }
+    }
+  })
+}
+const onSaved = () => {
+  showForm.value = false
+  editingAgent.value = null
+  agentStore.fetchAgents()
+  toast.add({
+    severity: 'success',
+    summary: 'Succès',
+    detail: 'Agent enregistré avec succès',
+    life: 3000
+  })
+}
 </script>
 
 <style scoped>
