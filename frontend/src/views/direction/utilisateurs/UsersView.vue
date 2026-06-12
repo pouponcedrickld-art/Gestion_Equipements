@@ -108,6 +108,8 @@ import { useUserStore } from '@/stores/userStore'
 import { useAgenceStore } from '@/stores/agenceStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import UserFormView from './UserFormView.vue'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const userStore = useUserStore()
 const agenceStore = useAgenceStore()
@@ -115,6 +117,8 @@ const showForm = ref(false)
 const editingUser = ref(null)
 const search = ref('')
 const filterRole = ref('')
+const toast = useToast()
+const confirm = useConfirm()
 
 onMounted(() => { userStore.fetchUsers(); agenceStore.fetchAgences() })
 

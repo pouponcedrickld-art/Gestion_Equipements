@@ -175,13 +175,15 @@
                 <div class="col-12 md:col-4">
                   <div class="field">
                     <label class="font-bold text-sm">Marque</label>
-                    <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" />
+                    <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" :class="{ 'p-invalid': errors.marque }" />
+                    <small class="p-error" v-if="errors.marque">{{ errors.marque[0] }}</small>
                   </div>
                 </div>
                 <div class="col-12 md:col-4">
                   <div class="field">
                     <label class="font-bold text-sm">Modèle</label>
-                    <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" />
+                    <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" :class="{ 'p-invalid': errors.modele }" />
+                    <small class="p-error" v-if="errors.modele">{{ errors.modele[0] }}</small>
                   </div>
                 </div>
                 <div class="col-12 md:col-4">
@@ -193,6 +195,7 @@
                       :placeholder="form.quantite_a_creer > 1 ? 'Auto' : 'S/N'"
                       class="p-inputtext-sm"
                     />
+                    <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
                   </div>
                 </div>
               </div>
@@ -340,13 +343,14 @@ const form = ref({
   modele: '',
   code_inventaire: '',
   categorie_id: null,
-  etat: 'nouveau',
+  etat: 'neuf',
   localisation: '',
   responsable_id: null,
   date_acquisition: null,
   prix_achat: null,
   photo: null,
   specifications: {},
+  quantite: 1,
   quantite_a_creer: 1,
   mode_enregistrement: 'individuel'
 })
@@ -373,7 +377,7 @@ const etatOptions = [
   { label: 'Perdu', value: 'perdu' }
 ]
 
-const categories = computed(() => categorieStore.categories)
+const categories = computed(() => categorieStore.categoriesList)
 const users = computed(() => userStore.users)
 
 const handleFileChange = (event) => {
