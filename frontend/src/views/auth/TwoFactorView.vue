@@ -58,65 +58,78 @@ const goBack = () => {
 .twofa-box {
   width: 100%;
   max-width: 400px;
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: var(--radius-xl);
 }
 
 h1 {
-  color: #3b82f6;
-  margin: 0 0 5px 0;
+  color: var(--text-dark);
+  margin: 0;
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
   text-align: center;
-  margin: 0 0 30px 0;
-  font-size: 1.1rem;
+  margin: 10px 0 30px 0;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 label {
   display: block;
-  color: #cbd5e1;
+  color: var(--text-dark);
   margin-bottom: 8px;
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
 input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  background: #0f172a;
-  color: #e2e8f0;
-  font-size: 1.2rem;
-  letter-spacing: 0.2em;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-dark);
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
   text-align: center;
   box-sizing: border-box;
+  transition: all 0.2s;
 }
 
 input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-button {
+button[type="submit"] {
   width: 100%;
-  padding: 12px;
-  background: #3b82f6;
-  color: white;
+  padding: 14px;
+  background: var(--primary);
+  color: var(--text-dark);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-md);
 }
 
-button:hover:not(:disabled) {
-  background: #2563eb;
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: 0 6px 16px rgba(250, 204, 21, 0.35);
 }
 
 button:disabled {
@@ -125,18 +138,33 @@ button:disabled {
 }
 
 .error {
-  color: #ef4444;
+  color: var(--error);
   text-align: center;
   margin-top: 15px;
+  font-weight: 600;
 }
 
 .back-btn {
-  background: #334155;
+  width: 100%;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
   margin-top: 15px;
+  padding: 10px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-dark);
+  border-color: var(--primary);
 }
 </style>
