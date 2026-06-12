@@ -30,7 +30,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('agences', function (Blueprint $table) {
-            $table->dropColumn(['code_postal', 'telephone', 'email']);
+            $columnsToDrop = ['code_postal', 'telephone', 'email'];
+            $existingColumns = [];
+            foreach ($columnsToDrop as $column) {
+                if (Schema::hasColumn('agences', $column)) {
+                    $existingColumns[] = $column;
+                }
+            }
+            if (!empty($existingColumns)) {
+                $table->dropColumn($existingColumns);
+            }
         });
     }
 };

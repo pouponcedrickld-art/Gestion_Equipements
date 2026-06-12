@@ -120,6 +120,10 @@ export const useEquipementStore = defineStore('equipement', {
           }
         })
 
+        // Log des données envoyées
+        console.log('Données envoyées au serveur:', data)
+        console.log('FormData:', [...formData.entries()])
+
         const response = await equipementApi.store(formData)
 
         if (response.data.success) {
@@ -135,8 +139,10 @@ export const useEquipementStore = defineStore('equipement', {
           throw new Error(response.data.message)
         }
       } catch (err) {
+        // Log détaillé des erreurs
+        console.error('Erreur createEquipement complète:', err)
+        console.error('Réponse du serveur:', err.response?.data)
         this.error = err.response?.data?.message || err.message
-        console.error('Erreur createEquipement:', err)
         throw err
       } finally {
         this.loading = false
