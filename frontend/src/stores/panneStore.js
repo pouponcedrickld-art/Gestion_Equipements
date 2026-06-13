@@ -88,6 +88,48 @@ export const usePanneStore = defineStore('panne', {
       } finally {
         this.loading = false
       }
+    },
+    async decider(id, data) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await panneApi.decider(id, data)
+        await this.fetchPannes()
+        return response.data
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la décision'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    async updateResultat(id, data) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await panneApi.updateResultat(id, data)
+        await this.fetchPannes()
+        return response.data
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la mise à jour du résultat'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+    async cloturer(id, data) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await panneApi.cloturer(id, data)
+        await this.fetchPannes()
+        return response.data
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la clôture'
+        throw error
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

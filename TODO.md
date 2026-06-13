@@ -1,46 +1,24 @@
-# TODO - Module Gestion des Pannes
+# TODO (BlackboxAI)
 
-## Étape 1 — Audit technique (fait)
-- Vérifier Backend: Panne model, PanneController, PannePolicy, PanneWorkflowService (vide), FormRequest StorePanneRequest (incomplet)
-- Vérifier Routes API
-- Vérifier Frontend: PannesView existant
+## Étape 1 — Notifications (done)
+- [x] Analyser l’existant (Notification model/migration, NotificationController, Notification UI).
 
-## Étape 2 — Backend : Historisation
-- Créer migration `panne_status_histories`
-- Créer model `PanneStatusHistory`
-- Ajouter relation dans `Panne`
+## Étape 2 — Calendrier maintenances FullCalendar
+- [ ] Ajouter endpoint API « maintenances/events » (range start/end + filtres agence/technicien).
+- [ ] Créer Vue calendrier FullCalendar (month/week/day) + couleurs statut + actions.
 
-## Étape 3 — Backend : Statuts normalisés + compatibilité
-- Standardiser `Panne.statut` sur: déclarée, en_cours, en_maintenance, résolue, irrécupérable
-- Mettre en place un mapping de compatibilité depuis anciennes valeurs (déclarée / en cours / réparée / remplacée / irrécupérable)
+## Étape 3 — PDFs (DomPDF)
+- [ ] RapportController / RapportService / DTO / validations / tests.
+- [ ] Aperçu + génération + téléchargement.
 
-## Étape 4 — Backend : Service Layer (SOLID)
-- Implémenter `PanneWorkflowService` avec transitions autorisées
-- À chaque transition: update Panne + update Equipement + création d’historique + event
+## Étape 4 — Excel exports (Laravel Excel)
+- [ ] Exports + service + controllers + routes + UI.
 
-## Étape 5 — Backend : FormRequests + Controller refactor
-- Compléter `StorePanneRequest`
-- Ajouter FormRequests pour transitions
-- Refactor `PanneController` pour appeler le service (controller fin)
+## Étape 5 — Dashboard analytique (Chart.js)
+- [ ] API statistiques + cache + optimisations.
+- [ ] UI + graphes + filtres agence.
 
-## Étape 6 — Backend : API Resources
-- Créer `PanneResource` (et détail si besoin)
-- Utiliser resources dans les endpoints
-
-## Étape 7 — Backend : Tests
-- Tests Feature: scope agence, workflow transitions, historisation, events
-
-## Étape 8 — Frontend : Structure Vue
-- Créer `PanneFormView`, `PanneDetailView` (si manquants)
-- Décomposer `PannesView` si nécessaire
-- Implémenter composable `usePanne`
-- Mettre/ajuster Pinia store
-
-## Étape 9 — Frontend : PrimeVue/UX
-- PrimeVue DataView/Table + Dialogs pour transitions
-- Upload photos compatible
-
-## Étape 10 — Vérification finale
-- Lancer tests backend
-- Lancer build frontend
+## Étape 6 — Alertes garantie automatiques
+- [ ] Job SendAlertesGarantieJob (90/60/30/7) + canaux email/in-app.
+- [ ] Scheduler + tests.
 

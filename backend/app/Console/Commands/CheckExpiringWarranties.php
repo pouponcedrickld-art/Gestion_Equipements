@@ -2,11 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Equipement;
-use App\Models\User;
-use App\Services\NotificationService;
+use App\Services\GarantieAlertService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CheckExpiringWarranties extends Command
 {
@@ -22,50 +20,26 @@ class CheckExpiringWarranties extends Command
      *
      * @var string
      */
-    protected $description = 'Check for equipment with expiring warranties and send notifications';
+    protected $description = 'Vérifier les garanties expirant et envoyer les alertes';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(GarantieAlertService $alertService): void
     {
-        $this->info('Checking for expiring warranties...');
+        $this->info('Vérification des garanties expirant...');
+        Log::info('Début de la commande notifications:check-expiring-warranties');
 
-        // Find equipment where warranty expires in 30 days or less
-        $expiryThreshold = Carbon::now()->addDays(30);
-
-        $equipements = Equipement::whereNotNull('date_fin_garantie')
-            ->where('date_fin_garantie', '<=', $expiryThreshold)
-            ->where('date_fin_garantie', '>=', Carbon::now())
-            ->get();
-
-        $this->info("Found {$equipements->count()} equipment with expiring warranties.");
-
-        foreach ($equipements as $equipement) {
-            // Get relevant users (super admins, gestionnaires, chef agence)
-            $users = User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence']);
-            })->where(function($q) use ($equipement) {
-                $q->where('agence_id', $equipement->agence_actuelle_id)
-                  ->orWhereHas('roles', function($rq) {
-                      $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general']);
-                  });
-            })->get();
-
-            foreach ($users as $user) {
-                NotificationService::sendNotification(
-                    user: $user,
-                    type: 'garantie_proche_expiration',
-                    title: 'Garantie proche expiration',
-                    message: "La garantie de l'équipement {$equipement->nom} ({$equipement->reference}) expire le {$equipement->date_fin_garantie->format('d/m/Y')}.",
-                    data: ['equipement_id' => $equipement->id],
-                    channels: ['in_app', 'email']
-                );
-            }
-
-            $this->info("Notification sent for equipment: {$equipement->nom}");
+        try {
+            $alertService->verifierEtEnvoyerAlertes();
+            $this->info('Vérification terminée avec succès !');
+            Log::info('Fin de la commande notifications:check-expiring-warranties avec succès');
+        } catch (\Exception $e) {
+            $this->error('Erreur lors de la vérification: ' . $e->getMessage());
+            Log::error('Erreur lors de la vérification des garanties', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
-
-        $this->info('Done!');
     }
 }

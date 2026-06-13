@@ -456,16 +456,22 @@ const handleDeleteOrArchive = async (categorie) => {
     return
   }
 
+  const confirmService = useConfirm()
   if (categorie.nombre_equipements > 0) {
     // Archiver car équipements liés
-    if (confirm(`Cette catégorie contient ${categorie.nombre_equipements} équipements. Elle ne peut pas être supprimée, mais elle peut être archivée. Voulez-vous l'archiver ?`)) {
-      try {
-        await categorieStore.updateCategorie(categorie.id, { statut: 'archive' })
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie archivée', life: 3000 })
-      } catch (err) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible d\'archiver', life: 3000 })
+    confirmService.require({
+      message: `Cette catégorie contient ${categorie.nombre_equipements} équipements. Elle ne peut pas être supprimée, mais elle peut être archivée. Voulez-vous l'archiver ?`,
+      header: 'Confirmer l\'archivage',
+      icon: 'pi pi-info-circle',
+      accept: async () => {
+        try {
+          await categorieStore.updateCategorie(categorie.id, { statut: 'archive' })
+          toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie archivée', life: 3000 })
+        } catch (err) {
+          toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible d\'archiver', life: 3000 })
+        }
       }
-    }
+    })
   } else {
     // Supprimer car pas d'équipements
     confirmDelete(categorie)

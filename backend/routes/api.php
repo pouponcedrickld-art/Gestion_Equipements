@@ -19,6 +19,7 @@ use App\Http\Controllers\Agence\MaintenanceController;
 use App\Http\Controllers\Agence\PerteController;
 use App\Http\Controllers\Direction\NotificationController;
 use App\Http\Controllers\Direction\RapportGlobalController;
+use App\Http\Controllers\Direction\RapportController;
 use App\Http\Controllers\Agence\StockAgenceController as AgenceStockController;
 use App\Http\Controllers\Direction\StockAgenceController as DirectionStockController;
 

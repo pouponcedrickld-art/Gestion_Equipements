@@ -64,8 +64,8 @@
             @change="applyFilters"
           >
             <option value="all">Tous les types</option>
-            <option value="préventif">Préventif</option>
-            <option value="correctif">Correctif</option>
+            <option value="preventive">Préventif</option>
+            <option value="corrective">Correctif</option>
           </select>
 
           <!-- Filtre par statut -->
