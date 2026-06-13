@@ -127,6 +127,7 @@ class PanneController extends Controller
         return response()->json(
             new PanneResource(
                 $panne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories'])
+            )
         );
     }
 

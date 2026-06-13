@@ -138,7 +138,7 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Créer une maintenance préventive
+     * Créer une maintenance (préventive ou corrective)
      *
      * @param MaintenanceRequest $request
      * @return JsonResponse
@@ -149,8 +149,15 @@ class MaintenanceController extends Controller
         Gate::authorize('planifier', Maintenance::class);
 
         try {
-            // Créer la maintenance via le service
-            $maintenance = $this->workflowService->planifierPreventive($request->validated());
+            $data = $request->validated();
+            
+            // Créer la maintenance via le service selon le type
+            if (isset($data['type_maintenance']) && $data['type_maintenance'] === 'corrective') {
+                $maintenance = $this->workflowService->planifierCorrective($data);
+            } else {
+                $maintenance = $this->workflowService->planifierPreventive($data);
+            }
+            
             $maintenance->load(['equipement', 'panne', 'technicienUser']);
 
             return response()->json([

@@ -133,6 +133,31 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
         Route::get('rapports/inventaire', [RapportGlobalController::class, 'inventaire']);
         Route::get('rapports/pannes', [RapportGlobalController::class, 'pannes']);
         Route::get('rapports/export/{type}', [RapportGlobalController::class, 'export']);
+
+        // Nouveaux rapports PDF
+        Route::get('rapports/inventaire-par-agence', [RapportController::class, 'inventaireParAgence']);
+        Route::get('rapports/inventaire-par-agence/download', [RapportController::class, 'downloadInventaireParAgence']);
+        Route::get('rapports/inventaire-par-agence/preview', [RapportController::class, 'previewInventaireParAgence']);
+
+        Route::get('rapports/equipements-affectes', [RapportController::class, 'equipementsAffectes']);
+        Route::get('rapports/equipements-affectes/download', [RapportController::class, 'downloadEquipementsAffectes']);
+        Route::get('rapports/equipements-affectes/preview', [RapportController::class, 'previewEquipementsAffectes']);
+
+        Route::get('rapports/equipements-en-panne', [RapportController::class, 'equipementsEnPanne']);
+        Route::get('rapports/equipements-en-panne/download', [RapportController::class, 'downloadEquipementsEnPanne']);
+        Route::get('rapports/equipements-en-panne/preview', [RapportController::class, 'previewEquipementsEnPanne']);
+
+        Route::get('rapports/maintenances', [RapportController::class, 'maintenances']);
+        Route::get('rapports/maintenances/download', [RapportController::class, 'downloadMaintenances']);
+        Route::get('rapports/maintenances/preview', [RapportController::class, 'previewMaintenances']);
+
+        Route::get('rapports/pertes-et-casses', [RapportController::class, 'pertesEtCasses']);
+        Route::get('rapports/pertes-et-casses/download', [RapportController::class, 'downloadPertesEtCasses']);
+        Route::get('rapports/pertes-et-casses/preview', [RapportController::class, 'previewPertesEtCasses']);
+
+        Route::get('rapports/audit-complet', [RapportController::class, 'auditComplet']);
+        Route::get('rapports/audit-complet/download', [RapportController::class, 'downloadAuditComplet']);
+        Route::get('rapports/audit-complet/preview', [RapportController::class, 'previewAuditComplet']);
     });
 
     // Stock des Agences
