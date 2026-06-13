@@ -1,7 +1,7 @@
 <template>
   <DirectionLayout>
     <div class="equipement-form-container" ref="pageContainer">
- 
+
       <!-- Header -->
       <div class="form-header animate-header">
         <Button
@@ -11,13 +11,13 @@
         />
         <h1 class="page-title">{{ isEditing ? 'Mise à jour' : 'Nouvel Équipement' }}</h1>
       </div>
- 
+
       <!-- Layout deux colonnes -->
       <div class="two-col-layout animate-card">
- 
+
         <!-- ─── SIDEBAR GAUCHE ─── -->
         <aside class="sidebar">
- 
+
           <!-- Photo -->
           <div class="sidebar-card">
             <div class="card-section-label">
@@ -44,13 +44,13 @@
             </div>
             <input type="file" ref="photoInput" @change="handleFileChange" accept="image/*" class="hidden" />
           </div>
- 
+
           <!-- Identification -->
           <div class="sidebar-card">
             <div class="card-section-label">
               <i class="pi pi-tag"></i> Identification
             </div>
- 
+
             <div class="field mb-3">
               <label class="font-bold text-sm">Catégorie *</label>
               <Dropdown
@@ -65,7 +65,7 @@
               />
               <small class="p-error" v-if="errors.categorie_id">{{ errors.categorie_id[0] }}</small>
             </div>
- 
+
             <div class="field mb-3">
               <label class="font-bold text-sm">Statut</label>
               <div class="status-badges">
@@ -80,7 +80,7 @@
                 </span>
               </div>
             </div>
- 
+
             <div class="field mb-3">
               <label class="font-bold text-sm">Quantité</label>
               <InputNumber
@@ -117,49 +117,19 @@
               </div>
             </div>
           </div>
- 
-          <!-- Attribution -->
-          <div class="sidebar-card">
-            <div class="card-section-label">
-              <i class="pi pi-user"></i> Attribution
-            </div>
- 
-            <div class="field mb-3">
-              <label class="font-bold text-sm">Responsable</label>
-              <Dropdown
-                v-model="form.responsable_id"
-                :options="users"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Attribuer à..."
-                filter
-                showClear
-                class="w-full p-inputtext-sm"
-              />
-            </div>
- 
-            <div class="field">
-              <label class="font-bold text-sm">Localisation</label>
-              <InputText
-                v-model="form.localisation"
-                placeholder="Bureau / Site"
-                class="w-full p-inputtext-sm"
-              />
-            </div>
-          </div>
- 
+
         </aside>
- 
+
         <!-- ─── CONTENU PRINCIPAL ─── -->
         <div class="main-content">
           <form @submit.prevent="handleSubmit" class="p-fluid">
- 
+
             <!-- Informations générales -->
             <div class="main-card">
               <div class="card-section-label">
                 <i class="pi pi-desktop"></i> Informations générales
               </div>
- 
+
               <div class="field mb-3">
                 <label class="font-bold text-sm">Désignation *</label>
                 <InputText
@@ -170,18 +140,20 @@
                 />
                 <small class="p-error" v-if="errors.nom">{{ errors.nom[0] }}</small>
               </div>
- 
+
               <div class="grid grid-tight">
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Marque</label>
-                    <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" />
+                    <InputText v-model="form.marque" placeholder="Ex : Lenovo" class="p-inputtext-sm" :class="{ 'p-invalid': errors.marque }" />
+                    <small class="p-error" v-if="errors.marque">{{ errors.marque[0] }}</small>
                   </div>
                 </div>
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Modèle</label>
-                    <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" />
+                    <InputText v-model="form.modele" placeholder="Ex : X1 Gen 9" class="p-inputtext-sm" :class="{ 'p-invalid': errors.modele }" />
+                    <small class="p-error" v-if="errors.modele">{{ errors.modele[0] }}</small>
                   </div>
                 </div>
                 <div class="col-12 md:col-4">
@@ -193,24 +165,47 @@
                       :placeholder="form.quantite_a_creer > 1 ? 'Auto' : 'S/N'"
                       class="p-inputtext-sm"
                     />
+                    <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Référence</label>
+                    <InputText v-model="form.reference" placeholder="Référence" class="p-inputtext-sm" :class="{ 'p-invalid': errors.reference }" />
+                    <small class="p-error" v-if="errors.reference">{{ errors.reference[0] }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Fournisseur</label>
+                    <InputText v-model="form.fournisseur" placeholder="Fournisseur" class="p-inputtext-sm" :class="{ 'p-invalid': errors.fournisseur }" />
+                    <small class="p-error" v-if="errors.fournisseur">{{ errors.fournisseur[0] }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">Code inventaire</label>
+                    <InputText v-model="form.code_inventaire" placeholder="Code inventaire" class="p-inputtext-sm" :class="{ 'p-invalid': errors.code_inventaire }" />
+                    <small class="p-error" v-if="errors.code_inventaire">{{ errors.code_inventaire[0] }}</small>
+                  </div>
+                </div>
+                <div class="col-12 md:col-4">
+                  <div class="field">
+                    <label class="font-bold text-sm">IMEI</label>
+                    <InputText v-model="form.imei" placeholder="IMEI" class="p-inputtext-sm" :class="{ 'p-invalid': errors.imei }" />
+                    <small class="p-error" v-if="errors.imei">{{ errors.imei[0] }}</small>
                   </div>
                 </div>
               </div>
             </div>
- 
+
             <!-- Inventaire & Acquisition -->
             <div class="main-card">
               <div class="card-section-label">
                 <i class="pi pi-clipboard"></i> Inventaire &amp; acquisition
               </div>
- 
+
               <div class="grid grid-tight">
-                <div class="col-12 md:col-6">
-                  <div class="field mb-3">
-                    <label class="font-bold text-sm">Code inventaire</label>
-                    <InputText v-model="form.code_inventaire" placeholder="Ex : INV-2024" class="p-inputtext-sm" />
-                  </div>
-                </div>
                 <div class="col-12 md:col-6">
                   <div class="field mb-3">
                     <label class="font-bold text-sm">Date d'acquisition</label>
@@ -236,49 +231,7 @@
                 </div>
               </div>
             </div>
- 
-            <!-- Spécifications techniques -->
-            <div class="main-card">
-              <div class="card-section-label">
-                <i class="pi pi-sliders-h"></i> Spécifications techniques
-                <span v-if="selectedCategoryName" class="category-badge">
-                  {{ selectedCategoryName }}
-                </span>
-              </div>
- 
-              <div v-if="selectedCategoryAttributes.length > 0" class="specs-grid">
-                <div
-                  v-for="attr in selectedCategoryAttributes"
-                  :key="attr.nom"
-                  class="field"
-                >
-                  <label class="font-bold text-xs">{{ attr.nom }}</label>
-                  <InputText
-                    v-if="attr.type === 'texte'"
-                    v-model="form.specifications[attr.nom]"
-                    class="p-inputtext-sm w-full"
-                  />
-                  <InputNumber
-                    v-else-if="attr.type === 'nombre'"
-                    v-model="form.specifications[attr.nom]"
-                    class="p-inputtext-sm w-full"
-                  />
-                  <Calendar
-                    v-else-if="attr.type === 'date'"
-                    v-model="form.specifications[attr.nom]"
-                    dateFormat="dd/mm/yy"
-                    showIcon
-                    class="p-inputtext-sm w-full"
-                  />
-                </div>
-              </div>
- 
-              <div v-else class="specs-empty">
-                <i class="pi pi-info-circle"></i>
-                <span>Aucune spécification technique pour cette catégorie</span>
-              </div>
-            </div>
- 
+
             <!-- Footer actions -->
             <div class="form-footer">
               <Button
@@ -294,15 +247,15 @@
                 :loading="loading"
               />
             </div>
- 
+
           </form>
         </div>
- 
+
       </div>
     </div>
   </DirectionLayout>
 </template>
- 
+
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -310,9 +263,8 @@ import { useToast } from 'primevue/usetoast'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import { useEquipementStore } from '@/stores/equipementStore'
 import { useCategorieStore } from '@/stores/categorieStore'
-import { useUserStore } from '@/stores/userStore'
 import gsap from 'gsap'
- 
+
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
@@ -321,45 +273,37 @@ import Card from 'primevue/card'
 import Calendar from 'primevue/calendar'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
- 
+
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const equipementStore = useEquipementStore()
 const categorieStore = useCategorieStore()
-const userStore = useUserStore()
- 
+
 const isEditing = computed(() => route.params.id !== undefined)
 const loading = ref(false)
 const errors = ref({})
- 
+
 const form = ref({
   nom: '',
+  reference: '',
   numero_serie: '',
+  imei: '',
+  code_inventaire: '',
   marque: '',
   modele: '',
-  code_inventaire: '',
   categorie_id: null,
-  etat: 'nouveau',
+  fournisseur: '',
+  etat: 'neuf',
   localisation: '',
   responsable_id: null,
   date_acquisition: null,
   prix_achat: null,
   photo: null,
   specifications: {},
+  quantite: 1,
   quantite_a_creer: 1,
   mode_enregistrement: 'individuel'
-})
-
-const selectedCategoryAttributes = computed(() => {
-  if (!form.value.categorie_id) return []
-  const cat = categories.value.find(c => c.id === form.value.categorie_id)
-  return cat?.attributs_personnalises || []
-})
-
-const selectedCategoryName = computed(() => {
-  const cat = categories.value.find(c => c.id === form.value.categorie_id)
-  return cat?.nom || ''
 })
 
 const photoPreview = ref(null)
@@ -373,8 +317,7 @@ const etatOptions = [
   { label: 'Perdu', value: 'perdu' }
 ]
 
-const categories = computed(() => categorieStore.categories)
-const users = computed(() => userStore.users)
+const categories = computed(() => categorieStore.categoriesList || categorieStore.categories || [])
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]
@@ -396,8 +339,6 @@ const handleSubmit = async () => {
   errors.value = {}
 
   try {
-    // On passe directement l'objet réactif form.value
-    // Le store s'occupera de la conversion FormData
     if (isEditing.value) {
       await equipementStore.updateEquipement(route.params.id, form.value)
       toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 })
@@ -418,17 +359,14 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
- 
+
 onMounted(async () => {
-  await Promise.all([
-    categorieStore.fetchCategories(),
-    userStore.fetchUsers()
-  ])
- 
+  await categorieStore.fetchCategories()
+
   if (route.query.categorie_id) {
     form.value.categorie_id = parseInt(route.query.categorie_id)
   }
- 
+
   if (isEditing.value) {
     loading.value = true
     try {
@@ -446,11 +384,12 @@ onMounted(async () => {
         date_acquisition: equipement.date_acquisition ? new Date(equipement.date_acquisition) : null,
         prix_achat: equipement.prix_achat,
         garantie_date_fin: equipement.garantie_date_fin ? new Date(equipement.garantie_date_fin) : null,
-        etat: equipement.etat || 'actif',
+        etat: equipement.etat || 'neuf',
         localisation: equipement.localisation || '',
-        responsable_id: equipement.responsable_id,
+        responsable_id: equipement.responsable_id || null,
         photo: null,
         specifications: equipement.specifications || {},
+        quantite: equipement.quantite || 1,
         quantite_a_creer: equipement.quantite || 1,
         mode_enregistrement: equipement.is_lot ? 'lot' : 'individuel'
       }
@@ -463,209 +402,179 @@ onMounted(async () => {
       loading.value = false
     }
   }
- 
+
   gsap.from('.animate-header', { opacity: 0, x: -30, duration: 0.6 })
   gsap.from('.animate-card', { opacity: 0, y: 30, duration: 0.8, delay: 0.2 })
 })
 </script>
- 
+
 <style scoped lang="scss">
 .equipement-form-container {
-  padding: 1.25rem;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
- 
+
 /* ── Header ── */
 .form-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
- 
+
 .page-title {
-  font-size: 1.4rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--text-dark);
   margin: 0;
 }
- 
+
 .back-btn {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
- 
+
 /* ── Layout deux colonnes ── */
 .two-col-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 1rem;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
   align-items: start;
 }
- 
+
 /* ── Sidebar ── */
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: 1rem;
+  gap: 1.5rem;
 }
- 
+
 .sidebar-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
- 
+
 /* ── Cartes principale ── */
 .main-content {
   display: flex;
   flex-direction: column;
 }
- 
+
 .main-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
- 
+
 /* ── Label de section ── */
 .card-section-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #64748b;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 0.85rem;
- 
+
   i {
-    color: #3b82f6;
-    font-size: 0.85rem;
+    color: var(--primary-hover);
+    font-size: 1rem;
   }
 }
- 
+
 /* ── Photo ── */
 .photo-upload-placeholder {
-  height: 160px;
+  height: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   cursor: pointer;
   color: #94a3b8;
   border: 2px dashed #e2e8f0;
   border-radius: 10px;
   background: #f8fafc;
   transition: border-color 0.2s;
- 
+
   &:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--primary);
+    color: var(--text-dark);
+    background: var(--bg-card);
   }
 }
- 
+
 .photo-preview-wrapper {
-  height: 160px;
+  height: 200px;
   position: relative;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #000;
- 
+
   .photo-preview-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
   }
- 
+
   .photo-delete-btn {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    top: 0.75rem;
+    right: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
- 
+
 /* ── Badges de statut ── */
 .status-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
 }
- 
+
 .status-badge {
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 14px;
   border-radius: 20px;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
-  transition: all 0.15s;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  transition: all 0.2s;
   user-select: none;
- 
+
   &:hover {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--primary);
+    color: var(--text-dark);
   }
- 
+
   &--active {
-    background: #eff6ff;
-    border-color: #3b82f6;
-    color: #1d4ed8;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-sm);
   }
 }
- 
-/* ── Badge catégorie dans specs ── */
-.category-badge {
-  font-size: 0.68rem;
-  font-weight: 600;
-  background: #eff6ff;
-  color: #1d4ed8;
-  padding: 2px 8px;
-  border-radius: 20px;
-  margin-left: 6px;
-  text-transform: none;
-  letter-spacing: 0;
-}
- 
-/* ── Spécifications ── */
-.specs-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
-}
- 
-.specs-empty {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px dashed #e2e8f0;
-  border-radius: 10px;
-  color: #94a3b8;
-  font-size: 0.85rem;
-}
- 
+
 /* ── Grid tight ── */
 .grid-tight {
   margin: -0.4rem;
- 
+
   > [class*="col"] {
     padding: 0.4rem;
   }
 }
- 
+
 /* ── Footer ── */
 .form-footer {
   display: flex;
@@ -675,40 +584,36 @@ onMounted(async () => {
   border-top: 1px solid #f1f5f9;
   margin-top: 0.25rem;
 }
- 
+
 /* ── PrimeVue overrides ── */
 :deep(.p-inputtext-sm) {
   padding: 0.45rem 0.75rem;
 }
- 
+
 :deep(.p-dropdown),
 :deep(.p-inputnumber-input),
 :deep(.p-calendar .p-inputtext) {
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
- 
+
   &:enabled:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 }
- 
+
 .hidden {
   display: none;
 }
- 
+
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .two-col-layout {
     grid-template-columns: 1fr;
   }
- 
+
   .sidebar {
     position: static;
-  }
- 
-  .specs-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

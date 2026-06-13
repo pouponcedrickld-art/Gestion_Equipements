@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Affectations
     Route::apiResource('affectations', AffectationController::class);
     Route::post('affectations/{id}/retour', [AffectationController::class, 'retour']);
+    Route::get('mes-affectations', [AffectationController::class, 'mesAffectations']);
 
     // Mouvements
     Route::get('mouvements', [MouvementController::class, 'index']);

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class EquipementController extends Controller
@@ -29,14 +30,15 @@ class EquipementController extends Controller
                 'responsable:id,name'
             ]);
 
-            if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
-                // On autorise la vue globale si demandé explicitement (ex: pour les demandes de matériel)
-                // ou si on filtre spécifiquement sur le stock général
-                if ($request->boolean('all_equipements') || $request->input('statut_global') === 'en_stock_general') {
-                    // Pas de filtrage par agence
-                } else {
-                    $query->byAgence($user->agence_id);
-                }
+            // Scope selon rôle
+            if ($user->hasRole('agent')) {
+                // Agent ne voit que les équipements affectés à lui
+                $query->whereHas('affectations', function ($q) use ($user) {
+                    $q->where('agent_id', $user->id)->where('statut', 'active');
+                });
+            } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                // Chef d'agence, gestionnaire local, technicien: voit équipements de son agence
+                $query->byAgence($user->agence_id);
             }
 
             if ($request->filled('search')) {
@@ -120,20 +122,28 @@ class EquipementController extends Controller
         try {
             $user = $request->user();
             
+            // Vérifier la permission
+            if (!$user->can('equipements.create')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de créer des équipements.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
-                'reference' => 'nullable|string|max:255|unique:equipements,reference',
-                'numero_serie' => 'nullable|string|max:255|unique:equipements,numero_serie',
-                'imei' => 'nullable|string|max:255|unique:equipements,imei',
-                'code_inventaire' => 'nullable|string|max:255|unique:equipements,code_inventaire',
+                'reference' => 'nullable|string|max:255',
+                'numero_serie' => 'nullable|string|max:255',
+                'imei' => 'nullable|string|max:255',
+                'code_inventaire' => 'nullable|string|max:255',
                 'marque' => 'nullable|string|max:255',
                 'modele' => 'nullable|string|max:255',
                 'categorie_id' => 'required|exists:categories,id',
                 'fournisseur' => 'nullable|string|max:255',
                 'date_acquisition' => 'nullable|date',
                 'prix_achat' => 'nullable|numeric|min:0',
-                'garantie_date_fin' => 'nullable|date|after_or_equal:date_acquisition',
-                'etat' => 'required|string|in:neuf,en_service,en_maintenance,en_panne,reforme,perdu',
+                'garantie_date_fin' => 'nullable|date',
+                'etat' => 'required|string',
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -141,7 +151,37 @@ class EquipementController extends Controller
                 'quantite' => 'nullable|integer|min:1',
                 'quantite_a_creer' => 'nullable|integer|min:1|max:100',
                 'mode_enregistrement' => 'nullable|string|in:individuel,lot',
+            ], [
+                'nom.required' => 'Le nom de l\'équipement est obligatoire.',
+                'categorie_id.required' => 'Vous devez sélectionner une catégorie.',
+                'categorie_id.exists' => 'La catégorie sélectionnée est invalide.',
+                'etat.required' => 'L\'état de l\'équipement est obligatoire.',
+                'photo.image' => 'Le fichier doit être une image.',
+                'photo.max' => 'La photo ne doit pas dépasser 2Mo.',
             ]);
+
+            \Log::info('STORE - Données validées:', $validated);
+
+            // Validation manuelle de l'unicité pour les champs non vides
+            $uniqueFields = ['reference', 'numero_serie', 'imei', 'code_inventaire'];
+            foreach ($uniqueFields as $field) {
+                if (!empty($validated[$field])) {
+                    if (Equipement::where($field, $validated[$field])->exists()) {
+                        throw ValidationException::withMessages([
+                            $field => ["Cette valeur est déjà utilisée."]
+                        ]);
+                    }
+                }
+            }
+
+            // Validation de la date de garantie
+            if (!empty($validated['garantie_date_fin']) && !empty($validated['date_acquisition'])) {
+                if (strtotime($validated['garantie_date_fin']) < strtotime($validated['date_acquisition'])) {
+                    throw ValidationException::withMessages([
+                        'garantie_date_fin' => ["La date de fin de garantie doit être après la date d'acquisition."]
+                    ]);
+                }
+            }
 
             $quantite = $request->input('quantite_a_creer', 1);
             $modeEnregistrement = $request->input('mode_enregistrement', 'individuel');
@@ -149,7 +189,9 @@ class EquipementController extends Controller
             $lotReference = ($quantite > 1 && $modeEnregistrement === 'individuel') ? $this->generateUniqueLotReference() : null;
 
             if ($user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
-                $agenceProprietaireId = $request->input('agence_proprietaire_id') ?? Agence::where('type', 'generale')->first()->id;
+                // Cherche d'abord l'agence générale ou la première agence disponible
+                $agenceGenerale = Agence::where('type', 'generale')->first();
+                $agenceProprietaireId = $request->input('agence_proprietaire_id') ?? ($agenceGenerale?->id ?? Agence::first()?->id);
                 $agenceActuelleId = $request->input('agence_actuelle_id') ?? $agenceProprietaireId;
             } else {
                 $agenceProprietaireId = $user->agence_id;
@@ -165,17 +207,15 @@ class EquipementController extends Controller
                 // Création d'un seul enregistrement représentant le lot
                 $equipementData = [
                     'nom' => $validated['nom'],
-                    'quantite' => $quantite,
                     'is_lot' => true,
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
                     'quantite' => $quantite,
                     'categorie_id' => $validated['categorie_id'],
-                    'fournisseur' => $validated['fournisseur'] ?? null,
                     'date_acquisition' => $validated['date_acquisition'] ?? null,
                     'prix_achat' => $validated['prix_achat'] ?? null,
                     'garantie_date_fin' => $validated['garantie_date_fin'] ?? null,
-                    'etat' => $validated['etat'],
+                    'etat' => $validated['etat'] === 'nouveau' ? 'neuf' : $validated['etat'],
                     'localisation' => $validated['localisation'] ?? null,
                     'responsable_id' => $validated['responsable_id'] ?? null,
                     'agence_proprietaire_id' => $agenceProprietaireId,
@@ -183,9 +223,8 @@ class EquipementController extends Controller
                     'statut_global' => $this->mapStatut($validated['etat']),
                     'photo' => $photoPath,
                     'lot_reference' => $this->generateUniqueLotReference(),
-                    'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
-                    'reference' => $validated['reference'] ?? $this->generateUniqueReference(),
-                    'code_inventaire' => $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire(),
+                    'reference' => $this->generateUniqueReference(),
+                    'code_inventaire' => $this->generateUniqueCodeInventaire(),
                 ];
 
                 $equipement = Equipement::create($equipementData);
@@ -209,11 +248,10 @@ class EquipementController extends Controller
                         'marque' => $validated['marque'] ?? null,
                         'modele' => $validated['modele'] ?? null,
                         'categorie_id' => $validated['categorie_id'],
-                        'fournisseur' => $validated['fournisseur'] ?? null,
                         'date_acquisition' => $validated['date_acquisition'] ?? null,
                         'prix_achat' => $validated['prix_achat'] ?? null,
                         'garantie_date_fin' => $validated['garantie_date_fin'] ?? null,
-                        'etat' => $validated['etat'],
+                        'etat' => $validated['etat'] === 'nouveau' ? 'neuf' : $validated['etat'],
                         'localisation' => $validated['localisation'] ?? null,
                         'responsable_id' => $validated['responsable_id'] ?? null,
                         'agence_proprietaire_id' => $agenceProprietaireId,
@@ -221,19 +259,9 @@ class EquipementController extends Controller
                         'statut_global' => $this->mapStatut($validated['etat']),
                         'photo' => $photoPath,
                         'lot_reference' => $lotReference,
-                        'specifications' => isset($validated['specifications']) ? (is_array($validated['specifications']) ? $validated['specifications'] : json_decode($validated['specifications'], true)) : null,
+                        'reference' => $this->generateUniqueReference(),
+                        'code_inventaire' => $this->generateUniqueCodeInventaire(),
                     ];
-
-                    // Gestion des identifiants uniques
-                    if ($quantite === 1) {
-                        $equipementData['numero_serie'] = $validated['numero_serie'] ?? null;
-                        $equipementData['reference'] = $validated['reference'] ?? $this->generateUniqueReference();
-                        $equipementData['code_inventaire'] = $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire();
-                    } else {
-                        $equipementData['numero_serie'] = null;
-                        $equipementData['reference'] = $this->generateUniqueReference();
-                        $equipementData['code_inventaire'] = $this->generateUniqueCodeInventaire();
-                    }
 
                     $equipement = Equipement::create($equipementData);
                     
@@ -259,17 +287,20 @@ class EquipementController extends Controller
                 'message' => ($quantite > 1 && $modeEnregistrement === 'lot') ? "Lot de {$quantite} équipements créé avec succès" : ($quantite > 1 ? "{$quantite} équipements créés avec succès" : 'Équipement créé avec succès')
             ], 201);
 
-
-
+        } catch (ValidationException $e) {
+            \Log::warning('VALIDATION FAILED:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Les données fournies sont invalides.',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             \Log::error('STORE EQUIPEMENT ERROR: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la création',
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -279,6 +310,24 @@ class EquipementController extends Controller
      */
     public function show(Equipement $equipement): JsonResponse
     {
+        $user = request()->user();
+        
+        // Vérifier l'accès
+        if ($user->hasRole('agent')) {
+            $canView = $equipement->affectations()->where('agent_id', $user->id)->where('statut', 'active')->exists();
+            if (!$canView) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de voir cet équipement.'
+                ], 403);
+            }
+        } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general']) && $equipement->agence_actuelle_id != $user->agence_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas la permission de voir cet équipement.'
+            ], 403);
+        }
+
         $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable', 'consommables', 'mouvements.user']);
         
         $relatedInLot = [];
@@ -303,12 +352,18 @@ class EquipementController extends Controller
     public function update(Request $request, Equipement $equipement): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('equipements.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de modifier des équipements.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
-                'quantite' => 'nullable|integer|min:1',
-                'quantite_a_creer' => 'nullable|integer|min:1',
-                'is_lot' => 'nullable|boolean',
-                'mode_enregistrement' => 'nullable|string|in:individuel,lot',
                 'numero_serie' => 'nullable|string|max:255|unique:equipements,numero_serie,' . $equipement->id,
                 'reference' => 'nullable|string|max:255|unique:equipements,reference,' . $equipement->id,
                 'imei' => 'nullable|string|max:255|unique:equipements,imei,' . $equipement->id,
@@ -320,7 +375,7 @@ class EquipementController extends Controller
                 'date_acquisition' => 'nullable|date',
                 'prix_achat' => 'nullable|numeric|min:0',
                 'garantie_date_fin' => 'nullable|date',
-                'etat' => 'required|string|in:nouveau,actif,en_maintenance,hors_service,archive',
+                'etat' => 'required|string|in:neuf,en_service,en_maintenance,en_panne,reforme,perdu,nouveau,actif,hors_service,archive',
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
                 'quantite' => 'nullable|integer|min:1',
@@ -337,13 +392,11 @@ class EquipementController extends Controller
                 $validated['specifications'] = json_decode($validated['specifications'], true);
             }
 
-            // Gérer la quantité et le mode lot si envoyés via les noms du formulaire
-            if ($request->has('quantite_a_creer')) {
-                $validated['quantite'] = $request->quantite_a_creer;
-            }
-            if ($request->has('mode_enregistrement')) {
-                $validated['is_lot'] = $request->mode_enregistrement === 'lot';
-            }
+            // Harmonisation de l'état
+            if ($validated['etat'] === 'nouveau') $validated['etat'] = 'neuf';
+            if ($validated['etat'] === 'actif') $validated['etat'] = 'en_service';
+            if ($validated['etat'] === 'hors_service') $validated['etat'] = 'reforme';
+            if ($validated['etat'] === 'archive') $validated['etat'] = 'perdu';
 
             $equipement->update(array_merge($validated, [
                 'statut_global' => $this->mapStatut($validated['etat'])
@@ -356,6 +409,13 @@ class EquipementController extends Controller
                 'data' => $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable']),
                 'message' => 'Équipement modifié avec succès'
             ]);
+        } catch (ValidationException $e) {
+            \Log::warning('VALIDATION FAILED:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Les données fournies sont invalides.',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             \Log::error("Erreur lors de la mise à jour de l'équipement {$equipement->id}: " . $e->getMessage());
             return response()->json([
@@ -372,6 +432,14 @@ class EquipementController extends Controller
     {
         try {
             $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('equipements.delete')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de supprimer des équipements.'
+                ], 403);
+            }
             
             // On change le statut avant le soft delete pour garder la trace métier
             $equipement->update([
@@ -399,10 +467,15 @@ class EquipementController extends Controller
     protected function mapStatut(string $statut): string
     {
         $map = [
+            'neuf' => 'en_stock_general',
             'nouveau' => 'en_stock_general',
+            'en_service' => 'en_service',
             'actif' => 'en_service',
             'en_maintenance' => 'en_maintenance',
+            'en_panne' => 'en_panne',
+            'reforme' => 'reforme',
             'hors_service' => 'reforme',
+            'perdu' => 'reforme',
             'archive' => 'archive'
         ];
         return $map[$statut] ?? 'en_service';

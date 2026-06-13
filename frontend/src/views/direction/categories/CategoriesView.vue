@@ -19,7 +19,7 @@
           </div>
         </div>
 
-        <div class="page-actions" v-if="hasRole(['super_admin', 'gestionnaire_stock_general'])">
+        <div class="page-actions" v-if="canManageCategories">
           <Button label="Nouvelle Catégorie" icon="pi pi-plus" @click="openCreateDialog"
             class="p-button-success p-button-raised action-btn" />
         </div>
@@ -60,7 +60,7 @@
       <div class="categories-container" v-if="!categorieStore.loading">
         <!-- Vue Table -->
         <DataTable v-if="viewMode === 'table' && categorieStore.categories.length > 0" 
-          :value="categorieStore.categories" responsiveLayout="scroll" class="modern-table" :rows="10">
+          :value="categorieStore.categories" responsiveLayout="scroll" class="professional-table" :rows="10">
           <!-- ... colonnes ... -->
           <Column field="nom" header="Nom de la catégorie" sortable>
             <template #body="{ data }">
@@ -94,8 +94,9 @@
             <template #body="{ data }">
               <div class="flex justify-content-end gap-2">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" v-tooltip.top="'Détails'" @click="viewCategorie(data)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editCategorie(data)" />
+                <Button v-if="canManageCategories" icon="pi pi-pencil" class="p-button-text p-button-rounded" v-tooltip.top="'Modifier'" @click="editCategorie(data)" />
                 <Button 
+                  v-if="canManageCategories"
                   :icon="data.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
                   :class="['p-button-text p-button-rounded', data.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
                   v-tooltip.top="data.statut === 'archive' ? 'Désarchiver' : 'Supprimer / Archiver'"
@@ -133,8 +134,9 @@
             <div class="card-footer">
               <div class="flex gap-1">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-sm p-button-info" @click="viewCategorie(cat)" />
-                <Button icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editCategorie(cat)" />
+                <Button v-if="canManageCategories" icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-sm" @click="editCategorie(cat)" />
                 <Button 
+                  v-if="canManageCategories"
                   :icon="cat.statut === 'archive' ? 'pi pi-refresh' : 'pi pi-trash'" 
                   :class="['p-button-text p-button-rounded p-button-sm', cat.statut === 'archive' ? 'p-button-success' : 'p-button-danger']"
                   @click="handleDeleteOrArchive(cat)"
@@ -284,11 +286,13 @@ import Tooltip from 'primevue/tooltip'
 
 // Stores
 import { useCategorieStore } from '@/stores/categorieStore'
+import { useAuthStore } from '@/stores/authStore'
 import { hasRole } from '@/utils/permissions'
 
 const router = useRouter()
 const toast = useToast()
 const categorieStore = useCategorieStore()
+const authStore = useAuthStore()
 
 const pageContainer = ref(null)
 const searchTerm = ref('')
@@ -303,6 +307,8 @@ const viewOptions = ref([
   { icon: 'pi pi-list', value: 'table' },
   { icon: 'pi pi-th-large', value: 'grid' }
 ])
+
+const canManageCategories = computed(() => authStore.isSuperAdmin || authStore.isGestionnaireGeneral)
 
 const statusOptions = [
   { label: 'Actif', value: 'actif' },
@@ -741,32 +747,23 @@ onMounted(() => {
 .detail-cat-icon { width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
 
 /* Styles du formulaire arrangé */
-.form-scroll-container {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding-right: 10px;
-  
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-}
-
 .form-section {
-  background: #f8fafc;
+  background: var(--bg-input);
   padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
   
   .section-title {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
-    color: #1e293b;
-    font-weight: 700;
+    color: var(--text-dark);
+    font-weight: 800;
     font-size: 1.1rem;
     
     i {
-      color: #3b82f6;
+      color: var(--primary-hover);
       font-size: 1.2rem;
     }
   }
@@ -774,39 +771,35 @@ onMounted(() => {
 
 .empty-attrs-msg {
   text-align: center;
-  padding: 2rem;
-  background: white;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  color: #64748b;
+  padding: 2.5rem;
+  background: var(--bg-card);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
   
   i { font-size: 2rem; margin-bottom: 1rem; }
-  p { margin: 0; font-size: 0.9rem; }
+  p { margin: 0; font-size: 0.9rem; font-weight: 600; }
 }
 
 .attr-row {
-  background: white;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  background: var(--bg-card);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s;
   
   &:hover {
-    border-color: #3b82f6;
-    background: #f0f9ff;
+    border-color: var(--primary);
+    background: var(--secondary-light);
   }
-}
-
-.attr-header-row {
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  opacity: 0.8;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
 }
 </style>

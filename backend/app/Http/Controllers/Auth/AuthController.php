@@ -145,6 +145,12 @@ class AuthController extends Controller
                 'nom' => $user->agence->nom,
                 'type' => $user->agence->type,
             ] : null,
+            'agent' => $user->agent ? [
+                'id' => $user->agent->id,
+                'matricule' => $user->agent->matricule,
+                'nom' => $user->agent->nom,
+                'prenom' => $user->agent->prenom,
+            ] : null,
             'permissions' => $user->getPermissionNames()->toArray(),
         ];
     }

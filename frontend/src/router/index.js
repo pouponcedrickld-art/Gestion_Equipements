@@ -29,6 +29,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/mes-materiels',
+    name: 'MesMateriels',
+    component: () => import('@/views/technicien/MesMaterielsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/agences',
     name: 'Agences',
     component: () => import('@/views/direction/agences/AgencesView.vue'),
@@ -44,13 +50,13 @@ const routes = [
     path: '/categories',
     name: 'Categories',
     component: () => import('@/views/direction/categories/CategoriesView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
     path: '/categories/:id',
     name: 'CategorieDetail',
     component: () => import('@/views/direction/categories/CategorieDetailView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
     path: '/equipements',
@@ -86,13 +92,13 @@ const routes = [
         path: '/consommables',
         name: 'Consommables',
         component: () => import('@/views/direction/consommables/ConsommablesView.vue'),
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
       },
       {
         path: '/consommables/:id',
         name: 'ConsommableDetail',
         component: () => import('@/views/direction/consommables/ConsommableDetailView.vue'),
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
       },
   {
     path: '/receptions',
@@ -122,7 +128,7 @@ const routes = [
     path: '/affectations',
     name: 'Affectations',
     component: () => import('@/views/agence/affectations/AffectationsView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
   },
   {
     path: '/pannes',
@@ -158,7 +164,7 @@ const routes = [
     path: '/rapports',
     name: 'Rapports',
     component: () => import('@/views/agence/rapports/RapportsView.vue'),
-    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock', 'technicien_maintenance'] }
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock'] }
   },
   {
     path: '/users',

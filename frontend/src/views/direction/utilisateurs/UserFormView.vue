@@ -1,68 +1,68 @@
 <template>
-  <div class="modal-form">
+  <div class="user-form-card">
     <div class="form-header">
-      <h2>{{ editData ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}</h2>
-      <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
+      <div class="flex items-center gap-3">
+        <div class="icon-circle">
+          <i :class="editData ? 'pi pi-user-edit' : 'pi pi-user-plus'"></i>
+        </div>
+        <h2 class="text-xl font-extrabold text-dark">{{ editData ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}</h2>
+      </div>
+      <button @click="$emit('cancel')" class="btn btn-outline btn-icon"><i class="pi pi-times"></i></button>
     </div>
-    <form @submit.prevent="handleSubmit">
+
+    <form @submit.prevent="handleSubmit" class="mt-6">
       <!-- Section Liaison Agent -->
-      <div class="form-group" v-if="!editData">
-        <label>Lier à un agent (optionnel)</label>
-        <div class="search-select">
-          <input v-model="agentSearch" placeholder="Rechercher un agent..." class="search-input" />
-          <select v-model="formData.agent_id" @change="onAgentSelect">
-            <option :value="null">-- Aucun / Nouvel utilisateur --</option>
-            <option v-for="a in filteredAgents" :key="a.id" :value="a.id">
-              {{ a.nom }} {{ a.prenom }} ({{ a.matricule }})
-            </option>
-          </select>
+      <div class="form-section mb-6" v-if="!editData">
+        <div class="section-title">
+          <i class="pi pi-link"></i> Liaison Agent
+        </div>
+        <div class="form-group">
+          <label>Lier à un agent existant (optionnel)</label>
+          <div class="search-select-custom">
+            <div class="relative mb-2">
+              <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs"></i>
+              <input v-model="agentSearch" placeholder="Filtrer les agents..." class="pl-8 text-sm" />
+            </div>
+            <select v-model="formData.agent_id" @change="onAgentSelect" class="text-sm">
+              <option :value="null">-- Aucun / Nouvel utilisateur indépendant --</option>
+              <option v-for="a in filteredAgents" :key="a.id" :value="a.id">
+                {{ a.nom }} {{ a.prenom }} ({{ a.matricule }})
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
       <!-- Informations de base -->
-      <div class="form-row">
+      <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
           <label>Nom complet *</label>
-          <input v-model="formData.name" required placeholder="Nom et prénom" />
+          <input v-model="formData.name" required placeholder="Ex: Jean Dupont" />
         </div>
         <div class="form-group">
-          <label>Email *</label>
-          <input v-model="formData.email" type="email" required placeholder="Email" />
+          <label>Email professionnel *</label>
+          <input v-model="formData.email" type="email" required placeholder="email@exemple.com" />
         </div>
       </div>
 
       <!-- Mot de passe et Rôle -->
-      <div class="form-row" v-if="!editData">
-        <div class="form-group">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group" v-if="!editData">
           <label>Mot de passe *</label>
-          <input v-model="formData.password" type="password" required placeholder="Min. 6 caractères" />
+          <input v-model="formData.password" type="password" required placeholder="••••••••" />
+        </div>
+        <div class="form-group" v-else>
+          <label>Changer mot de passe</label>
+          <input v-model="formData.password" type="password" placeholder="Laisser vide si inchangé" />
         </div>
         <div class="form-group">
-          <label>Rôle *</label>
+          <label>Rôle du compte *</label>
           <select v-model="formData.role" required>
-            <option value="">-- Choisir --</option>
+            <option value="">-- Choisir un rôle --</option>
             <option value="super_admin">Super Admin</option>
-            <option value="gestionnaire_stock_general">G. Stock Général</option>
+            <option value="gestionnaire_stock_general">Stock Général</option>
             <option value="chef_agence">Chef d'Agence</option>
-            <option value="gestionnaire_stock">G. Stock Local</option>
-            <option value="technicien_maintenance">Technicien</option>
-            <option value="agent">Agent</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row" v-else>
-        <div class="form-group">
-          <label>Nouveau mot de passe (optionnel)</label>
-          <input v-model="formData.password" type="password" placeholder="Laisser vide pour ne pas changer" />
-        </div>
-        <div class="form-group">
-          <label>Rôle *</label>
-          <select v-model="formData.role" required>
-            <option value="">-- Choisir --</option>
-            <option value="super_admin">Super Admin</option>
-            <option value="gestionnaire_stock_general">G. Stock Général</option>
-            <option value="chef_agence">Chef d'Agence</option>
-            <option value="gestionnaire_stock">G. Stock Local</option>
+            <option value="gestionnaire_stock">Stock Local</option>
             <option value="technicien_maintenance">Technicien</option>
             <option value="agent">Agent</option>
           </select>
@@ -70,34 +70,39 @@
       </div>
 
       <!-- Agence et Téléphone -->
-      <div class="form-row">
+      <div class="grid grid-cols-2 gap-4">
         <div class="form-group">
-          <label>Agence *</label>
+          <label>Agence de rattachement *</label>
           <select v-model="formData.agence_id" required>
-            <option value="">-- Choisir --</option>
+            <option value="">-- Choisir une agence --</option>
             <option v-for="a in agences" :key="a.id" :value="a.id">{{ a.nom }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>Téléphone</label>
-          <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
+          <input v-model="formData.telephone" placeholder="+229 ..." />
         </div>
       </div>
 
       <!-- Poste -->
       <div class="form-group">
-        <label>Poste occupé</label>
-        <input v-model="formData.poste" placeholder="Poste occupé" />
+        <label>Poste / Fonction</label>
+        <input v-model="formData.poste" placeholder="Ex: Responsable IT, Comptable..." />
       </div>
 
       <!-- Actions -->
-      <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary" :disabled="saving">
-          {{ saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer') }}
+      <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-color">
+        <button type="button" @click="$emit('cancel')" class="btn btn-secondary btn-md">Annuler</button>
+        <button type="submit" class="btn btn-primary btn-md" :disabled="saving">
+          <i v-if="saving" class="pi pi-spin pi-spinner mr-2"></i>
+          {{ saving ? 'Traitement...' : (editData ? 'Mettre à jour' : 'Créer le compte') }}
         </button>
       </div>
-      <p v-if="error" class="error">{{ error }}</p>
+      
+      <div v-if="error" class="error-msg mt-4">
+        <i class="pi pi-exclamation-circle"></i>
+        <span>{{ error }}</span>
+      </div>
     </form>
   </div>
 </template>
@@ -192,7 +197,7 @@ watch(() => props.editData, (val) => {
       poste: val.poste || '',
       actif: val.actif ?? true,
       role: val.roles?.[0]?.name || '',
-      password: '', // On ne pré-remplit jamais le mot de passe
+      password: '',
     })
   } else {
     resetForm()
@@ -219,118 +224,87 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.modal-form {
-  background: #1e293b;
-  border-radius: 12px;
+.user-form-card {
+  background: var(--bg-card);
+  padding: 2.5rem;
+  border-radius: var(--radius-xl);
+  max-width: 650px;
   width: 100%;
-  max-width: 550px;
-  padding: 25px;
+  border: 1px solid var(--border-color);
 }
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.form-header h2 {
-  color: #e2e8f0;
-  margin: 0;
-  font-size: 1.3rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.3rem;
-  cursor: pointer;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+.icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-hover);
+  font-size: 1.4rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 1.25rem;
 }
 
-.form-group label {
-  color: #cbd5e1;
+.form-section {
+  background: var(--bg-app);
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.section-title i {
+  color: var(--primary-hover);
+}
+
+.search-select-custom {
+  background: var(--bg-card);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.error-msg {
+  background: #fef2f2;
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  background: #0f172a;
-  color: #e2e8f0;
-  box-sizing: border-box;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #334155;
-  color: #e2e8f0;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.error {
-  color: #ef4444;
-  margin-top: 10px;
-  text-align: center;
-}
-
-.search-select {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.search-input {
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  border-bottom: none !important;
-  background: #0f172a !important;
-}
-
-.search-select select {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
+@media (max-width: 640px) {
+  .user-form-card {
+    padding: 1.5rem;
+  }
 }
 </style>
