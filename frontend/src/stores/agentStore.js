@@ -79,11 +79,36 @@ export const useAgentStore = defineStore('agent', () => {
     }
   }
 
+  const fetchAvailableAgents = async () => {
+    loading.value = true
+    try {
+      const response = await agentApi.available()
+      return response.data.data || response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchPostes = async () => {
+    try {
+      const response = await agentApi.getPostes()
+      return response.data
+    } catch (err) {
+      console.error('Erreur postes:', err)
+      return []
+    }
+  }
+
   return {
     agents,
     loading,
     error,
     fetchAgents,
+    fetchAvailableAgents,
+    fetchPostes,
     createAgent,
     updateAgent,
     deleteAgent,

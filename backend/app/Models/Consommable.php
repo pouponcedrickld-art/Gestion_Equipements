@@ -82,6 +82,16 @@ class Consommable extends Model
         return $query->where('equipement_id', $equipementId);
     }
 
+    /**
+     * Scope : Filtrer par agence (via l'équipement)
+     */
+    public function scopeByAgence($query, $agenceId)
+    {
+        return $query->whereHas('equipement', function($q) use ($agenceId) {
+            $q->where('agence_actuelle_id', $agenceId);
+        });
+    }
+
     // ===== MÉTHODES UTILITAIRES =====
 
     /**

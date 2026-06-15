@@ -12,8 +12,9 @@ class StorePanneRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -23,7 +24,13 @@ class StorePanneRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'equipement_id' => ['required', 'integer', 'exists:equipements,id'],
+            'agent_id' => ['required', 'integer', 'exists:agents,id'],
+            'description' => ['required', 'string', 'min:5'],
+            'niveau_gravite' => ['required', 'in:mineure,majeure,critique'],
+            'photos' => ['nullable', 'array'],
+            'photos.*' => ['nullable'],
         ];
     }
+
 }

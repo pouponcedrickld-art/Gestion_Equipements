@@ -4,6 +4,7 @@ import affectationApi from '@/api/affectationApi'
 
 export const useAffectationStore = defineStore('affectation', () => {
   const affectations = ref([])
+  const mesAffectations = ref([])
   const loading = ref(false)
   const error = ref(null)
 
@@ -12,6 +13,19 @@ export const useAffectationStore = defineStore('affectation', () => {
     try {
       const response = await affectationApi.index()
       affectations.value = response.data.data || response.data
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchMesAffectations = async () => {
+    loading.value = true
+    try {
+      const response = await affectationApi.mesAffectations()
+      mesAffectations.value = response.data.data || response.data
     } catch (err) {
       error.value = err.message
       throw err
@@ -43,7 +57,7 @@ export const useAffectationStore = defineStore('affectation', () => {
   }
 
   return {
-    affectations, loading, error,
-    fetchAffectations, createAffectation, enregistrerRetour
+    affectations, mesAffectations, loading, error,
+    fetchAffectations, fetchMesAffectations, createAffectation, enregistrerRetour
   }
 })

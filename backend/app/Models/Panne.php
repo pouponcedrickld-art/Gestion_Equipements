@@ -58,4 +58,12 @@ class Panne extends Model
     {
         return $this->hasMany(Maintenance::class);
     }
+
+    /**
+     * Historique des transitions de statut d’une panne.
+     */
+    public function statusHistories()
+    {
+        return $this->hasMany(PanneStatusHistory::class)->orderBy('created_at', 'desc');
+    }
 }

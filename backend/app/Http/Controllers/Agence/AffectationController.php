@@ -41,6 +41,24 @@ class AffectationController extends Controller
     }
 
     /**
+     * Liste des affectations de l'utilisateur connecté (technicien ou agent).
+     */
+    public function mesAffectations()
+    {
+        $user = Auth::user();
+        
+        $query = Affectation::with(['agent', 'equipement', 'affectePar'])
+            ->where('statut', 'active');
+
+        // Si l'utilisateur a un agent lié, filtrer les affectations de cet agent
+        if ($user->agent) {
+            $query->where('agent_id', $user->agent->id);
+        }
+
+        return response()->json($query->orderBy('date_affectation', 'desc')->get());
+    }
+
+    /**
      * Créer une ou plusieurs affectations.
      */
     public function store(Request $request)

@@ -17,8 +17,6 @@ class AgentFactory extends Factory
             'prenom' => $this->faker->firstName(),
             'telephone' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
-            'direction' => $this->faker->randomElement(['Direction Générale', 'Direction Technique', 'Direction Financière']),
-            'service' => $this->faker->randomElement(['Informatique', 'Comptabilité', 'RH', 'Commercial']),
             'poste' => $this->faker->jobTitle(),
             'statut' => $this->faker->randomElement(['actif', 'inactif']),
             'photo' => null,

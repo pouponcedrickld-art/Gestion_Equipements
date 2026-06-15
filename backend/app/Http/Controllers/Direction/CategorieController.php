@@ -17,6 +17,16 @@ class CategorieController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            // Vérifier la permission de voir les catégories
+            if (!$user->can('categories.view_all')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de voir les catégories.'
+                ], 403);
+            }
+            
             $query = Categorie::query()->with(['parent', 'equipements:id,categorie_id,statut_global']);
 
             if ($request->filled('search')) {
@@ -65,6 +75,16 @@ class CategorieController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('categories.create')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de créer des catégories.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255|unique:categories,nom',
                 'code' => 'nullable|string|max:50|unique:categories,code',
@@ -99,6 +119,16 @@ class CategorieController extends Controller
      */
     public function show(Categorie $categorie): JsonResponse
     {
+        $user = request()->user();
+        
+        // Vérifier la permission
+        if (!$user->can('categories.view_all')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas la permission de voir cette catégorie.'
+            ], 403);
+        }
+        
         $categorie->load(['parent', 'enfants', 'equipements']);
         return response()->json([
             'success' => true,
@@ -112,6 +142,16 @@ class CategorieController extends Controller
     public function update(Request $request, Categorie $categorie): JsonResponse
     {
         try {
+            $user = $request->user();
+            
+            // Vérifier la permission
+            if (!$user->can('categories.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de modifier des catégories.'
+                ], 403);
+            }
+            
             $validated = $request->validate([
                 'nom' => 'required|string|max:255|unique:categories,nom,' . $categorie->id,
                 'code' => 'nullable|string|max:50|unique:categories,code,' . $categorie->id,
@@ -143,8 +183,18 @@ class CategorieController extends Controller
     /**
      * Supprimer une catégorie
      */
-    public function destroy(Categorie $categorie): JsonResponse
+    public function destroy(Request $request, Categorie $categorie): JsonResponse
     {
+        $user = $request->user();
+        
+        // Vérifier la permission
+        if (!$user->can('categories.delete')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas la permission de supprimer des catégories.'
+            ], 403);
+        }
+        
         if (!$categorie->canBeDeleted()) {
             return response()->json([
                 'success' => false,

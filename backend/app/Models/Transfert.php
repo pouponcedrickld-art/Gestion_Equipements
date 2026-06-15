@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\App;
 
 class Transfert extends Model
 {
-    use HasFactory, SoftDeletes;
+    
 
     protected $fillable = [
         'demande_materiel_id',

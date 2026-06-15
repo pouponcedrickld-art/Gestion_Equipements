@@ -50,6 +50,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
     // Agents
     Route::middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock')->group(function () {
+        Route::get('agents/available', [AgentController::class, 'available']);
+        Route::get('agents/postes', [AgentController::class, 'postes']);
         Route::apiResource('agents', AgentController::class);
     });
 
@@ -100,6 +102,7 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     // Affectations
     Route::apiResource('affectations', AffectationController::class);
     Route::post('affectations/{id}/retour', [AffectationController::class, 'retour']);
+    Route::get('mes-affectations', [AffectationController::class, 'mesAffectations']);
 
     // Mouvements
     Route::get('mouvements', [MouvementController::class, 'index']);
@@ -108,9 +111,14 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::apiResource('pannes', PanneController::class);
     Route::post('pannes/{id}/transmettre-maintenance', [PanneController::class, 'transmettreMaintenance'])->middleware('role:gestionnaire_stock');
     Route::post('pannes/{id}/diagnostiquer', [PanneController::class, 'diagnostiquer'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/decider', [PanneController::class, 'decider'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/update-resultat', [PanneController::class, 'updateResultat'])->middleware('role:technicien_maintenance|super_admin');
+    Route::post('pannes/{id}/cloturer', [PanneController::class, 'cloturer'])->middleware('role:technicien_maintenance|super_admin|gestionnaire_stock');
 
     // Maintenances
     Route::apiResource('maintenances', MaintenanceController::class)->middleware('role:super_admin|gestionnaire_stock_general|technicien_maintenance|gestionnaire_stock');
+    Route::post('maintenances/{id}/start', [MaintenanceController::class, 'start'])->middleware('role:super_admin|technicien_maintenance');
+    Route::post('maintenances/{id}/complete', [MaintenanceController::class, 'complete'])->middleware('role:super_admin|technicien_maintenance');
 
     // Pertes
     Route::apiResource('pertes', PerteController::class);
