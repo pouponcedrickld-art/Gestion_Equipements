@@ -19,6 +19,7 @@ use App\Http\Controllers\Agence\MaintenanceController;
 use App\Http\Controllers\Agence\PerteController;
 use App\Http\Controllers\Direction\NotificationController;
 use App\Http\Controllers\Direction\RapportGlobalController;
+use App\Http\Controllers\Direction\RapportController;
 use App\Http\Controllers\Agence\StockAgenceController as AgenceStockController;
 use App\Http\Controllers\Direction\StockAgenceController as DirectionStockController;
 
@@ -27,14 +28,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/2fa/verify', [AuthController::class, 'verify2FA']);
 
 // ROUTES PROTÉGÉES (Auth simple)
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'user.active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
 // ROUTES PROTÉGÉES (Auth + Scope Agence)
-Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
+Route::middleware(['auth:sanctum', 'user.active', 'agence.scope'])->group(function () {
     // Dashboard (Cedric)
     Route::get('/dashboard', [DashboardAgenceController::class, 'index']);
 
@@ -57,11 +58,11 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
 
     // Équipements
     Route::get('equipements', [EquipementController::class, 'index'])->withoutMiddleware(['agence.scope']);
-    Route::apiResource('equipements', EquipementController::class)->except(['index']);
-    Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::get('equipements/search/advanced', [EquipementController::class, 'search']);
+    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::apiResource('equipements', EquipementController::class)->except(['index']);
 
     // Catégories
     Route::get('categories', [CategorieController::class, 'index']);
@@ -90,6 +91,8 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
     Route::post('transferts/{id}/refuser', [TransfertController::class, 'refuser'])->middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock');
     Route::post('transferts/{id}/expedier', [TransfertController::class, 'expedier'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::post('transferts/{id}/recevoir', [TransfertController::class, 'recevoir'])->middleware('role:super_admin|gestionnaire_stock|chef_agence');
+    // Décision de réception par l'agence destination : 'accepte' incrémente le stock, 'refuse' met l'équipement en retour
+    Route::patch('transferts/{id}/traiter-reception', [TransfertController::class, 'traiterReception'])->middleware('role:super_admin|gestionnaire_stock_general|chef_agence|gestionnaire_stock');
     Route::get('transferts/statistiques', [TransfertController::class, 'statistiques']);
     Route::get('transferts/options', [TransfertController::class, 'getOptions']);
 
@@ -134,6 +137,31 @@ Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
         Route::get('rapports/inventaire', [RapportGlobalController::class, 'inventaire']);
         Route::get('rapports/pannes', [RapportGlobalController::class, 'pannes']);
         Route::get('rapports/export/{type}', [RapportGlobalController::class, 'export']);
+
+        // Nouveaux rapports PDF
+        Route::get('rapports/inventaire-par-agence', [RapportController::class, 'inventaireParAgence']);
+        Route::get('rapports/inventaire-par-agence/download', [RapportController::class, 'downloadInventaireParAgence']);
+        Route::get('rapports/inventaire-par-agence/preview', [RapportController::class, 'previewInventaireParAgence']);
+
+        Route::get('rapports/equipements-affectes', [RapportController::class, 'equipementsAffectes']);
+        Route::get('rapports/equipements-affectes/download', [RapportController::class, 'downloadEquipementsAffectes']);
+        Route::get('rapports/equipements-affectes/preview', [RapportController::class, 'previewEquipementsAffectes']);
+
+        Route::get('rapports/equipements-en-panne', [RapportController::class, 'equipementsEnPanne']);
+        Route::get('rapports/equipements-en-panne/download', [RapportController::class, 'downloadEquipementsEnPanne']);
+        Route::get('rapports/equipements-en-panne/preview', [RapportController::class, 'previewEquipementsEnPanne']);
+
+        Route::get('rapports/maintenances', [RapportController::class, 'maintenances']);
+        Route::get('rapports/maintenances/download', [RapportController::class, 'downloadMaintenances']);
+        Route::get('rapports/maintenances/preview', [RapportController::class, 'previewMaintenances']);
+
+        Route::get('rapports/pertes-et-casses', [RapportController::class, 'pertesEtCasses']);
+        Route::get('rapports/pertes-et-casses/download', [RapportController::class, 'downloadPertesEtCasses']);
+        Route::get('rapports/pertes-et-casses/preview', [RapportController::class, 'previewPertesEtCasses']);
+
+        Route::get('rapports/audit-complet', [RapportController::class, 'auditComplet']);
+        Route::get('rapports/audit-complet/download', [RapportController::class, 'downloadAuditComplet']);
+        Route::get('rapports/audit-complet/preview', [RapportController::class, 'previewAuditComplet']);
     });
 
     // Stock des Agences

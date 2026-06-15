@@ -81,6 +81,9 @@ export const useCategorieStore = defineStore('categorie', () => {
       return categoriesList.value
     }
 
+    loading.value = true
+    error.value = null
+
     try {
       const response = await categorieApi.list()
       
@@ -93,6 +96,9 @@ export const useCategorieStore = defineStore('categorie', () => {
     } catch (err) {
       error.value = err.response?.data?.message || err.message
       console.error('Erreur fetchCategoriesList:', err)
+      throw err // On relance l'erreur pour que le composant puisse gérer le fallback
+    } finally {
+      loading.value = false
     }
     
     return categoriesList.value

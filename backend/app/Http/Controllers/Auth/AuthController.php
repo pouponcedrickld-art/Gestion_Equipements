@@ -26,13 +26,10 @@ class AuthController extends Controller
             ]);
         }
 
-        // Vérifier si 2FA est activé
-        if ($user->two_factor_secret) {
+        if (!$user->actif) {
             return response()->json([
-                'requires_2fa' => true,
-                'user_id' => $user->id,
-                'message' => '2FA requis'
-            ]);
+                'message' => 'Votre compte est désactivé. Veuillez contacter l\'administrateur.'
+            ], 403);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -51,6 +48,12 @@ class AuthController extends Controller
         ]);
 
         $user = User::findOrFail($request->user_id);
+
+        if (!$user->actif) {
+            return response()->json([
+                'message' => 'Votre compte est désactivé.'
+            ], 403);
+        }
 
         // Mode DEV : neutraliser 2FA pour que le site soit fonctionnel rapidement.
         // Active si APP_ENV=local ou si DISABLE_2FA=true dans .env.

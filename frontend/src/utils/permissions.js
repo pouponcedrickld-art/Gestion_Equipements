@@ -30,6 +30,7 @@ export const getMenuItems = () => {
         { label: menuEquipementLabel, icon: 'pi pi-mobile', route: menuEquipementRoute, visible: true },
         { label: 'Consommables', icon: 'pi pi-box', route: '/consommables', visible: ['super_admin', 'gestionnaire_stock_general'].includes(role) },
         { label: 'Réceptions', icon: 'pi pi-download', route: '/receptions', visible: ['chef_agence', 'gestionnaire_stock'].includes(role) },
+        { label: 'Retours', icon: 'pi pi-undo', route: '/retours', visible: ['chef_agence', 'gestionnaire_stock'].includes(role) },
         { label: 'Transferts', icon: 'pi pi-send', route: '/transferts', visible: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'].includes(role) },
         { label: 'Demandes', icon: 'pi pi-shopping-cart', route: '/demandes-materiel', visible: ['super_admin', 'gestionnaire_stock_general', 'chef_agence'].includes(role) },
         { label: 'Affectations', icon: 'pi pi-arrow-right-arrow-left', route: '/affectations', visible: !['agent', 'technicien_maintenance'].includes(role) },

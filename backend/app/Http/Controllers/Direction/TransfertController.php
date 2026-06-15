@@ -280,10 +280,14 @@ class TransfertController extends Controller
             $equipement = $demande->equipement;
 
             DB::transaction(function () use ($demande, $equipement, $user) {
+                // Get Siège Social (Agence Générale) if agence_actuelle_id is null
+                $agenceGenerale = Agence::where('type', 'generale')->first();
+                $agenceSourceId = $equipement->agence_actuelle_id ?? $agenceGenerale?->id;
+                
                 Transfert::create([
                     'demande_materiel_id' => $demande->id,
                     'equipement_id' => $equipement->id,
-                    'agence_source_id' => $equipement->agence_actuelle_id,
+                    'agence_source_id' => $agenceSourceId,
                     'agence_destination_id' => $demande->agence_id,
                     'type_transfert' => 'livraison_generale',
                     'statut' => 'approuve',
@@ -302,6 +306,151 @@ class TransfertController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Traiter la réception d'un transfert expédié (agence destination).
+     *
+     * Cette méthode centralise la décision de l'agence destinataire :
+     *   - 'accepte' → confirme la réception, incrémente le stock local de l'agence destination.
+     *   - 'refuse'  → enregistre le motif de refus et marque l'équipement à retourner
+     *                 (il apparaîtra dans le menu "Retours" de l'agence destination).
+     *
+     * @route PATCH /api/transferts/{id}/traiter-reception
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id  Identifiant du transfert
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function traiterReception(Request $request, $id): JsonResponse
+    {
+        try {
+            $user     = $request->user();
+            $transfert = Transfert::with(['equipement', 'agenceSource', 'agenceDestination'])
+                                   ->findOrFail($id);
+
+            // ── Vérification des permissions ────────────────────────────────────────
+            // Seul l'utilisateur appartenant à l'agence de destination (ou un admin) peut décider.
+            if (
+                !$user->hasRole(['super_admin', 'gestionnaire_stock_general']) &&
+                $user->agence_id !== $transfert->agence_destination_id
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Seule l\'agence destinataire peut traiter cette réception.'
+                ], 403);
+            }
+
+            // ── Vérification du statut courant ───────────────────────────────────────
+            // On peut traiter les transferts approuvés ('approuve') ou expédiés ('expedie').
+            // Un transfert 'approuve' peut être accepté/refusé directement par l'agence
+            // sans nécessiter l'étape formelle d'expédition par le GSG.
+            if (!in_array($transfert->statut, ['approuve', 'expedie'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Ce transfert ne peut pas être traité : statut actuel '{$transfert->statut}' (attendu : 'approuve' ou 'expedie')."
+                ], 400);
+            }
+
+            // ── Validation des données envoyées par le frontend ──────────────────────
+            $validated = $request->validate([
+                // Le choix de l'agence : 'accepte' ou 'refuse'
+                'statut'      => 'required|string|in:accepte,refuse',
+                // Obligatoire uniquement en cas de refus
+                'motif_refus' => 'required_if:statut,refuse|nullable|string|max:1000',
+            ], [
+                'statut.required'            => 'La décision (accepte/refuse) est obligatoire.',
+                'statut.in'                  => 'La décision doit être "accepte" ou "refuse".',
+                'motif_refus.required_if'    => 'Le motif de refus est obligatoire pour un refus.',
+                'motif_refus.max'            => 'Le motif de refus ne peut pas dépasser 1000 caractères.',
+            ]);
+
+            // ── Traitement dans une transaction pour garantir la cohérence des données ─
+            DB::beginTransaction();
+
+            try {
+                if ($validated['statut'] === 'accepte') {
+                    // ── CAS 1 : ACCEPTATION ─────────────────────────────────────────
+                    // La méthode recevoir() du modèle Transfert effectue automatiquement :
+                    //   • Mise à jour du statut du transfert → 'recu'
+                    //   • Mise à jour de l'agence_actuelle_id de l'équipement
+                    //   • Incrémentation du stock de l'agence destination via StockAgenceService
+                    //   • Création d'un mouvement de traçabilité
+                    $transfert->recevoir($user->id);
+
+                    $message = "Équipement '{$transfert->equipement->nom}' accepté et ajouté au stock de l'agence.";
+
+                } else {
+                    // ── CAS 2 : REFUS ───────────────────────────────────────────────
+                    // La méthode refuser() du modèle Transfert :
+                    //   • Passe le statut du transfert → 'refuse'
+                    //   • Enregistre le motif_refus
+                    $transfert->refuser($user->id, $validated['motif_refus']);
+
+                    // L'équipement doit retourner à la source.
+                    // On le marque 'en_retour' pour qu'il apparaisse dans le menu "Retours"
+                    // de l'agence destination (où il se trouve physiquement).
+                    if ($transfert->equipement) {
+                        $transfert->equipement->update([
+                            'statut_global' => 'en_retour',
+                        ]);
+
+                        // Traçabilité : création d'un mouvement pour journaliser le refus
+                        $transfert->equipement->createMouvement(
+                            'retour',
+                            "Équipement refusé à la réception par {$user->name}. Motif : {$validated['motif_refus']}",
+                            $user->id,
+                            ['agence_id' => $transfert->agence_destination_id], // valeur avant
+                            ['agence_id' => $transfert->agence_source_id]        // valeur cible (retour)
+                        );
+
+                        // Création automatique d'un transfert de retour pour que l'équipement
+                        // s'affiche dans le menu "Retours" de l'agence (transferts sortants).
+                        \App\Models\Transfert::create([
+                            'equipement_id' => $transfert->equipement_id,
+                            'agence_source_id' => $transfert->agence_destination_id,
+                            'agence_destination_id' => $transfert->agence_source_id,
+                            'demande_par_id' => $user->id,
+                            'type_transfert' => 'retour_generale',
+                            'statut' => 'demande',
+                            'date_demande' => now(),
+                            'observations' => "Retour automatique suite au refus de réception. Motif : {$validated['motif_refus']}",
+                        ]);
+                    }
+
+                    $message = "Transfert refusé. L'équipement est en attente de retour à l'agence source.";
+                }
+
+                DB::commit();
+
+                // Rechargement des relations pour la réponse complète
+                $transfert->load(['equipement', 'agenceSource', 'agenceDestination', 'demandePar', 'validePar']);
+
+                return response()->json([
+                    'success' => true,
+                    'data'    => $transfert,
+                    'message' => $message,
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e; // Propagation pour le bloc catch externe
+            }
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation.',
+                'errors'  => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error'   => config('app.debug') ? $e->getTraceAsString() : null,
+            ], 400);
         }
     }
 

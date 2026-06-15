@@ -18,7 +18,7 @@ class Transfert extends Model
         'agence_source_id',
         'agence_destination_id',
         'type_transfert', // livraison_generale, retour_generale, transfert_interne
-        'statut', // brouillon, en_attente_expedition, en_transit, recu, annule
+        'statut', // brouillon, en_attente_expedition, en_transit, recu, annule, refuse
         'date_demande',
         'date_expedition',
         'date_reception',
@@ -26,6 +26,7 @@ class Transfert extends Model
         'valide_par_id',
         'quantite',
         'observations',
+        'motif_refus',
     ];
 
     protected $casts = [
@@ -116,6 +117,7 @@ class Transfert extends Model
         $this->update([
             'statut' => 'refuse',
             'valide_par_id' => $userId,
+            'motif_refus' => $observations,
             'observations' => $this->observations . "\nRefusé/Annulé : " . $observations
         ]);
 

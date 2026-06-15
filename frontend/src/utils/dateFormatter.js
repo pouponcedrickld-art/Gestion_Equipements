@@ -7,7 +7,7 @@
  * @param {Date|string} date - Date à formater
  * @returns {string} Format: "jj/mm/aaaa"
  */
-export function formatDateFr(date) {
+export function formatDate(date) {
   try {
     const d = typeof date === 'string' ? new Date(date) : date
     if (isNaN(d.getTime())) return 'Date invalide'
@@ -21,6 +21,15 @@ export function formatDateFr(date) {
     console.error('Error formatting date:', error)
     return 'Date invalide'
   }
+}
+
+/**
+ * Formate une date en français (format court) (alias)
+ * @param {Date|string} date - Date à formater
+ * @returns {string} Format: "jj/mm/aaaa"
+ */
+export function formatDateFr(date) {
+  return formatDate(date);
 }
 
 /**
@@ -151,7 +160,7 @@ export function formatDateTime(date) {
     const d = typeof date === 'string' ? new Date(date) : date
     if (isNaN(d.getTime())) return 'Date invalide'
     
-    return `${formatDateFr(d)} à ${formatTime(d)}`
+    return `${formatDate(d)} à ${formatTime(d)}`
   } catch (error) {
     console.error('Error formatting datetime:', error)
     return 'Date invalide'

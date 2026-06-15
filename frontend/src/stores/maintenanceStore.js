@@ -66,7 +66,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
       try {
         const response = await maintenanceApi.getByPeriod(startDate, endDate, filters);
-        this.maintenances = response.data || [];
+        this.maintenances = response.data?.data || [];
         
         // Mettre en cache
         this.cache.set(cacheKey, {
@@ -98,7 +98,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
       try {
         const response = await maintenanceApi.getByMonth(month, filters);
-        this.maintenances = response.data || [];
+        this.maintenances = response.data?.data || [];
         
         this.cache.set(cacheKey, {
           data: this.maintenances,
@@ -149,6 +149,98 @@ export const useMaintenanceStore = defineStore('maintenance', {
       } catch (error) {
         this.error = error.response?.data?.message || 'Erreur lors de la création de la maintenance';
         console.error('Erreur createMaintenance:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Met à jour une maintenance
+     */
+    async updateMaintenance(id, data) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await maintenanceApi.update(id, data);
+        
+        // Invalider le cache
+        this.clearCache();
+        
+        return response.data;
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la mise à jour de la maintenance';
+        console.error('Erreur updateMaintenance:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Supprime une maintenance
+     */
+    async deleteMaintenance(id) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await maintenanceApi.delete(id);
+        
+        // Invalider le cache
+        this.clearCache();
+        
+        return response.data;
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la suppression de la maintenance';
+        console.error('Erreur deleteMaintenance:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Démarre une maintenance
+     */
+    async startMaintenance(id, data = {}) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await maintenanceApi.start(id, data);
+        
+        // Invalider le cache
+        this.clearCache();
+        
+        return response.data;
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors du démarrage de la maintenance';
+        console.error('Erreur startMaintenance:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Termine une maintenance
+     */
+    async completeMaintenance(id, data = {}) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await maintenanceApi.complete(id, data);
+        
+        // Invalider le cache
+        this.clearCache();
+        
+        return response.data;
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Erreur lors de la fin de la maintenance';
+        console.error('Erreur completeMaintenance:', error);
         throw error;
       } finally {
         this.loading = false;

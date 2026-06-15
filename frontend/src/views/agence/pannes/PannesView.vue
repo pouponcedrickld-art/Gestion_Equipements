@@ -5,23 +5,11 @@
         <div class="header-left">
           <h2>Gestion des Pannes</h2>
           <p>Signalez et suivez les pannes de matériel</p>
-          <p>Debug: showModal = {{ showModal }}</p>
         </div>
         <div class="header-right">
           <button class="add-btn" @click="openAddModal">
             <i class="pi pi-plus"></i> Nouvelle Panne
           </button>
-        </div>
-      </div>
-
-      <!-- Debug inline modal first -->
-      <div v-if="showModal"
-        style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,0,0,0.3);z-index:9999;display:flex;align-items:center;justify-content:center;">
-        <div style="background:#1e293b;padding:20px;border-radius:12px;width:550px;color:white;">
-          <h3>Nouvelle Panne</h3>
-          <p>🎉 Modal affiché!</p>
-          <button @click="showModal = false"
-            style="background:#3b82f6;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Fermer</button>
         </div>
       </div>
 
@@ -34,19 +22,19 @@
           <div class="select-box">
             <select v-model="filters.statut">
               <option value="">Tous les statuts</option>
-              <option value="déclarée">Déclarée</option>
-              <option value="en cours">En cours</option>
-              <option value="réparée">Réparée</option>
-              <option value="irrécupérable">Irrécupérable</option>
-              <option value="remplacée">Remplacée</option>
+              <option value="declaree">Déclarée</option>
+              <option value="en_cours">En cours</option>
+              <option value="en_maintenance">En maintenance</option>
+              <option value="resolue">Résolue</option>
+              <option value="irrecuperable">Irrécupérable</option>
+              <option value="cloturee">Clôturée</option>
             </select>
           </div>
           <div class="select-box">
             <select v-model="filters.niveau_gravite">
               <option value="">Toutes les gravités</option>
-              <option value="basse">Basse</option>
-              <option value="moyenne">Moyenne</option>
-              <option value="haute">Haute</option>
+              <option value="mineure">Mineure</option>
+              <option value="majeure">Majeure</option>
               <option value="critique">Critique</option>
             </select>
           </div>
@@ -79,16 +67,18 @@
                 <td>{{ p.equipement?.nom }} ({{ p.equipement?.reference }})</td>
                 <td>{{ p.agent?.nom }} {{ p.agent?.prenom }}</td>
                 <td><span class="gravite-badge" :class="p.niveau_gravite">{{ p.niveau_gravite }}</span></td>
-                <td><span class="status-badge" :class="p.statut">{{ p.statut }}</span></td>
+                <td><span class="status-badge" :class="p.statut">{{ formatStatus(p.statut) }}</span></td>
                 <td>
                   <div class="actions">
                     <button class="detail-btn" @click="showDetail(p)">Détails</button>
-                    <button v-if="p.statut === 'déclarée'" class="transmettre-btn"
+                    <button v-if="p.statut === 'declaree'" class="transmettre-btn"
                       @click="transmettrePanne(p)">Transmettre</button>
-                    <button v-if="p.statut === 'en cours'" class="diagnostic-btn"
+                    <button v-if="['en_cours', 'en_maintenance'].includes(p.statut)" class="diagnostic-btn"
                       @click="openDiagnosticModal(p)">Diagnostic</button>
+                    <button v-if="['en_cours', 'en_maintenance'].includes(p.statut)" class="maintenance-btn"
+                      @click="openMaintenanceModal(p)">Créer Maintenance</button>
                     <button class="edit-btn" @click="openEditModal(p)">Modifier</button>
-                    <button class="delete-btn" @click="deletePanne(p)">Supprimer</button>
+                    <button class="delete-btn" @click="confirmDelete(p)">Supprimer</button>
                   </div>
                 </td>
               </tr>
@@ -121,20 +111,20 @@
           <div class="field mb-4">
             <label class="font-bold block mb-2">Niveau de Gravité</label>
             <select v-model="panneForm.niveau_gravite" class="w-full" required>
-              <option value="basse">Basse</option>
-              <option value="moyenne">Moyenne</option>
-              <option value="haute">Haute</option>
+              <option value="mineure">Mineure</option>
+              <option value="majeure">Majeure</option>
               <option value="critique">Critique</option>
             </select>
           </div>
           <div v-if="isEdit" class="field mb-4">
             <label class="font-bold block mb-2">Statut</label>
             <select v-model="panneForm.statut" class="w-full">
-              <option value="déclarée">Déclarée</option>
-              <option value="en cours">En cours</option>
-              <option value="réparée">Réparée</option>
-              <option value="irrécupérable">Irrécupérable</option>
-              <option value="remplacée">Remplacée</option>
+              <option value="declaree">Déclarée</option>
+              <option value="en_cours">En cours</option>
+              <option value="en_maintenance">En maintenance</option>
+              <option value="resolue">Résolue</option>
+              <option value="irrecuperable">Irrécupérable</option>
+              <option value="cloturee">Clôturée</option>
             </select>
           </div>
           <div v-if="isEdit" class="field mb-4">
@@ -147,7 +137,7 @@
           </div>
           <div v-if="isEdit" class="field mb-4">
             <label class="font-bold block mb-2">Coût Réparation</label>
-            <input v-model="panneForm.cout_reparation" type="number" step="0.01" class="w-full">
+            <input v-model="panneForm.cout_reparation" type="number" step="0.01" class="w-full" />
           </div>
           <div class="modal-footer">
             <Button label="Annuler" class="p-button-secondary" @click="showModal = false" />
@@ -174,15 +164,15 @@
         class="p-fluid dark-modal">
         <div v-if="selectedPanne" class="detail-content">
           <div class="detail-row"><span class="label">Équipement:</span> <span class="value">{{
-            selectedPanne.equipement?.nom }} ({{ selectedPanne.equipement?.reference }})</span></div>
+              selectedPanne.equipement?.nom }} ({{ selectedPanne.equipement?.reference }})</span></div>
           <div class="detail-row"><span class="label">Agent:</span> <span class="value">{{ selectedPanne.agent?.nom }}
               {{ selectedPanne.agent?.prenom }}</span></div>
           <div class="detail-row"><span class="label">Date Déclaration:</span> <span class="value">{{
-            formatDate(selectedPanne.date_declaration) }}</span></div>
+              formatDate(selectedPanne.date_declaration) }}</span></div>
           <div class="detail-row"><span class="label">Gravité:</span> <span class="value"><span class="gravite-badge"
                 :class="selectedPanne.niveau_gravite">{{ selectedPanne.niveau_gravite }}</span></span></div>
           <div class="detail-row"><span class="label">Statut:</span> <span class="value"><span class="status-badge"
-                :class="selectedPanne.statut">{{ selectedPanne.statut }}</span></span></div>
+                :class="selectedPanne.statut">{{ formatStatus(selectedPanne.statut) }}</span></span></div>
           <div class="detail-row"><span class="label">Description:</span></div>
           <div class="detail-text">{{ selectedPanne.description }}</div>
           <div v-if="selectedPanne.diagnostic_technicien" class="detail-row mt-4"><span class="label">Diagnostic:</span>
@@ -196,10 +186,59 @@
               class="value">{{ selectedPanne.cout_reparation }} €</span></div>
           <div v-if="selectedPanne.date_resolution" class="detail-row"><span class="label">Date Résolution:</span> <span
               class="value">{{ formatDate(selectedPanne.date_resolution) }}</span></div>
+          <div v-if="selectedPanne.maintenances?.length" class="detail-row mt-4"><span class="label">Maintenances:</span>
+          </div>
+          <div v-if="selectedPanne.maintenances?.length" class="detail-text">
+            <div v-for="m in selectedPanne.maintenances" :key="m.id" class="mb-2 p-2 bg-gray-800 rounded">
+              <strong>Maintenance #{{ m.id }}</strong> - {{ m.type_maintenance }} - {{ m.statut }}
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <Button label="Fermer" class="p-button-secondary" @click="showDetailModal = false" />
         </div>
+      </Dialog>
+
+      <Dialog v-model:visible="showMaintenanceModal" header="Créer une Maintenance Corrective" :style="{ width: '550px' }" modal
+        class="p-fluid dark-modal">
+        <form @submit.prevent="submitMaintenance" class="panne-form">
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Équipement</label>
+            <select v-model="maintenanceForm.equipement_id" class="w-full" disabled>
+              <option v-for="eq in equipements" :key="eq.id" :value="eq.id">{{ eq.nom }} ({{ eq.reference }})</option>
+            </select>
+          </div>
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Type Maintenance</label>
+            <select v-model="maintenanceForm.type_maintenance" class="w-full" disabled>
+              <option value="corrective">Corrective</option>
+              <option value="preventive">Préventive</option>
+            </select>
+          </div>
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Date Prévue</label>
+            <input v-model="maintenanceForm.date_prevue" type="date" class="w-full" required />
+          </div>
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Technicien</label>
+            <select v-model="maintenanceForm.technicien_id" class="w-full">
+              <option value="">Sélectionner un technicien</option>
+              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
+            </select>
+          </div>
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Diagnostic</label>
+            <textarea v-model="maintenanceForm.diagnostic" rows="4" class="w-full"></textarea>
+          </div>
+          <div class="field mb-4">
+            <label class="font-bold block mb-2">Coût (estimation)</label>
+            <input v-model="maintenanceForm.cout" type="number" step="0.01" class="w-full" />
+          </div>
+          <div class="modal-footer">
+            <Button label="Annuler" class="p-button-secondary" @click="showMaintenanceModal = false" />
+            <Button label="Créer" type="submit" class="p-button-primary" />
+          </div>
+        </form>
       </Dialog>
     </div>
   </AgenceLayout>
@@ -211,18 +250,25 @@ import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import { usePanneStore } from '@/stores/panneStore.js'
 import { useEquipementStore } from '@/stores/equipementStore.js'
 import { useAgentStore } from '@/stores/agentStore.js'
+import { useMaintenanceStore } from '@/stores/maintenanceStore.js'
+import { useUserStore } from '@/stores/userStore.js'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const panneStore = usePanneStore()
 const equipementStore = useEquipementStore()
 const agentStore = useAgentStore()
+const maintenanceStore = useMaintenanceStore()
+const userStore = useUserStore()
 const toast = useToast()
+const confirm = useConfirm()
 
 const pannes = ref([])
 const equipements = ref([])
 const agents = ref([])
+const users = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const search = ref('')
@@ -230,41 +276,60 @@ const filters = ref({ statut: '', niveau_gravite: '' })
 const showModal = ref(false)
 const showDiagnosticModal = ref(false)
 const showDetailModal = ref(false)
+const showMaintenanceModal = ref(false)
 const isEdit = ref(false)
 const selectedPanne = ref(null)
 const panneForm = ref({})
 const diagnosticForm = ref({})
+const maintenanceForm = ref({})
 
 const filteredPannes = computed(() => {
   return pannes.value.filter(p => {
     const matchesSearch = !search.value ||
-      p.equipement?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
-      p.agent?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.value.toLowerCase())
+      (p.equipement?.nom?.toLowerCase().includes(search.value.toLowerCase()) ||
+        p.agent?.nom?.toLowerCase().includes(search.value.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.value.toLowerCase()))
     const matchesStatut = !filters.value.statut || p.statut === filters.value.statut
     const matchesGravite = !filters.value.niveau_gravite || p.niveau_gravite === filters.value.niveau_gravite
     return matchesSearch && matchesStatut && matchesGravite
   })
 })
 
+const formatStatus = (statut) => {
+  const statusMap = {
+    'declaree': 'Déclarée',
+    'en_cours': 'En cours',
+    'en_maintenance': 'En maintenance',
+    'resolue': 'Résolue',
+    'irrecuperable': 'Irrécupérable',
+    'cloturee': 'Clôturée'
+  }
+  return statusMap[statut] || statut
+}
+
 const fetchData = async () => {
   loading.value = true
-  await Promise.all([
-    panneStore.fetchPannes(),
-    equipementStore.fetchEquipements(),
-    agentStore.fetchAgents()
-  ])
-  pannes.value = panneStore.pannes
-  equipements.value = equipementStore.equipements
-  agents.value = agentStore.agents
-  loading.value = false
+  try {
+    await Promise.all([
+      panneStore.fetchPannes(),
+      equipementStore.fetchEquipements(),
+      agentStore.fetchAgents(),
+      userStore.fetchUsers()
+    ])
+    pannes.value = panneStore.pannes
+    equipements.value = equipementStore.equipements
+    agents.value = agentStore.agents
+    users.value = userStore.users
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
 }
 
 const openAddModal = () => {
-  console.log('Nouvelle Panne clicked!')
   isEdit.value = false
-  panneForm.value = { equipement_id: '', agent_id: '', description: '', niveau_gravite: 'moyenne', statut: 'déclarée' }
-  console.log('showModal set to true!')
+  panneForm.value = { equipement_id: '', agent_id: '', description: '', niveau_gravite: 'mineure', statut: 'declaree' }
   showModal.value = true
 }
 
@@ -276,8 +341,31 @@ const openEditModal = (panne) => {
 
 const openDiagnosticModal = (panne) => {
   selectedPanne.value = panne
-  diagnosticForm.value = { panne_id: panne.id, diagnostic_technicien: '' }
+  diagnosticForm.value = { panne_id: panne.id, diagnostic_technicien: panne.diagnostic_technicien || '' }
   showDiagnosticModal.value = true
+}
+
+const openMaintenanceModal = (panne) => {
+  selectedPanne.value = panne
+  maintenanceForm.value = {
+    panne_id: panne.id,
+    equipement_id: panne.equipement_id,
+    type_maintenance: 'corrective',
+    date_prevue: new Date().toISOString().split('T')[0],
+    diagnostic: panne.diagnostic_technicien || ''
+  }
+  showMaintenanceModal.value = true
+}
+
+const submitMaintenance = async () => {
+  try {
+    await maintenanceStore.createMaintenance(maintenanceForm.value)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Maintenance créée avec succès', life: 3000 })
+    showMaintenanceModal.value = false
+    await fetchData()
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la création de la maintenance', life: 3000 })
+  }
 }
 
 const showDetail = (panne) => {
@@ -327,16 +415,21 @@ const transmettrePanne = async (panne) => {
   }
 }
 
-const deletePanne = async (panne) => {
-  if (confirm('Supprimer cette panne ?')) {
-    try {
-      await panneStore.deletePanne(panne.id)
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Panne supprimée', life: 3000 })
-      await fetchData()
-    } catch (err) {
-      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
+const confirmDelete = (panne) => {
+  confirm.require({
+    message: 'Êtes-vous sûr de vouloir supprimer cette panne ?',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await panneStore.deletePanne(panne.id)
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Panne supprimée', life: 3000 })
+        await fetchData()
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
+      }
     }
-  }
+  })
 }
 
 const formatDate = (date) => {
@@ -447,7 +540,7 @@ select {
   padding: 14px 16px;
   text-align: left;
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -465,19 +558,14 @@ select {
   font-weight: 700;
 }
 
-.gravite-badge.basse {
+.gravite-badge.mineure {
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
 }
 
-.gravite-badge.moyenne {
+.gravite-badge.majeure {
   background: rgba(245, 158, 11, 0.15);
   color: #f59e0b;
-}
-
-.gravite-badge.haute {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
 }
 
 .gravite-badge.critique {
@@ -485,37 +573,44 @@ select {
   color: #ef4444;
 }
 
-.status-badge.déclarée {
+.status-badge.declaree {
   background: rgba(107, 114, 128, 0.15);
   color: #94a3b8;
 }
 
-.status-badge.en-cours {
+.status-badge.en_cours {
   background: rgba(59, 130, 246, 0.15);
   color: #3b82f6;
 }
 
-.status-badge.réparée {
+.status-badge.en_maintenance {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-badge.resolue {
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
 }
 
-.status-badge.irrécupérable {
+.status-badge.irrecuperable {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }
 
-.status-badge.remplacée {
-  background: rgba(139, 92, 246, 0.15);
-  color: #8b5cf6;
+.status-badge.cloturee {
+  background: rgba(75, 85, 99, 0.15);
+  color: #6b7280;
 }
 
 .actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.detail-btn {
+.detail-btn,
+.edit-btn {
   background: #334155;
   color: white;
   border: none;
@@ -533,17 +628,9 @@ select {
   cursor: pointer;
 }
 
-.diagnostic-btn {
+.diagnostic-btn,
+.maintenance-btn {
   background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.edit-btn {
-  background: #334155;
   color: white;
   border: none;
   padding: 6px 12px;
