@@ -66,7 +66,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
       try {
         const response = await maintenanceApi.getByPeriod(startDate, endDate, filters);
-        this.maintenances = response.data || [];
+        this.maintenances = response.data?.data || [];
         
         // Mettre en cache
         this.cache.set(cacheKey, {
@@ -98,7 +98,7 @@ export const useMaintenanceStore = defineStore('maintenance', {
 
       try {
         const response = await maintenanceApi.getByMonth(month, filters);
-        this.maintenances = response.data || [];
+        this.maintenances = response.data?.data || [];
         
         this.cache.set(cacheKey, {
           data: this.maintenances,

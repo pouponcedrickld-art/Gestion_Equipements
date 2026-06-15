@@ -74,7 +74,7 @@ class DashboardAgenceController extends Controller
                     'temps_moyen_reparation' => $this->calculateAvgRepairTime($agenceId),
                     'garanties_expirant' => Equipement::when($agenceId, function ($q, $agenceId) {
                         $q->where('agence_actuelle_id', $agenceId);
-                    })->where('date_fin_garantie', '>=', now())->where('date_fin_garantie', '<=', now()->addDays(30))->count(),
+                    })->where('garantie_date_fin', '>=', now())->where('garantie_date_fin', '<=', now()->addDays(30))->count(),
                 ];
 
                 $stats['equipements_par_agence'] = Agence::when($agenceId, function ($q, $agenceId) {
@@ -153,7 +153,7 @@ class DashboardAgenceController extends Controller
                     'equipements_en_maintenance' => Maintenance::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->where('statut', 'en_cours')->count(),
                     'equipements_irrecuperables' => Equipement::where('agence_actuelle_id', $aid)->where('statut_global', 'reforme')->count(),
                     'temps_moyen_reparation' => $this->calculateAvgRepairTime($aid),
-                    'garanties_expirant' => Equipement::where('agence_actuelle_id', $aid)->where('date_fin_garantie', '>=', now())->where('date_fin_garantie', '<=', now()->addDays(30))->count(),
+                    'garanties_expirant' => Equipement::where('agence_actuelle_id', $aid)->where('garantie_date_fin', '>=', now())->where('garantie_date_fin', '<=', now()->addDays(30))->count(),
                 ];
 
                 $stats['equipements_par_categorie'] = \App\Models\Categorie::withCount(['equipements' => fn($q) => $q->where('agence_actuelle_id', $aid)])->get(['id', 'nom', 'equipements_count']);
