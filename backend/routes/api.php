@@ -58,11 +58,11 @@ Route::middleware(['auth:sanctum', 'user.active', 'agence.scope'])->group(functi
 
     // Équipements
     Route::get('equipements', [EquipementController::class, 'index'])->withoutMiddleware(['agence.scope']);
-    Route::apiResource('equipements', EquipementController::class)->except(['index']);
-    Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
-    Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
     Route::get('equipements/search/advanced', [EquipementController::class, 'search']);
+    Route::get('equipements/import/template', [EquipementController::class, 'downloadTemplate'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('equipements/import', [EquipementController::class, 'import'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::post('equipements/{id}/qr', [EquipementController::class, 'generateQr'])->middleware('role:super_admin|gestionnaire_stock_general');
+    Route::apiResource('equipements', EquipementController::class)->except(['index']);
 
     // Catégories
     Route::get('categories', [CategorieController::class, 'index']);
