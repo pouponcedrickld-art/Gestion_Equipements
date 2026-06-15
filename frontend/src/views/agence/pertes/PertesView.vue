@@ -17,14 +17,14 @@
         <div class="filters-row">
           <div class="search-box">
             <i class="pi pi-search"></i>
-            <input v-model="search" type="text" placeholder="Rechercher une déclaration...">
+            <input v-model="search" type="text" placeholder="Rechercher une déclaration..." @input="handleFilter">
           </div>
           <div class="select-box">
-            <select v-model="filters.statut">
+            <select v-model="filters.statut" @change="handleFilter">
               <option value="">Tous les statuts</option>
-              <option value="en attente">En attente</option>
-              <option value="validée">Validée</option>
-              <option value="clôturée">Clôturée</option>
+              <option value="declaree">En attente</option>
+              <option value="validee">Validée</option>
+              <option value="cloturee">Clôturée</option>
             </select>
           </div>
         </div>
@@ -51,17 +51,23 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="p in filteredPertes" :key="p.id">
+              <tr v-for="p in pertes" :key="p.id">
                 <td>{{ formatDate(p.date_declaration) }}</td>
                 <td><span class="type-badge" :class="p.type">{{ formatType(p.type) }}</span></td>
                 <td>{{ p.equipement?.nom }} ({{ p.equipement?.reference }})</td>
                 <td>{{ p.agent?.nom }} {{ p.agent?.prenom }}</td>
-                <td><span class="status-badge" :class="p.statut">{{ p.statut }}</span></td>
+                <td><span class="status-badge" :class="p.statut">{{ formatStatut(p.statut) }}</span></td>
                 <td>
                   <div class="actions">
-                    <button v-if="p.statut === 'en attente'" class="validate-btn" @click="validatePerte(p)">Valider</button>
-                    <button v-if="p.statut === 'en attente'" class="edit-btn" @click="openEditModal(p)">Modifier</button>
-                    <button class="delete-btn" @click="deletePerte(p)">Supprimer</button>
+                    <button v-if="p.statut === 'declaree'" class="validate-btn" @click="validatePerte(p)" title="Valider">
+                      <i class="pi pi-check"></i>
+                    </button>
+                    <button v-if="p.statut === 'declaree'" class="edit-btn" @click="openEditModal(p)" title="Modifier">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="delete-btn" @click="deletePerte(p)" title="Supprimer">
+                      <i class="pi pi-trash"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -107,9 +113,9 @@
           <div v-if="isEdit" class="field mb-4">
             <label class="font-bold block mb-2">Statut</label>
             <select v-model="perteForm.statut" class="w-full">
-              <option value="en attente">En attente</option>
-              <option value="validée">Validée</option>
-              <option value="clôturée">Clôturée</option>
+              <option value="declaree">En attente</option>
+              <option value="validee">Validée</option>
+              <option value="cloturee">Clôturée</option>
             </select>
           </div>
           <div class="modal-footer">
@@ -131,6 +137,7 @@ import { useAgentStore } from '@/stores/agentStore.js'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const perteStore = usePerteStore()
 const equipementStore = useEquipementStore()
@@ -149,32 +156,34 @@ const showModal = ref(false)
 const isEdit = ref(false)
 const perteForm = ref({})
 
-const filteredPertes = computed(() => {
-  return pertes.value.filter(p => {
-    const matchesSearch = !search.value || 
-      p.equipement?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
-      p.agent?.nom.toLowerCase().includes(search.value.toLowerCase())
-    const matchesStatut = !filters.value.statut || p.statut === filters.value.statut
-    return matchesSearch && matchesStatut
-  })
-})
+const handleFilter = () => {
+  fetchData()
+}
 
 const fetchData = async () => {
   loading.value = true
-  await Promise.all([
-    perteStore.fetchPertes(),
-    equipementStore.fetchEquipements(),
-    agentStore.fetchAgents()
-  ])
-  pertes.value = perteStore.pertes
-  equipements.value = equipementStore.equipements
-  agents.value = agentStore.agents
-  loading.value = false
+  try {
+    await Promise.all([
+      perteStore.fetchPertes({ 
+        statut: filters.value.statut,
+        search: search.value 
+      }),
+      equipementStore.fetchEquipements(),
+      agentStore.fetchAgents()
+    ])
+    pertes.value = perteStore.pertes
+    equipements.value = equipementStore.equipements
+    agents.value = agentStore.agents
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec du chargement des données' })
+  } finally {
+    loading.value = false
+  }
 }
 
 const openAddModal = () => {
   isEdit.value = false
-  perteForm.value = { type: 'perte', equipement_id: '', agent_id: '', description: '', statut: 'en attente' }
+  perteForm.value = { type: 'perte', equipement_id: '', agent_id: '', description: '', statut: 'declaree' }
   showModal.value = true
 }
 
@@ -196,7 +205,8 @@ const submitPerte = async () => {
     showModal.value = false
     await fetchData()
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'enregistrement', life: 3000 })
+    const errorMsg = err.response?.data?.message || 'Échec de l\'enregistrement'
+    toast.add({ severity: 'error', summary: 'Erreur', detail: errorMsg, life: 3000 })
   } finally {
     submitting.value = false
   }
@@ -204,11 +214,12 @@ const submitPerte = async () => {
 
 const validatePerte = async (perte) => {
   try {
-    await perteStore.updatePerte(perte.id, { ...perte, statut: 'validée' })
+    await perteStore.updatePerte(perte.id, { ...perte, statut: 'validee' })
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Déclaration validée', life: 3000 })
     await fetchData()
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la validation', life: 3000 })
+    const errorMsg = err.response?.data?.message || 'Échec de la validation'
+    toast.add({ severity: 'error', summary: 'Erreur', detail: errorMsg, life: 3000 })
   }
 }
 
@@ -239,6 +250,15 @@ const formatType = (type) => {
   return { perte: 'Perte', vol: 'Vol', casse: 'Casse' }[type] || type
 }
 
+const formatStatut = (statut) => {
+  const map = {
+    'declaree': 'En attente',
+    'validee': 'Validée',
+    'cloturee': 'Clôturée'
+  }
+  return map[statut] || statut
+}
+
 onMounted(fetchData)
 </script>
 
@@ -263,9 +283,9 @@ select { padding-left: 12px; width: 180px; }
 .type-badge.perte { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
 .type-badge.vol { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .type-badge.casse { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.status-badge.en-attente { background: rgba(107, 114, 128, 0.15); color: #94a3b8; }
-.status-badge.validée { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-.status-badge.clôturée { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.status-badge.declaree { background: rgba(107, 114, 128, 0.15); color: #94a3b8; }
+.status-badge.validee { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.status-badge.cloturee { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .actions { display: flex; gap: 8px; }
 .validate-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 .edit-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
