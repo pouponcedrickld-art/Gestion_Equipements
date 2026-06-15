@@ -276,8 +276,11 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tooltip from 'primevue/tooltip'
 
+import { useConfirm } from 'primevue/useconfirm'
+
 const router = useRouter()
 const toast = useToast()
+const confirm = useConfirm()
 const equipementStore = useEquipementStore()
 const categorieStore = useCategorieStore()
 const authStore = useAuthStore()
@@ -338,14 +341,20 @@ const editEquipement = (equip) => router.push(`/equipements/${equip.id}/modifier
 const showQRCode = (equip) => toast.add({ severity: 'info', summary: 'QR Code', detail: `Génération pour ${equip.code_inventaire}` })
 
 const handleDelete = async (equip) => {
-  if (confirm(`Voulez-vous vraiment mettre au rebut l'équipement ${equip.nom} ?`)) {
-    try {
-      await equipementStore.deleteEquipement(equip.id)
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis au rebut' })
-    } catch (err) {
-      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Action impossible' })
+  confirm.require({
+    message: `Voulez-vous vraiment mettre au rebut l'équipement ${equip.nom} ?`,
+    header: 'Confirmation de mise au rebut',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await equipementStore.deleteEquipement(equip.id)
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis au rebut', life: 3000 })
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Action impossible', life: 3000 })
+      }
     }
-  }
+  })
 }
 
 const resetFilters = () => {

@@ -293,6 +293,7 @@ const router = useRouter()
 const toast = useToast()
 const categorieStore = useCategorieStore()
 const authStore = useAuthStore()
+const confirm = useConfirm()
 
 const pageContainer = ref(null)
 const searchTerm = ref('')
@@ -456,13 +457,13 @@ const handleDeleteOrArchive = async (categorie) => {
     return
   }
 
-  const confirmService = useConfirm()
   if (categorie.nombre_equipements > 0) {
     // Archiver car équipements liés
-    confirmService.require({
+    confirm.require({
       message: `Cette catégorie contient ${categorie.nombre_equipements} équipements. Elle ne peut pas être supprimée, mais elle peut être archivée. Voulez-vous l'archiver ?`,
       header: 'Confirmer l\'archivage',
       icon: 'pi pi-info-circle',
+      acceptClass: 'p-button-warning',
       accept: async () => {
         try {
           await categorieStore.updateCategorie(categorie.id, { statut: 'archive' })
@@ -474,22 +475,20 @@ const handleDeleteOrArchive = async (categorie) => {
     })
   } else {
     // Supprimer car pas d'équipements
-    confirmDelete(categorie)
-  }
-}
-
-const confirmDelete = (categorie) => {
-  categorieToDelete.value = categorie
-  showDeleteDialog.value = true
-}
-
-const deleteCategorie = async () => {
-  try {
-    await categorieStore.deleteCategorie(categorieToDelete.value.id)
-    showDeleteDialog.value = false
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie supprimée', life: 3000 })
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer la catégorie', life: 3000 })
+    confirm.require({
+      message: `Êtes-vous sûr de vouloir supprimer la catégorie "${categorie.nom}" ? Cette action est irréversible.`,
+      header: 'Confirmation de suppression',
+      icon: 'pi pi-exclamation-triangle',
+      acceptClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await categorieStore.deleteCategorie(categorie.id)
+          toast.add({ severity: 'success', summary: 'Succès', detail: 'Catégorie supprimée', life: 3000 })
+        } catch (err) {
+          toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer la catégorie', life: 3000 })
+        }
+      }
+    })
   }
 }
 
