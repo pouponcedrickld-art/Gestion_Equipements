@@ -13,6 +13,7 @@ export const usePerteStore = defineStore('perte', {
       this.error = null
       try {
         const response = await perteApi.index(filters)
+        // Laravel pagination support
         this.pertes = response.data?.data || response.data || []
       } catch (error) {
         this.error = error.response?.data?.message || 'Erreur lors du chargement des pertes'

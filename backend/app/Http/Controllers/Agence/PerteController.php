@@ -47,11 +47,16 @@ class PerteController extends Controller
                 'type' => $request->type,
                 'date_declaration' => now(),
                 'description' => $request->description,
-                'statut' => 'en attente',
+                'statut' => 'declaree',
             ]);
 
             $equipement = Equipement::findOrFail($request->equipement_id);
-            $equipement->update(['statut_global' => 'perdu']);
+            // On met à jour l'état de l'équipement
+            $equipement->update([
+                'etat' => 'perdu',
+                'statut_global' => $request->type === 'casse' ? $equipement->statut_global : 'perdu'
+            ]);
+            
             $equipement->createMouvement(
                 'perte',
                 "Déclaration de {$request->type} par agent ID: {$request->agent_id}. Description: {$request->description}",
@@ -70,7 +75,7 @@ class PerteController extends Controller
     public function update(Request $request, Perte $perte)
     {
         $request->validate([
-            'statut' => 'required|in:en attente,validé,clôturé',
+            'statut' => 'required|in:declaree,validee,cloturee',
             'description' => 'nullable|string',
         ]);
 
@@ -79,8 +84,8 @@ class PerteController extends Controller
         $perte->update([
             'statut' => $request->statut,
             'description' => $request->description ?? $perte->description,
-            'valide_par' => $request->statut !== 'en attente' ? $user->id : $perte->valide_par,
-            'date_validation' => $request->statut !== 'en attente' ? now() : $perte->date_validation,
+            'valide_par' => $request->statut !== 'declaree' ? $user->id : $perte->valide_par,
+            'date_validation' => $request->statut !== 'declaree' ? now() : $perte->date_validation,
         ]);
 
         return response()->json(['message' => 'Perte mise à jour avec succès']);
