@@ -280,10 +280,14 @@ class TransfertController extends Controller
             $equipement = $demande->equipement;
 
             DB::transaction(function () use ($demande, $equipement, $user) {
+                // Get Siège Social (Agence Générale) if agence_actuelle_id is null
+                $agenceGenerale = Agence::where('type', 'generale')->first();
+                $agenceSourceId = $equipement->agence_actuelle_id ?? $agenceGenerale?->id;
+                
                 Transfert::create([
                     'demande_materiel_id' => $demande->id,
                     'equipement_id' => $equipement->id,
-                    'agence_source_id' => $equipement->agence_actuelle_id,
+                    'agence_source_id' => $agenceSourceId,
                     'agence_destination_id' => $demande->agence_id,
                     'type_transfert' => 'livraison_generale',
                     'statut' => 'approuve',
