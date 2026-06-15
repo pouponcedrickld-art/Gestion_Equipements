@@ -136,6 +136,7 @@ const perteStore = usePerteStore()
 const equipementStore = useEquipementStore()
 const agentStore = useAgentStore()
 const toast = useToast()
+const confirm = useConfirm()
 
 const pertes = ref([])
 const equipements = ref([])
@@ -212,15 +213,21 @@ const validatePerte = async (perte) => {
 }
 
 const deletePerte = async (perte) => {
-  if (confirm('Supprimer cette déclaration ?')) {
-    try {
-      await perteStore.deletePerte(perte.id)
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Déclaration supprimée', life: 3000 })
-      await fetchData()
-    } catch (err) {
-      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
+  confirm.require({
+    message: 'Voulez-vous vraiment supprimer cette déclaration ?',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await perteStore.deletePerte(perte.id)
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Déclaration supprimée', life: 3000 })
+        await fetchData()
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
+      }
     }
-  }
+  })
 }
 
 const formatDate = (date) => {

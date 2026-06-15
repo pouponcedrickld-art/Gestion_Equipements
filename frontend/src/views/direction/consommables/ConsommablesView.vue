@@ -355,8 +355,11 @@ import Dialog from 'primevue/dialog'
 import RadioButton from 'primevue/radiobutton'
 import Textarea from 'primevue/textarea'
 
+import { useConfirm } from 'primevue/useconfirm'
+
 const toast = useToast()
 const router = useRouter()
+const confirm = useConfirm()
 const consommableStore = useConsommableStore()
 const equipementStore = useEquipementStore()
 const authStore = useAuthStore()
@@ -493,11 +496,21 @@ const ajusterStock = async () => {
 }
 
 const confirmDelete = async (item) => {
-  if (confirm(`Voulez-vous vraiment supprimer le consommable ${item.nom} ?`)) {
-    await consommableStore.deleteConsommable(item.id)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Consommable supprimé', life: 3000 })
-    await consommableStore.fetchStatistiques()
-  }
+  confirm.require({
+    message: `Voulez-vous vraiment supprimer le consommable ${item.nom} ?`,
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await consommableStore.deleteConsommable(item.id)
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Consommable supprimé', life: 3000 })
+        await consommableStore.fetchStatistiques()
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
+      }
+    }
+  })
 }
 
 const cancelEdit = () => {
