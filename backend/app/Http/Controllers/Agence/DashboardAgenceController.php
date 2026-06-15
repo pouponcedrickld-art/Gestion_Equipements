@@ -56,7 +56,7 @@ class DashboardAgenceController extends Controller
                     })->where('statut', 'planifiee')->count(),
                     'agences_count' => $agenceId ? 1 : Agence::where('type', 'sous_agence')->count(),
                     'agents_actifs' => \App\Models\Agent::when($agenceId, function ($q, $agenceId) {
-                        $q->whereHas('user', fn($u) => $u->where('agence_id', $agenceId));
+                        $q->whereHas('user', fn($u) => $u->where('users.agence_id', $agenceId));
                     })->where('statut', 'actif')->count(),
                     
                     // New indicators
@@ -96,7 +96,7 @@ class DashboardAgenceController extends Controller
                         $q->where('agence_source_id', $agenceId)->orWhere('agence_destination_id', $agenceId);
                     })->where('created_at', '>=', now()->subDays(7))->count(),
                     'affectations' => Affectation::when($agenceId, function ($q, $agenceId) {
-                        $q->where('agence_id', $agenceId);
+                        $q->whereHas('agent.user', fn($qu) => $qu->where('agence_id', $agenceId));
                     })->where('created_at', '>=', now()->subDays(7))->count(),
                     'pannes' => Panne::when($agenceId, function ($q, $agenceId) {
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
@@ -144,7 +144,7 @@ class DashboardAgenceController extends Controller
                         })->whereIn('statut', ['demande', 'approuve', 'expedie'])->count(),
                     'demandes_en_attente' => DemandeMateriel::where('agence_id', $aid)->where('statut', 'en attente')->count(),
                     'pannes_a_traiter' => Panne::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->where('statut', 'declaree')->count(),
-                    'agents_count' => \App\Models\Agent::whereHas('user', fn($q) => $q->where('agence_id', $aid))->count(),
+                    'agents_count' => \App\Models\Agent::whereHas('user', fn($q) => $q->where('users.agence_id', $aid))->count(),
                     
                     // New indicators
                     'nombre_pannes' => Panne::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->count(),

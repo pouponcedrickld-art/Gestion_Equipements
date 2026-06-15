@@ -28,14 +28,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/2fa/verify', [AuthController::class, 'verify2FA']);
 
 // ROUTES PROTÉGÉES (Auth simple)
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'user.active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
 // ROUTES PROTÉGÉES (Auth + Scope Agence)
-Route::middleware(['auth:sanctum', 'agence.scope'])->group(function () {
+Route::middleware(['auth:sanctum', 'user.active', 'agence.scope'])->group(function () {
     // Dashboard (Cedric)
     Route::get('/dashboard', [DashboardAgenceController::class, 'index']);
 

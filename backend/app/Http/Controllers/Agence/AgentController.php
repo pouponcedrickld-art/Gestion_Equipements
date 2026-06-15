@@ -65,6 +65,20 @@ class AgentController extends Controller
         ]);
 
         $agent->update($r->all());
+
+        // Synchronisation avec l'utilisateur lié
+        if ($r->has('statut') && $agent->user) {
+            $isActif = $r->statut === 'actif';
+            if ($agent->user->actif !== $isActif) {
+                $agent->user->update(['actif' => $isActif]);
+                
+                // Si on désactive l'utilisateur via l'agent, on le déconnecte
+                if (!$isActif) {
+                    $agent->user->tokens()->delete();
+                }
+            }
+        }
+
         return $agent->load('user');
     }
 

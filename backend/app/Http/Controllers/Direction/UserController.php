@@ -47,6 +47,8 @@ class UserController extends Controller
                 $agent = Agent::find($r->agent_id);
                 if ($agent) {
                     $agent->user_id = $u->id;
+                    // Synchroniser le statut de l'agent avec celui de l'utilisateur
+                    $agent->statut = $u->actif ? 'actif' : 'inactif';
                     $agent->save();
                 }
             }
@@ -83,6 +85,19 @@ class UserController extends Controller
             $data['password'] = Hash::make($r->password);
         }
         $user->update($data);
+
+        // Répercussion en chaîne sur l'agent
+        if ($r->has('actif')) {
+            if ($user->agent) {
+                $user->agent->update(['statut' => $user->actif ? 'actif' : 'inactif']);
+            }
+            
+            // Si désactivé, déconnecter
+            if (!$user->actif) {
+                $user->tokens()->delete();
+            }
+        }
+
         if ($r->filled('role')) {
             $user->syncRoles([$r->role]);
         }
@@ -100,7 +115,25 @@ class UserController extends Controller
 
     public function toggleActif(User $user)
     {
-        $user->update(['actif' => !$user->actif]);
-        return $user->load('agence');
+        $newStatus = !$user->actif;
+        $user->update(['actif' => $newStatus]);
+
+        // Répercussion en chaîne :
+        if (!$newStatus) {
+            // 1. Déconnecter l'utilisateur partout (révoquer les tokens)
+            $user->tokens()->delete();
+
+            // 2. Si l'utilisateur est lié à un agent, désactiver l'agent
+            if ($user->agent) {
+                $user->agent->update(['statut' => 'inactif']);
+            }
+        } else {
+            // 3. Si on réactive l'utilisateur, on réactive aussi l'agent
+            if ($user->agent) {
+                $user->agent->update(['statut' => 'actif']);
+            }
+        }
+
+        return $user->load(['agence', 'agent']);
     }
 }
