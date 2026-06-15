@@ -122,12 +122,39 @@ class EquipementController extends Controller
         try {
             $user = $request->user();
             
-            // Vérifier la permission
-            if (!$user->can('equipements.create')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vous n\'avez pas la permission de créer des équipements.'
-                ], 403);
+            try {
+                $validated = $request->validate([
+                    'nom' => 'required|string|max:255',
+                    'reference' => 'nullable|string|max:255',
+                    'numero_serie' => 'nullable|string|max:255',
+                    'imei' => 'nullable|string|max:255',
+                    'code_inventaire' => 'nullable|string|max:255',
+                    'marque' => 'nullable|string|max:255',
+                    'modele' => 'nullable|string|max:255',
+                    'categorie_id' => 'required|exists:categories,id',
+                    'fournisseur' => 'nullable|string|max:255',
+                    'date_acquisition' => 'nullable|date',
+                    'prix_achat' => 'nullable|numeric|min:0',
+                    'garantie_date_fin' => 'nullable|date',
+                    'etat' => 'required|string',
+                    'localisation' => 'nullable|string|max:255',
+                    'responsable_id' => 'nullable|exists:users,id',
+                    'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                    'specifications' => 'nullable|string',
+                    'quantite' => 'nullable|integer|min:1',
+                    'quantite_a_creer' => 'nullable|integer|min:1|max:100',
+                    'mode_enregistrement' => 'nullable|string|in:individuel,lot',
+                ], [
+                    'nom.required' => 'Le nom de l\'équipement est obligatoire.',
+                    'categorie_id.required' => 'Vous devez sélectionner une catégorie.',
+                    'categorie_id.exists' => 'La catégorie sélectionnée est invalide.',
+                    'etat.required' => 'L\'état de l\'équipement est obligatoire.',
+                    'photo.image' => 'Le fichier doit être une image.',
+                    'photo.max' => 'La photo ne doit pas dépasser 2Mo.',
+                ]);
+            } catch (ValidationException $e) {
+                \Log::error('STORE VALIDATION ERROR:', ['errors' => $e->errors(), 'request' => $request->all()]);
+                throw $e;
             }
             
             $validated = $request->validate([

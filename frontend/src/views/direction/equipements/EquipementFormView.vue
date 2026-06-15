@@ -168,6 +168,7 @@
                     <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
                   </div>
                 </div>
+<<<<<<< HEAD
                 <div class="col-12 md:col-4">
                   <div class="field">
                     <label class="font-bold text-sm">Référence</label>
@@ -196,6 +197,8 @@
                     <small class="p-error" v-if="errors.imei">{{ errors.imei[0] }}</small>
                   </div>
                 </div>
+=======
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
               </div>
             </div>
 
@@ -317,7 +320,12 @@ const etatOptions = [
   { label: 'Perdu', value: 'perdu' }
 ]
 
+<<<<<<< HEAD
 const categories = computed(() => categorieStore.categoriesList || categorieStore.categories || [])
+=======
+const categories = computed(() => categorieStore.categoriesList)
+const users = computed(() => userStore.users)
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]
@@ -482,9 +490,15 @@ onMounted(async () => {
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
+<<<<<<< HEAD
   letter-spacing: 0.06em;
   margin-bottom: 0.85rem;
 
+=======
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+ 
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
   i {
     color: var(--primary-hover);
     font-size: 1rem;
@@ -500,12 +514,21 @@ onMounted(async () => {
   justify-content: center;
   gap: 0.75rem;
   cursor: pointer;
+<<<<<<< HEAD
   color: #94a3b8;
   border: 2px dashed #e2e8f0;
   border-radius: 10px;
   background: #f8fafc;
   transition: border-color 0.2s;
 
+=======
+  color: var(--text-muted);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  transition: all 0.2s;
+ 
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
   &:hover {
     border-color: var(--primary);
     color: var(--text-dark);
@@ -565,6 +588,7 @@ onMounted(async () => {
     box-shadow: var(--shadow-sm);
   }
 }
+<<<<<<< HEAD
 
 /* ── Grid tight ── */
 .grid-tight {
@@ -573,12 +597,46 @@ onMounted(async () => {
   > [class*="col"] {
     padding: 0.4rem;
   }
+=======
+ 
+/* ── Badge catégorie dans specs ── */
+.category-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--secondary-light);
+  color: var(--text-dark);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-left: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+ 
+/* ── Spécifications ── */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+ 
+.specs-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: 600;
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
 }
 
 /* ── Footer ── */
 .form-footer {
   display: flex;
   justify-content: flex-end;
+<<<<<<< HEAD
   gap: 0.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid #f1f5f9;
@@ -604,6 +662,11 @@ onMounted(async () => {
 
 .hidden {
   display: none;
+=======
+  gap: 1rem;
+  padding: 1.5rem 0;
+  margin-top: 1rem;
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
 }
 
 /* ── Responsive ── */
@@ -616,4 +679,16 @@ onMounted(async () => {
     position: static;
   }
 }
+<<<<<<< HEAD
+=======
+
+@media (max-width: 640px) {
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+  .specs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+>>>>>>> 6c91a2101549dfea911133f52ab1e5a37111f745
 </style>
