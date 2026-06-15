@@ -33,6 +33,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        // Force update agence_id in case user already existed without it
+        if ($chefLome->agence_id !== $agenceLome?->id) {
+            $chefLome->agence_id = $agenceLome?->id;
+            $chefLome->save();
+        }
         $chefLome->syncRoles(['chef_agence']);
 
         // Gestionnaire Stock Lomé
@@ -45,6 +50,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        // Force update agence_id in case user already existed without it
+        if ($gestionnaireLome->agence_id !== $agenceLome?->id) {
+            $gestionnaireLome->agence_id = $agenceLome?->id;
+            $gestionnaireLome->save();
+        }
         $gestionnaireLome->syncRoles(['gestionnaire_stock']);
 
         // Technicien
@@ -57,6 +67,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        // Force update agence_id in case user already existed without it
+        if ($technicien->agence_id !== $agenceLome?->id) {
+            $technicien->agence_id = $agenceLome?->id;
+            $technicien->save();
+        }
         $technicien->syncRoles(['technicien_maintenance']);
         
         // Créer Agent lié au Technicien
@@ -83,6 +98,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        // Force update agence_id in case user already existed without it
+        if ($agent->agence_id !== $agenceLome?->id) {
+            $agent->agence_id = $agenceLome?->id;
+            $agent->save();
+        }
         $agent->syncRoles(['agent']);
         
         // Créer Agent lié à l'Agent Terrain
