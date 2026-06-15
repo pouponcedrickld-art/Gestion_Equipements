@@ -318,6 +318,70 @@ export const useTransfertStore = defineStore('transfert', () => {
   }
 
   /**
+   * Traiter la réception d'un transfert (décision de l'agence destination).
+   *
+   * Envoie une requête PATCH à l'API avec la décision de l'agence :
+   *   - statut 'accepte' → le backend confirme la réception et incrémente le stock.
+   *   - statut 'refuse'  → le backend enregistre le motif et marque l'équipement en retour.
+   *
+   * La liste locale est mise à jour de façon réactive après la réponse serveur.
+   *
+   * @param {number} id      - Identifiant du transfert à traiter
+   * @param {{ statut: 'accepte'|'refuse', motif_refus?: string }} payload
+   *                         - Décision + motif optionnel (obligatoire si refuse)
+   * @returns {Promise<Object>} Le transfert mis à jour renvoyé par l'API
+   *
+   * @example
+   * // Accepter un transfert
+   * await transfertStore.traiterReception(42, { statut: 'accepte' })
+   *
+   * // Refuser un transfert avec un motif
+   * await transfertStore.traiterReception(42, { statut: 'refuse', motif_refus: 'Matériel endommagé' })
+   */
+  async function traiterReception(id, payload) {
+    loading.value = true
+    error.value = null
+
+    try {
+      // Appel PATCH vers /api/transferts/{id}/traiter-reception
+      const response = await transfertApi.traiterReception(id, payload)
+
+      if (response.data.success) {
+        const updatedTransfert = response.data.data
+
+        // ── Mise à jour réactive de la liste locale ──────────────────────────
+        // On remplace l'entrée concernée pour que tous les composants abonnés
+        // au store se mettent à jour automatiquement sans re-fetch complet.
+        const index = transferts.value.findIndex(t => t.id === id)
+        if (index !== -1) {
+          transferts.value[index] = updatedTransfert
+        }
+
+        // Si le composant affichait le détail de ce transfert, on le met aussi à jour
+        if (currentTransfert.value && currentTransfert.value.id === id) {
+          currentTransfert.value = updatedTransfert
+        }
+
+        return updatedTransfert
+      } else {
+        throw new Error(response.data.message || 'Erreur lors du traitement de la réception')
+      }
+    } catch (err) {
+      // On remonte les erreurs de validation (422) avec leur message détaillé
+      const message =
+        err.response?.data?.errors
+          ? Object.values(err.response.data.errors).flat().join(' ')
+          : err.response?.data?.message || err.message || 'Erreur réseau'
+
+      error.value = message
+      console.error('Erreur traiterReception:', err)
+      throw err // Propagation pour que le composant Vue puisse afficher le toast d'erreur
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Charger les transferts par statut
    */
   async function fetchByStatut(statut) {
@@ -528,6 +592,7 @@ export const useTransfertStore = defineStore('transfert', () => {
     refuserTransfert,
     expedierTransfert,
     recevoirTransfert,
+    traiterReception,   // ← Décision Accepter / Refuser (agence destination)
     fetchByStatut,
     fetchTransfertsEntrants,
     fetchTransfertsSortants,

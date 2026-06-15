@@ -14,3 +14,8 @@ Schedule::job(new SendAlertesGarantieJob())
     ->name('send-alertes-garantie')
     ->withoutOverlapping();
 
+Schedule::command('notifications:check-expiring-warranties')
+    ->daily()
+    ->name('check-expiring-warranties')
+    ->withoutOverlapping();
+

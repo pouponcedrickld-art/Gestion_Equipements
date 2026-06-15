@@ -151,7 +151,7 @@ class Transfert extends Model
             ]);
             
             $this->equipement->createMouvement(
-                'transfert_recu',
+                'transfert',
                 "Réception transfert depuis " . ($this->agenceSource->nom ?? 'Origine'),
                 $userId
             );

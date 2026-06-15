@@ -87,6 +87,22 @@ class PanneWorkflowService
             // Event + notification (si listeners existent)
             event(new PanneDeclaree($panne, $actor));
 
+            // Send notification
+            $recipients = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock', 'technicien_maintenance']))
+                ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
+                ->get();
+
+            foreach ($recipients as $recipient) {
+                \App\Services\NotificationService::sendNotification(
+                    user: $recipient,
+                    type: 'panne_declaree',
+                    title: 'Nouvelle panne déclarée',
+                    message: "Une nouvelle panne a été déclarée pour l'équipement {$equipement->nom} ({$equipement->reference}).",
+                    data: ['panne_id' => $panne->id, 'equipement_id' => $equipement->id],
+                    channels: ['in_app', 'email']
+                );
+            }
+
             return $panne;
         });
     }
@@ -131,7 +147,26 @@ class PanneWorkflowService
     {
         // On force un statut final : resolue ou irrecuperable ne couvre pas la clôture administrative.
         // Convention: cloturee.
-        return $this->transition($panne, $actor, 'cloturee', $payload);
+        $panne = $this->transition($panne, $actor, 'cloturee', $payload);
+
+        // Send panne resolue notification
+        $equipement = $panne->equipement()->firstOrFail();
+        $recipients = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock']))
+            ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            \App\Services\NotificationService::sendNotification(
+                user: $recipient,
+                type: 'panne_resolue',
+                title: 'Panne résolue',
+                message: "La panne sur l'équipement {$equipement->nom} ({$equipement->reference}) a été résolue.",
+                data: ['panne_id' => $panne->id, 'equipement_id' => $equipement->id],
+                channels: ['in_app', 'email']
+            );
+        }
+
+        return $panne;
     }
 
 
@@ -243,4 +278,3 @@ class PanneWorkflowService
         ]);
     }
 }
-

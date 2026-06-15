@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Equipement;
 use App\Models\Maintenance;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MaintenanceWorkflowService
@@ -25,7 +27,44 @@ class MaintenanceWorkflowService
             $data['type_maintenance'] = $data['type_maintenance'] ?? 'preventive';
             $data['statut'] = $data['statut'] ?? 'planifiee';
 
-            return Maintenance::create($data);
+            $maintenance = Maintenance::create($data);
+
+            // Send notification
+            $this->sendMaintenanceCreatedNotification($maintenance);
+
+            return $maintenance;
+        });
+    }
+
+    /**
+     * Planifier une maintenance corrective (liée à une panne)
+     *
+     * @param array $data Données de la maintenance
+     * @return Maintenance
+     * @throws \Exception
+     */
+    public function planifierCorrective(array $data): Maintenance
+    {
+        return DB::transaction(function () use ($data) {
+            // Vérifier les doublons: même équipement et même date prévue
+            $this->checkForDuplicate($data['equipement_id'], $data['date_prevue']);
+
+            // S'assurer que le type est correctif et le statut par défaut est "planifiee"
+            $data['type_maintenance'] = 'corrective';
+            $data['statut'] = $data['statut'] ?? 'planifiee';
+
+            $maintenance = Maintenance::create($data);
+
+            // Si une panne est liée, la passer en en_maintenance
+            if (isset($data['panne_id'])) {
+                $panne = \App\Models\Panne::findOrFail($data['panne_id']);
+                $panne->update(['statut' => 'en_maintenance']);
+            }
+
+            // Send notification
+            $this->sendMaintenanceCreatedNotification($maintenance);
+
+            return $maintenance;
         });
     }
 
@@ -113,6 +152,11 @@ class MaintenanceWorkflowService
                 ...$data,
             ]);
 
+            // Mettre à jour le statut de l'équipement
+            $equipement = Equipement::findOrFail($maintenance->equipement_id);
+            $currentUser = Auth::user();
+            $equipement->changerStatut('en_maintenance', $currentUser->id, "Démarrage de maintenance #{$maintenance->id}");
+
             return $maintenance;
         });
     }
@@ -133,6 +177,25 @@ class MaintenanceWorkflowService
                 'date_fin' => now(),
                 ...$data,
             ]);
+
+            // Mettre à jour le statut de l'équipement
+            $equipement = Equipement::findOrFail($maintenance->equipement_id);
+            $currentUser = Auth::user();
+            $equipement->changerStatut('en_service', $currentUser->id, "Maintenance #{$maintenance->id} terminée");
+
+            // Si une panne est liée, la résoudre
+            if ($maintenance->panne_id) {
+                $panne = \App\Models\Panne::findOrFail($maintenance->panne_id);
+                $panne->update([
+                    'statut' => 'resolue',
+                    'date_resolution' => now(),
+                    'action_realisee' => $data['action_realisee'] ?? $panne->action_realisee,
+                    'cout_reparation' => $data['cout'] ?? $panne->cout_reparation,
+                ]);
+            }
+
+            // Send maintenance completed notification
+            $this->sendMaintenanceCompletedNotification($maintenance);
 
             return $maintenance;
         });
@@ -173,5 +236,53 @@ class MaintenanceWorkflowService
     {
         $maintenance = Maintenance::findOrFail($maintenanceId);
         $maintenance->delete();
+    }
+
+    /**
+     * Send notification when maintenance is created
+     */
+    private function sendMaintenanceCreatedNotification(Maintenance $maintenance): void
+    {
+        $maintenance->load('equipement');
+        $equipement = $maintenance->equipement;
+
+        $recipients = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock', 'technicien_maintenance']))
+            ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            \App\Services\NotificationService::sendNotification(
+                user: $recipient,
+                type: 'maintenance_programmee',
+                title: 'Nouvelle maintenance programmée',
+                message: "Une nouvelle {$maintenance->type_maintenance} a été programmée pour l'équipement {$equipement->nom} ({$equipement->reference}) le {$maintenance->date_prevue}.",
+                data: ['maintenance_id' => $maintenance->id, 'equipement_id' => $equipement->id],
+                channels: ['in_app', 'email']
+            );
+        }
+    }
+
+    /**
+     * Send notification when maintenance is completed
+     */
+    private function sendMaintenanceCompletedNotification(Maintenance $maintenance): void
+    {
+        $maintenance->load('equipement');
+        $equipement = $maintenance->equipement;
+
+        $recipients = \App\Models\User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock']))
+            ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            \App\Services\NotificationService::sendNotification(
+                user: $recipient,
+                type: 'maintenance_terminee',
+                title: 'Maintenance terminée',
+                message: "La {$maintenance->type_maintenance} pour l'équipement {$equipement->nom} ({$equipement->reference}) a été terminée.",
+                data: ['maintenance_id' => $maintenance->id, 'equipement_id' => $equipement->id],
+                channels: ['in_app', 'email']
+            );
+        }
     }
 }

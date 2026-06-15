@@ -14,6 +14,13 @@ export default {
     expedier: (id) => api.post(`/transferts/${id}/expedier`),
     recevoir: (id) => api.post(`/transferts/${id}/recevoir`),
 
+    /**
+     * Traiter la réception côté agence destination.
+     * @param {number} id  - ID du transfert
+     * @param {{ statut: 'accepte'|'refuse', motif_refus?: string }} payload
+     */
+    traiterReception: (id, payload) => api.patch(`/transferts/${id}/traiter-reception`, payload),
+
     // Filtres par statut
     getByStatut: (statut, params = {}) => 
         api.get('/transferts', { params: { statut, ...params } }),

@@ -176,7 +176,7 @@ const transfertsSortants = computed(() => {
 
   return list.filter(t => {
     // 1. L'agence courante doit être la source
-    const isSource = t.agence_source_id === authStore.userAgence
+    const isSource = t.agence_source_id == authStore.userAgence
     
     // 2. Doit être un retour vers le Siège
     const isRetour = t.type_transfert === 'retour_generale'

@@ -6,6 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Services\RapportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Exports\EquipementsExport;
+use App\Exports\PannesExport;
+use App\Exports\MaintenancesExport;
+use App\Exports\AffectationsExport;
+use App\Exports\MouvementsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RapportGlobalController extends Controller
 {
@@ -64,17 +70,25 @@ class RapportGlobalController extends Controller
     }
 
     /**
-     * Exportation des rapports
+     * Exportation Excel
      */
-    public function export(Request $request, $type): JsonResponse
+    public function export(Request $request, $type)
     {
-        $filters = $request->only(['agence_id', 'categorie_id', 'statut']);
-        $data = $this->rapportService->getEquipementsReport($filters);
+        $filters = $request->only(['agence_id', 'categorie_id', 'statut', 'type_maintenance', 'date_debut', 'date_fin']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-            'type' => $type
-        ]);
+        switch ($type) {
+            case 'inventaire':
+                return Excel::download(new EquipementsExport($filters), 'inventaire.xlsx');
+            case 'pannes':
+                return Excel::download(new PannesExport($filters), 'pannes.xlsx');
+            case 'maintenances':
+                return Excel::download(new MaintenancesExport($filters), 'maintenances.xlsx');
+            case 'affectations':
+                return Excel::download(new AffectationsExport($filters), 'affectations.xlsx');
+            case 'mouvements':
+                return Excel::download(new MouvementsExport($filters), 'mouvements.xlsx');
+            default:
+                return response()->json(['error' => 'Type de rapport invalide'], 400);
+        }
     }
 }

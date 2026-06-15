@@ -106,7 +106,7 @@ export function useMaintenance() {
 
   /**
    * Filtre les maintenances par type
-   * @param {string} type - Type de maintenance ('préventif', 'correctif', ou 'all')
+   * @param {string} type - Type de maintenance ('preventive', 'corrective', ou 'all')
    * @returns {Array}
    */
   function filterByType(type) {
@@ -115,6 +115,68 @@ export function useMaintenance() {
     }
     
     return store.maintenances.filter(m => m.type_maintenance === type)
+  }
+
+  /**
+   * Met à jour une maintenance
+   * @param {number} id - ID de la maintenance
+   * @param {Object} data - Données à mettre à jour
+   * @returns {Promise<Object>}
+   */
+  async function updateMaintenance(id, data) {
+    try {
+      const maintenance = await store.updateMaintenance(id, data)
+      return maintenance
+    } catch (err) {
+      console.error('Error updating maintenance:', err)
+      throw new Error(err.message || 'Impossible de mettre à jour la maintenance.')
+    }
+  }
+
+  /**
+   * Supprime une maintenance
+   * @param {number} id - ID de la maintenance
+   * @returns {Promise<void>}
+   */
+  async function deleteMaintenance(id) {
+    try {
+      await store.deleteMaintenance(id)
+    } catch (err) {
+      console.error('Error deleting maintenance:', err)
+      throw new Error(err.message || 'Impossible de supprimer la maintenance.')
+    }
+  }
+
+  /**
+   * Démarre une maintenance
+   * @param {number} id - ID de la maintenance
+   * @param {Object} data - Données additionnelles (technicien_id, diagnostic)
+   * @returns {Promise<Object>}
+   */
+  async function startMaintenance(id, data = {}) {
+    try {
+      const maintenance = await store.startMaintenance(id, data)
+      return maintenance
+    } catch (err) {
+      console.error('Error starting maintenance:', err)
+      throw new Error(err.message || 'Impossible de démarrer la maintenance.')
+    }
+  }
+
+  /**
+   * Termine une maintenance
+   * @param {number} id - ID de la maintenance
+   * @param {Object} data - Données additionnelles (diagnostic, cout, observations, action_realisee)
+   * @returns {Promise<Object>}
+   */
+  async function completeMaintenance(id, data = {}) {
+    try {
+      const maintenance = await store.completeMaintenance(id, data)
+      return maintenance
+    } catch (err) {
+      console.error('Error completing maintenance:', err)
+      throw new Error(err.message || 'Impossible de terminer la maintenance.')
+    }
   }
 
   /**
@@ -222,6 +284,10 @@ export function useMaintenance() {
     loadMaintenances,
     loadMaintenanceDetails,
     createMaintenance,
+    updateMaintenance,
+    deleteMaintenance,
+    startMaintenance,
+    completeMaintenance,
     
     // Utilitaires de filtrage
     getMaintenancesForDay,

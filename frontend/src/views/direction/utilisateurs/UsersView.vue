@@ -142,8 +142,56 @@ const getRoleLabel = (role) => {
 }
 
 const editUser = (u) => { editingUser.value = { ...u, role: u.roles?.[0]?.name }; showForm.value = true }
-const toggleUser = async (u) => { await userStore.toggleActif(u.id) }
-const deleteUser = async (id) => { if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return; await userStore.deleteUser(id) }
+
+const toggleUser = async (u) => {
+  const isActivating = !u.actif
+  
+  confirm.require({
+    message: `Voulez-vous vraiment ${isActivating ? 'activer' : 'désactiver'} le compte de ${u.name} ?`,
+    header: 'Confirmation de statut',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: isActivating ? 'Activer' : 'Désactiver',
+    rejectLabel: 'Annuler',
+    acceptClass: isActivating ? 'p-button-success' : 'p-button-danger',
+    accept: async () => {
+      try {
+        await userStore.toggleActif(u.id)
+        toast.add({ 
+          severity: 'success', 
+          summary: 'Succès', 
+          detail: `Compte ${isActivating ? 'activé' : 'désactivé'} avec succès`, 
+          life: 3000 
+        })
+      } catch (err) {
+        toast.add({ 
+          severity: 'error', 
+          summary: 'Erreur', 
+          detail: 'Une erreur est survenue lors de la modification du statut', 
+          life: 3000 
+        })
+      }
+    }
+  })
+}
+
+const deleteUser = async (id) => {
+  confirm.require({
+    message: 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-trash',
+    acceptLabel: 'Supprimer',
+    rejectLabel: 'Annuler',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await userStore.deleteUser(id)
+        toast.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur supprimé', life: 3000 })
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer cet utilisateur', life: 3000 })
+      }
+    }
+  })
+}
 const onSaved = () => { showForm.value = false; editingUser.value = null; userStore.fetchUsers() }
 </script>
 

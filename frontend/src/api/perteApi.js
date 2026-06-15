@@ -1,7 +1,7 @@
 import api from './axiosConfig.js'
 
 export default {
-    index: () => api.get('/pertes'),
+    index: (params = {}) => api.get('/pertes', { params }),
     show: (id) => api.get(`/pertes/${id}`),
     store: (data) => api.post('/pertes', data),
     update: (id, data) => api.put(`/pertes/${id}`, data),

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class EquipementController extends Controller
@@ -30,14 +31,17 @@ class EquipementController extends Controller
             ]);
 
             // Scope selon rôle
-            if ($user->hasRole('agent')) {
-                // Agent ne voit que les équipements affectés à lui
-                $query->whereHas('affectations', function ($q) use ($user) {
-                    $q->where('agent_id', $user->id)->where('statut', 'active');
-                });
-            } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
-                // Chef d'agence, gestionnaire local, technicien: voit équipements de son agence
-                $query->byAgence($user->agence_id);
+            // Si 'all_equipements' est true (ex: pour le catalogue de demande de matériel), on ignore la restriction d'agence
+            if (!$request->boolean('all_equipements')) {
+                if ($user->hasRole('agent')) {
+                    // Agent ne voit que les équipements affectés à lui
+                    $query->whereHas('affectations', function ($q) use ($user) {
+                        $q->where('agent_id', $user->id)->where('statut', 'active');
+                    });
+                } elseif (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+                    // Chef d'agence, gestionnaire local, technicien: voit équipements de son agence
+                    $query->byAgence($user->agence_id);
+                }
             }
 
             if ($request->filled('search')) {
@@ -156,6 +160,8 @@ class EquipementController extends Controller
                 throw $e;
             }
 
+            \Log::info('STORE - Données validées:', $validated);
+
             // Validation manuelle de l'unicité pour les champs non vides
             $uniqueFields = ['reference', 'numero_serie', 'imei', 'code_inventaire'];
             foreach ($uniqueFields as $field) {
@@ -183,7 +189,9 @@ class EquipementController extends Controller
             $lotReference = ($quantite > 1 && $modeEnregistrement === 'individuel') ? $this->generateUniqueLotReference() : null;
 
             if ($user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
-                $agenceProprietaireId = $request->input('agence_proprietaire_id') ?? (Agence::where('type', 'generale')->first()?->id);
+                // Cherche d'abord l'agence générale ou la première agence disponible
+                $agenceGenerale = Agence::where('type', 'generale')->first();
+                $agenceProprietaireId = $request->input('agence_proprietaire_id') ?? ($agenceGenerale?->id ?? Agence::first()?->id);
                 $agenceActuelleId = $request->input('agence_actuelle_id') ?? $agenceProprietaireId;
             } else {
                 $agenceProprietaireId = $user->agence_id;
@@ -454,6 +462,153 @@ class EquipementController extends Controller
                 'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Recherche avancée d'équipements
+     */
+    public function search(Request $request): JsonResponse
+    {
+        try {
+            $query = Equipement::query()->with([
+                'categorie:id,nom',
+                'agenceProprietaire:id,nom',
+                'agenceActuelle:id,nom',
+                'responsable:id,name'
+            ]);
+
+            if ($request->filled('search')) {
+                $query->search($request->search);
+            }
+            if ($request->filled('qr_search')) {
+                $query->where('qr_code', 'like', '%' . $request->qr_search . '%');
+            }
+            if ($request->filled('categorie_id')) {
+                $query->byCategorie($request->categorie_id);
+            }
+            if ($request->filled('agence_id')) {
+                $query->byAgence($request->agence_id);
+            }
+            if ($request->filled('etat')) {
+                $query->byEtat($request->etat);
+            }
+            if ($request->filled('statut_global')) {
+                $query->byStatutGlobal($request->statut_global);
+            }
+            if ($request->boolean('disponibles_transfert')) {
+                $query->disponiblesTransfert();
+            }
+
+            $equipements = $query->orderBy('created_at', 'desc')->paginate($request->input('per_page', 15));
+
+            return response()->json([
+                'success' => true,
+                'data' => $equipements,
+                'message' => 'Résultats de recherche'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la recherche',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer un QR code pour un équipement
+     */
+    public function generateQr(Request $request, $id): JsonResponse
+    {
+        try {
+            $equipement = Equipement::findOrFail($id);
+            $equipement->generateQRCode();
+
+            return response()->json([
+                'success' => true,
+                'data' => ['qr_code' => $equipement->qr_code],
+                'message' => 'QR Code généré avec succès'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du QR Code: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Importer des équipements depuis un fichier CSV
+     */
+    public function import(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:csv,txt|max:10240',
+            ]);
+
+            $file = $request->file('file');
+            $previewOnly = $request->boolean('preview_only', false);
+
+            if ($previewOnly) {
+                // Retourner un aperçu des données
+                $rows = array_map('str_getcsv', file($file->getRealPath()));
+                $headers = array_shift($rows);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'headers' => $headers,
+                        'rows' => array_slice($rows, 0, 10),
+                        'total' => count($rows)
+                    ],
+                    'message' => 'Aperçu généré avec succès'
+                ]);
+            }
+
+            // Logique d'import complète (déléguée au service existant si disponible)
+            $importer = app(\App\Services\ImportService::class);
+            $result = $importer->importEquipements($file, $request->user());
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+                'message' => "{$result['imported']} équipements importés avec succès"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'import: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Télécharger le template CSV pour l'import
+     */
+    public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $headers = [
+            'nom', 'numero_serie', 'marque', 'modele', 'categorie_id',
+            'fournisseur', 'date_acquisition', 'prix_achat', 'etat'
+        ];
+
+        $filename = 'template_import_equipements.csv';
+        $path = storage_path("app/templates/{$filename}");
+
+        if (!file_exists(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        $handle = fopen($path, 'w');
+        fputcsv($handle, $headers);
+        fputcsv($handle, ['Ex: PC Portable', 'SN-001', 'Dell', 'Latitude 5420', '1', 'Fournisseur SA', '2025-01-15', '500000', 'neuf']);
+        fclose($handle);
+
+        return response()->download($path, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\""
+        ])->deleteFileAfterSend(true);
     }
 
     protected function mapStatut(string $statut): string

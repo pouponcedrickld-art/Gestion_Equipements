@@ -84,10 +84,23 @@
         </div>
       </div>
 
-      <!-- Poste -->
-      <div class="form-group">
-        <label>Poste / Fonction</label>
-        <input v-model="formData.poste" placeholder="Ex: Responsable IT, Comptable..." />
+      <!-- Poste et Statut -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label>Poste / Fonction</label>
+          <input v-model="formData.poste" placeholder="Ex: Responsable IT, Comptable..." />
+        </div>
+        <div class="form-group flex flex-col justify-end">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="formData.actif" class="w-auto h-auto" />
+            <span class="text-sm font-bold" :class="formData.actif ? 'text-success' : 'text-danger'">
+              Compte {{ formData.actif ? 'Actif' : 'Inactif' }}
+            </span>
+          </label>
+          <p class="text-xs text-muted mt-1">
+            {{ formData.actif ? 'L\'utilisateur peut se connecter.' : 'L\'accès sera bloqué immédiatement.' }}
+          </p>
+        </div>
       </div>
 
       <!-- Actions -->

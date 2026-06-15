@@ -13,13 +13,15 @@ class AlerteGarantieExpireNotification extends Notification implements ShouldQue
     use Queueable;
 
     public $equipement;
+    public $seuilJours;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Equipement $equipement)
+    public function __construct(Equipement $equipement, int $seuilJours = 30)
     {
         $this->equipement = $equipement;
+        $this->seuilJours = $seuilJours;
     }
 
     /**
@@ -37,12 +39,15 @@ class AlerteGarantieExpireNotification extends Notification implements ShouldQue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $subject = "Alerte : Garantie expirant dans {$this->seuilJours} jours";
+        
         return (new MailMessage)
-            ->subject('Alerte : Garantie expirant dans 30 jours')
+            ->subject($subject)
             ->greeting('Bonjour,')
-            ->line("La garantie de l'équipement {$this->equipement->reference} expire dans 30 jours.")
+            ->line("La garantie de l'équipement {$this->equipement->reference} expire dans {$this->seuilJours} jours.")
             ->line("Date de fin de garantie : {$this->equipement->garantie_date_fin->format('d/m/Y')}")
             ->line("Équipement : {$this->equipement->marque} {$this->equipement->modele}")
+            ->line("Référence : {$this->equipement->reference}")
             ->action('Voir l\'équipement', url('/equipements/' . $this->equipement->id))
             ->line('Merci de prendre les dispositions nécessaires.');
     }
@@ -60,7 +65,8 @@ class AlerteGarantieExpireNotification extends Notification implements ShouldQue
             'garantie_date_fin' => $this->equipement->garantie_date_fin,
             'marque' => $this->equipement->marque,
             'modele' => $this->equipement->modele,
-            'message' => "Garantie expirant dans 30 jours pour l'équipement {$this->equipement->reference}",
+            'seuil_jours' => $this->seuilJours,
+            'message' => "Garantie expirant dans {$this->seuilJours} jours pour l'équipement {$this->equipement->reference}",
         ];
     }
 }
