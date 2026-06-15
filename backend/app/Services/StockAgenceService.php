@@ -12,18 +12,25 @@ class StockAgenceService
     /**
      * Incrémenter le stock d'une agence lors de la réception d'un transfert
      */
-    public function incrementerStockReception(Transfert $transfert): StockAgence
+    public function incrementerStockReception(Transfert $transfert): ?StockAgence
     {
         return DB::transaction(function () use ($transfert) {
             $agenceId = $transfert->agence_destination_id;
             $equipementId = $transfert->equipement_id;
             
+            // S'assurer que l'équipement est chargé pour avoir la catégorie
+            $equipement = $transfert->equipement ?: Equipement::find($equipementId);
+            
+            if (!$equipement) {
+                return null;
+            }
+
             // Récupérer ou créer le stock pour cette agence et cet équipement
             $stock = StockAgence::firstOrCreate(
                 [
                     'agence_id' => $agenceId,
                     'equipement_id' => $equipementId,
-                    'categorie_id' => $transfert->equipement->categorie_id,
+                    'categorie_id' => $equipement->categorie_id,
                 ],
                 [
                     'quantite' => 0,
@@ -32,8 +39,8 @@ class StockAgenceService
                 ]
             );
 
-            // Déterminer la quantité à ajouter (1 pour un équipement unique, ou la quantité pour un lot)
-            $quantite = $this->determinerQuantite($transfert->equipement);
+            // Déterminer la quantité à ajouter
+            $quantite = $this->determinerQuantite($equipement);
 
             // Mettre à jour le stock
             $stock->increment('quantite', $quantite);
@@ -54,7 +61,7 @@ class StockAgenceService
         return DB::transaction(function () use ($transfert, $type) {
             $agenceId = $type === 'rejet' 
                 ? $transfert->agence_destination_id 
-                : $transfert->agence_origine_id;
+                : $transfert->agence_source_id; // Fix: use agence_source_id
             
             $equipementId = $transfert->equipement_id;
             
@@ -66,7 +73,12 @@ class StockAgenceService
                 return null;
             }
 
-            $quantite = $this->determinerQuantite($transfert->equipement);
+            $equipement = $transfert->equipement ?: Equipement::find($equipementId);
+            if (!$equipement) {
+                return null;
+            }
+
+            $quantite = $this->determinerQuantite($equipement);
 
             // Mettre à jour le stock
             $stock->decrement('quantite', $quantite);

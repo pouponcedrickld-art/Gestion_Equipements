@@ -132,6 +132,20 @@ class Transfert extends Model
             'statut' => 'expedie',
             'date_expedition' => now()
         ]);
+
+        // Mettre à jour le statut de l'équipement
+        if ($this->equipement) {
+            $this->equipement->update([
+                'statut_global' => 'en_transit',
+                'localisation' => 'En transfert vers ' . ($this->agenceDestination->nom ?? 'Destination')
+            ]);
+
+            $this->equipement->createMouvement(
+                'transfert',
+                "Expédition du transfert vers " . ($this->agenceDestination->nom ?? 'Destination'),
+                $userId
+            );
+        }
     }
 
     public function recevoir($userId)
@@ -149,7 +163,7 @@ class Transfert extends Model
             ]);
             
             $this->equipement->createMouvement(
-                'transfert_recu',
+                'transfert',
                 "Réception transfert depuis " . ($this->agenceSource->nom ?? 'Origine'),
                 $userId
             );

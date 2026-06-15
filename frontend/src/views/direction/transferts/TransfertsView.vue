@@ -149,8 +149,16 @@
             <template #body="slotProps">
               <div class="actions-cell">
                 <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" @click="viewDetails(slotProps.data)" v-tooltip.top="'Voir détails'" />
-                <Button v-if="slotProps.data.statut === 'demande'" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success" @click="approveTransfert(slotProps.data)" v-tooltip.top="'Approuver'" />
-                <Button v-if="slotProps.data.statut === 'approuve'" icon="pi pi-send" class="p-button-text p-button-rounded p-button-warning" @click="shipTransfert(slotProps.data)" v-tooltip.top="'Expédier'" />
+                
+                <!-- Actions de validation (GSG) -->
+                <Button v-if="slotProps.data.statut === 'demande'" label="Approuver" icon="pi pi-check" class="p-button-success p-button-sm mr-1" @click="approveTransfert(slotProps.data)" />
+                <Button v-if="slotProps.data.statut === 'demande'" label="Rejeter" icon="pi pi-times" class="p-button-danger p-button-sm mr-1" @click="ouvrirRefusDialog(slotProps.data)" />
+                
+                <!-- Actions d'expédition (GSG) -->
+                <Button v-if="slotProps.data.statut === 'approuve'" label="Expédier" icon="pi pi-send" class="p-button-warning p-button-sm mr-1" @click="shipTransfert(slotProps.data)" />
+                <Button v-if="slotProps.data.statut === 'approuve'" label="Annuler" icon="pi pi-times" class="p-button-text p-button-danger p-button-sm mr-1" @click="ouvrirRefusDialog(slotProps.data)" />
+                
+                <!-- Action de réception (Au cas où GSG doive le faire) -->
                 <Button v-if="slotProps.data.statut === 'expedie'" icon="pi pi-inbox" class="p-button-text p-button-rounded p-button-primary" @click="receiveTransfert(slotProps.data)" v-tooltip.top="'Recevoir'" />
               </div>
             </template>
@@ -162,6 +170,18 @@
       <div class="table-container skeleton" v-else>
         <div v-for="n in 5" :key="n" class="skeleton-row"></div>
       </div>
+
+      <!-- Dialogue de refus -->
+      <Dialog v-model:visible="refusDialogVisible" header="Rejeter / Annuler le transfert" :modal="true" :style="{ width: '450px' }">
+        <div class="form-group">
+          <label for="observations">Motif du rejet/annulation *</label>
+          <Textarea id="observations" v-model="refusObservations" rows="4" class="w-full" placeholder="Veuillez indiquer la raison..." />
+        </div>
+        <template #footer>
+          <Button label="Fermer" icon="pi pi-times" class="p-button-text" @click="fermerRefusDialog" />
+          <Button label="Confirmer le Rejet" icon="pi pi-check" class="p-button-danger" @click="confirmerRefus" />
+        </template>
+      </Dialog>
     </div>
   </DirectionLayout>
 </template>
@@ -182,6 +202,53 @@ import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
+import Textarea from 'primevue/textarea'
+
+const router = useRouter()
+const toast = useToast()
+const transfertStore = useTransfertStore()
+
+const loading = ref(false)
+const loadingApprovedDemandes = ref(false) 
+const approvedDemandes = ref([]) 
+const selectedStatut = ref(null)
+const searchQuery = ref('')
+
+const refusDialogVisible = ref(false)
+const refusObservations = ref('')
+const transfertARefuser = ref(null)
+
+// ... reste du script ...
+
+const ouvrirRefusDialog = (trans) => {
+  transfertARefuser.value = trans
+  refusObservations.value = ''
+  refusDialogVisible.value = true
+}
+
+const fermerRefusDialog = () => {
+  refusDialogVisible.value = false
+  transfertARefuser.value = null
+}
+
+const confirmerRefus = async () => {
+  if (!refusObservations.value.trim()) {
+    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Indiquez un motif' })
+    return
+  }
+  try {
+    await transfertStore.refuserTransfert(transfertARefuser.value.id, refusObservations.value)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert rejeté/annulé' })
+    fermerRefusDialog()
+    await Promise.all([
+      transfertStore.fetchTransferts(),
+      fetchApprovedDemandes()
+    ])
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'opération' })
+  }
+}
 
 const router = useRouter()
 const toast = useToast()
@@ -277,7 +344,7 @@ const approveTransfert = async (trans) => {
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'approbation' })
   }
 }
-
+// --- Expédition de l'équipement ---
 const shipTransfert = async (trans) => {
   try {
     await transfertStore.expedierTransfert(trans.id)
@@ -295,7 +362,7 @@ const receiveTransfert = async (trans) => {
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la réception' })
   }
 }
-
+// --- Chargement des transferts ---
 onMounted(async () => {
   loading.value = true
   await Promise.all([

@@ -126,6 +126,7 @@ const submitting = ref(false)
 const loadingEquipements = ref(false)
 const errorMsg = ref('')
 
+// Options d'urgence
 const urgenceOptions = [
   { label: 'Basse', value: 'Basse' },
   { label: 'Moyenne', value: 'Moyenne' },
@@ -190,6 +191,7 @@ const submitForm = async () => {
     dateFormatted = `${year}-${month}-${day}`
   }
 
+  // Envoi de la demande
   try {
     await demandeAgenceApi.store({
       ...form.value,

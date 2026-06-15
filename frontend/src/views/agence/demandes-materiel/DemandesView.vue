@@ -293,8 +293,8 @@ import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import demandeAgenceApi from '@/api/demandeAgenceApi'
 
 // --- États de filtrage (Ajoutés pour la recherche et le statut) ---
-const searchQuery = ref('') // Pour la barre de recherche par nom d'équipement
-const selectedStatus = ref('') // Pour le filtre par statut (en attente, approuvé, rejeté)
+const searchQuery = ref('') 
+const selectedStatus = ref('') 
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -354,11 +354,12 @@ const showDeleteModal = ref(false)
 const deletingDemande = ref(null)
 const submittingDelete = ref(false)
 
+// --- Chargement des demandes ---
 const fetchDemandes = async () => {
   loading.value = true
   try {
     const res = await demandeAgenceApi.index()
-    // Support both direct array and { success, data } structures
+    // Gérer les différentes structures de réponse
     if (res.data && res.data.success) {
       demandes.value = res.data.data
     } else {
