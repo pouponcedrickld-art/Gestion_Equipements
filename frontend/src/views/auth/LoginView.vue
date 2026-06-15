@@ -1,11 +1,17 @@
-
+<!-- =============================================
+  FICHIER : views/auth/LoginView.vue
+  RÔLE : Page de connexion (login)
+  Demande email + mot de passe → appelle authStore.login()
+  Si 2FA est activé → redirige vers /login/2fa
+  Sinon → redirige vers / (dashboard)
+============================================== -->
 <template>
   <div class="login-container">
     <div class="login-box">
       <!-- Zone Logo & Titre -->
       <div class="header-section">
         <div class="logo-wrapper">
-          <!-- Icône Compteur/Dashboard intégrée en SVG pour être pixel-perfect -->
+          <!-- Icône Compteur/Dashboard intégrée en SVG -->
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 4C7.58 4 4 7.58 4 12C4 13.1 4.22 14.16 4.63 15.13L6.14 13.62C6.05 13.11 6 12.56 6 12C6 8.69 8.69 6 12 6C15.31 6 18 8.69 18 12C18 15.31 15.31 18 12 18C11.44 18 10.89 17.95 10.38 17.86L8.87 19.37C9.84 19.78 10.9 20 12 20C16.42 20 20 16.42 20 12C20 7.58 16.42 4 12 4ZM12 8C9.79 8 8 9.79 8 12C8 12.38 8.05 12.74 8.16 13.09L10.32 10.93C10.5 10.36 11.04 9.92 11.69 9.92C12.47 9.92 13.1 10.55 13.1 11.33C13.1 11.98 12.66 12.52 12.09 12.7L9.93 14.86C10.28 14.97 10.64 15 11 15C13.21 15 15 13.21 15 12C15 9.79 13.21 8 12 8ZM12 11C12.28 11 12.5 11.22 12.5 11.5C12.5 11.78 12.28 12 12 12C11.72 12 11.5 11.78 11.5 11.5C11.5 11.22 11.72 11 12 11Z" fill="#111827"/>
             <rect x="11" y="16" width="2" height="2" rx="0.5" fill="#111827"/>
@@ -18,8 +24,9 @@
         <p class="subtitle">Gestion de Matériel</p>
       </div>
 
-      <!-- Formulaire -->
+      <!-- Formulaire de connexion -->
       <form @submit.prevent="handleLogin">
+        <!-- Champ Email -->
         <div class="form-group">
           <label>Email</label>
           <input 
@@ -30,6 +37,7 @@
           />
         </div>
 
+        <!-- Champ Mot de passe -->
         <div class="form-group">
           <label>Mot de passe</label>
           <div class="password-wrapper">
@@ -39,7 +47,7 @@
               placeholder="••••••••••••" 
               required 
             />
-            <!-- Icône Œil pour simuler le visuel de l'image -->
+            <!-- Icône Œil (juste visuel, pas implémenté) -->
             <span class="toggle-password">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -49,10 +57,12 @@
           </div>
         </div>
 
+        <!-- Bouton de connexion (désactivé pendant le chargement) -->
         <button type="submit" :disabled="loading" class="btn-submit">
           {{ loading ? 'Connexion...' : 'Se connecter' }}
         </button>
 
+        <!-- Message d'erreur si la connexion échoue -->
         <p v-if="error" class="error-msg">{{ error }}</p>
       </form>
 
@@ -71,35 +81,58 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/authStore.js'
+// =============================================
+// 1. IMPORTS
+// =============================================
+import { ref } from 'vue' // Pour les variables réactives
+import { useRouter } from 'vue-router' // Pour naviguer entre les pages
+import { useAuthStore } from '@/stores/authStore.js' // Le store d'authentification
 
+// =============================================
+// 2. INITIALISATIONS
+// =============================================
 const router = useRouter()
 const authStore = useAuthStore()
 
+// =============================================
+// 3. VARIABLES RÉACTIVES (ref)
+// =============================================
+// credentials : contient l'email et le mot de passe saisis par l'utilisateur
 const credentials = ref({
   email: '',
   password: ''
 })
 
+// loading : true pendant la tentative de connexion (pour désactiver le bouton)
 const loading = ref(false)
+// error : message d'erreur si la connexion échoue
 const error = ref('')
 
+// =============================================
+// 4. FONCTIONS
+// =============================================
+// handleLogin() : Fonction appelée quand on soumet le formulaire
 const handleLogin = async () => {
-  loading.value = true
-  error.value = ''
+  loading.value = true // Active le chargement
+  error.value = '' // Réinitialise le message d'erreur
 
   try {
+    // Appelle la fonction login() du store (authStore.js) avec les credentials
     const result = await authStore.login(credentials.value)
+    
+    // Si le serveur renvoie { requires2FA: true } → redirige vers la page 2FA
     if (result && result.requires2FA) {
       router.push('/login/2fa')
-    } else {
+    } 
+    // Sinon → connexion réussie, redirige vers le dashboard
+    else {
       router.push('/')
     }
   } catch (err) {
+    // Si erreur → affiche le message d'erreur venant du serveur (ou un message générique)
     error.value = err.response?.data?.message || 'Erreur de connexion'
   } finally {
+    // Dans tous les cas (succès ou échec), arrête le chargement
     loading.value = false
   }
 }
@@ -296,4 +329,3 @@ input:focus {
   }
 }
 </style>
-

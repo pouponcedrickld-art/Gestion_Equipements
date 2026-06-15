@@ -1,24 +1,31 @@
 <template>
+  <!-- Layout de l'agence (menu + en-tête) -->
   <AgenceLayout>
+    <!-- Conteneur principal de la page -->
     <div class="maintenances-container">
+      <!-- Barre d'en-tête avec titre et bouton d'ajout -->
       <div class="header-bar">
         <div class="header-left">
           <h2>Gestion des Maintenances</h2>
           <p>Suivez les maintenances préventives et correctives</p>
         </div>
         <div class="header-right">
+          <!-- Bouton pour ajouter une nouvelle maintenance : ouvre le modal -->
           <button class="add-btn" @click="openAddModal">
             <i class="pi pi-plus"></i> Nouvelle Maintenance
           </button>
         </div>
       </div>
 
+      <!-- Carte des filtres : recherche + filtre par statut + filtre par type -->
       <div class="filters-card">
         <div class="filters-row">
+          <!-- Barre de recherche : filtre par nom d'équipement ou diagnostic -->
           <div class="search-box">
             <i class="pi pi-search"></i>
             <input v-model="search" type="text" placeholder="Rechercher une maintenance...">
           </div>
+          <!-- Filtre par statut de la maintenance -->
           <div class="select-box">
             <select v-model="filters.statut">
               <option value="">Tous les statuts</option>
@@ -27,6 +34,7 @@
               <option value="terminee">Terminée</option>
             </select>
           </div>
+          <!-- Filtre par type de maintenance (préventive ou corrective) -->
           <div class="select-box">
             <select v-model="filters.type_maintenance">
               <option value="">Tous les types</option>
@@ -37,14 +45,18 @@
         </div>
       </div>
 
+      <!-- Carte du tableau des maintenances -->
       <div class="table-card">
+        <!-- État de chargement : affiche un spinner pendant le chargement des données -->
         <div v-if="loading" class="loading-state">
           <i class="pi pi-spin pi-spinner"></i> Chargement...
         </div>
+        <!-- État vide : si aucune maintenance n'est trouvée -->
         <div v-else-if="maintenances.length === 0" class="empty-state">
           <i class="pi pi-info-circle"></i>
           <p>Aucune maintenance trouvée.</p>
         </div>
+        <!-- Sinon, affiche le tableau des maintenances filtrées -->
         <div v-else class="table-wrapper">
           <table class="data-table">
             <thead>
@@ -58,6 +70,7 @@
               </tr>
             </thead>
             <tbody>
+              <!-- Pour chaque maintenance filtrée, on affiche une ligne -->
               <tr v-for="m in filteredMaintenances" :key="m.id">
                 <td>{{ formatDate(m.date_prevue) }}</td>
                 <td>{{ m.equipement?.nom }} ({{ m.equipement?.reference }})</td>
@@ -67,7 +80,9 @@
                 <td>
                   <div class="actions">
                     <button class="detail-btn" @click="showDetail(m)">Détails</button>
+                    <!-- Bouton "Démarrer" : seulement si la maintenance est planifiée -->
                     <button v-if="m.statut === 'planifiee'" class="start-btn" @click="startMaintenance(m)">Démarrer</button>
+                    <!-- Bouton "Terminer" : seulement si la maintenance est en cours -->
                     <button v-if="m.statut === 'en_cours'" class="complete-btn" @click="openCompleteModal(m)">Terminer</button>
                     <button class="edit-btn" @click="openEditModal(m)">Modifier</button>
                     <button class="delete-btn" @click="confirmDelete(m)">Supprimer</button>
@@ -79,6 +94,7 @@
         </div>
       </div>
 
+      <!-- Modal d'ajout ou de modification d'une maintenance -->
       <Dialog v-model:visible="showModal" :header="isEdit ? 'Modifier la Maintenance' : 'Nouvelle Maintenance'"
         :style="{ width: '600px' }" modal class="p-fluid dark-modal">
         <form @submit.prevent="submitMaintenance" class="maintenance-form">
@@ -100,6 +116,7 @@
             <label class="font-bold block mb-2">Date Prévue</label>
             <input v-model="maintenanceForm.date_prevue" type="date" class="w-full" required />
           </div>
+          <!-- Champ "Panne associée" : seulement si le type est "corrective" -->
           <div v-if="maintenanceForm.type_maintenance === 'corrective'" class="field mb-4">
             <label class="font-bold block mb-2">Panne associée</label>
             <select v-model="maintenanceForm.panne_id" class="w-full">
@@ -122,6 +139,7 @@
             <label class="font-bold block mb-2">Coût</label>
             <input v-model="maintenanceForm.cout" type="number" step="0.01" class="w-full" />
           </div>
+          <!-- Champ "Observations" : seulement si on est en mode édition et la maintenance est terminée -->
           <div v-if="isEdit && maintenanceForm.statut === 'terminee'" class="field mb-4">
             <label class="font-bold block mb-2">Résultat / Observations</label>
             <textarea v-model="maintenanceForm.observations" rows="3" class="w-full"></textarea>
@@ -133,6 +151,7 @@
         </form>
       </Dialog>
 
+      <!-- Modal pour terminer une maintenance (quand elle est en cours) -->
       <Dialog v-model:visible="showCompleteModal" header="Terminer la Maintenance" :style="{ width: '500px' }" modal
         class="p-fluid dark-modal">
         <form @submit.prevent="submitComplete" class="maintenance-form">
@@ -159,6 +178,7 @@
         </form>
       </Dialog>
 
+      <!-- Modal pour afficher les détails d'une maintenance -->
       <Dialog v-model:visible="showDetailModal" header="Détails de la Maintenance" :style="{ width: '600px' }" modal
         class="p-fluid dark-modal">
         <div v-if="selectedMaintenance" class="detail-content">
@@ -194,51 +214,76 @@
 </template>
 
 <script setup>
+// =============================================
+// IMPORTS : Ce qu'on a besoin pour la page
+// =============================================
 import { ref, computed, onMounted } from 'vue'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
+// Les stores pour gérer les données (maintenances, équipements, pannes, utilisateurs)
 import { useMaintenanceStore } from '@/stores/maintenanceStore.js'
 import { useEquipementStore } from '@/stores/equipementStore.js'
 import { usePanneStore } from '@/stores/panneStore.js'
 import { useUserStore } from '@/stores/userStore.js'
+// Les composants PrimeVue pour le modal et les boutons
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+// Les services pour les notifications et la confirmation
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 
-const maintenanceStore = useMaintenanceStore()
-const equipementStore = useEquipementStore()
-const panneStore = usePanneStore()
-const userStore = useUserStore()
-const toast = useToast()
-const confirm = useConfirm()
+// =============================================
+// INITIALISATION DES STORES ET SERVICES
+// =============================================
+const maintenanceStore = useMaintenanceStore() // Pour les maintenances
+const equipementStore = useEquipementStore() // Pour les équipements
+const panneStore = usePanneStore() // Pour les pannes
+const userStore = useUserStore() // Pour les utilisateurs (techniciens)
+const toast = useToast() // Pour les notifications toast (petits messages en haut à droite)
+const confirm = useConfirm() // Pour la confirmation de suppression
 
-const maintenances = ref([])
-const equipements = ref([])
-const pannes = ref([])
-const users = ref([])
-const loading = ref(false)
-const submitting = ref(false)
-const search = ref('')
-const filters = ref({ statut: '', type_maintenance: '' })
-const showModal = ref(false)
-const showCompleteModal = ref(false)
-const showDetailModal = ref(false)
-const isEdit = ref(false)
-const selectedMaintenance = ref(null)
-const maintenanceForm = ref({})
-const completeForm = ref({})
+// =============================================
+// VARIABLES RÉACTIVES (ref) : Elles changent et la page se met à jour
+// =============================================
+const maintenances = ref([]) // Tableau de toutes les maintenances
+const equipements = ref([]) // Tableau de tous les équipements
+const pannes = ref([]) // Tableau de toutes les pannes
+const users = ref([]) // Tableau de tous les utilisateurs (techniciens)
+const loading = ref(false) // true pendant le chargement des données
+const submitting = ref(false) // true pendant l'enregistrement d'une maintenance
+const search = ref('') // Texte de la barre de recherche
+const filters = ref({ statut: '', type_maintenance: '' }) // Filtres sélectionnés
+// Visibilité des modals
+const showModal = ref(false) // Modal d'ajout/modification
+const showCompleteModal = ref(false) // Modal de terminaison
+const showDetailModal = ref(false) // Modal de détails
+const isEdit = ref(false) // true si on est en mode modification, false si ajout
+const selectedMaintenance = ref(null) // Maintenance sélectionnée pour les détails ou la terminaison
+const maintenanceForm = ref({}) // Données du formulaire d'ajout/modification
+const completeForm = ref({}) // Données du formulaire de terminaison
 
+// =============================================
+// PROPRIÉTÉS CALCULÉES (computed) : Elles se calculent automatiquement
+// =============================================
+// Filtre les maintenances selon la recherche et les filtres sélectionnés
 const filteredMaintenances = computed(() => {
   return maintenances.value.filter(m => {
+    // Filtre par recherche : vérifie le nom de l'équipement ou le diagnostic
     const matchesSearch = !search.value ||
       (m.equipement?.nom?.toLowerCase().includes(search.value.toLowerCase()) ||
         m.diagnostic?.toLowerCase().includes(search.value.toLowerCase()))
+    // Filtre par statut
     const matchesStatut = !filters.value.statut || m.statut === filters.value.statut
+    // Filtre par type de maintenance
     const matchesType = !filters.value.type_maintenance || m.type_maintenance === filters.value.type_maintenance
+    // Retourne true seulement si tous les filtres correspondent
     return matchesSearch && matchesStatut && matchesType
   })
 })
 
+// =============================================
+// FONCTIONS UTILITAIRES : Formattage des données
+// =============================================
+// Transforme le code du statut en texte français (ex: "planifiee" → "Planifiée")
 const formatStatus = (statut) => {
   const statusMap = {
     'planifiee': 'Planifiée',
@@ -248,6 +293,7 @@ const formatStatus = (statut) => {
   return statusMap[statut] || statut
 }
 
+// Transforme le code du type en texte français (ex: "preventive" → "Préventive")
 const formatType = (type) => {
   const typeMap = {
     'preventive': 'Préventive',
@@ -256,103 +302,135 @@ const formatType = (type) => {
   return typeMap[type] || type
 }
 
+// Formate la date en format français (JJ/MM/AAAA)
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('fr-FR')
+}
+
+// =============================================
+// FONCTIONS DE RÉCUPÉRATION DES DONNÉES
+// =============================================
+// Récupère toutes les données nécessaires depuis les stores (maintenances, équipements, pannes, utilisateurs)
 const fetchData = async () => {
-  loading.value = true
+  loading.value = true // Active l'état de chargement
   try {
+    // Récupère toutes les données en parallèle (plus rapide)
     await Promise.all([
       maintenanceStore.fetchMaintenancesByPeriod(),
       equipementStore.fetchEquipements(),
       panneStore.fetchPannes(),
       userStore.fetchUsers()
     ])
+    // Met à jour nos variables réactives avec les données des stores
     maintenances.value = maintenanceStore.maintenances
     equipements.value = equipementStore.equipements
     pannes.value = panneStore.pannes
     users.value = userStore.users
   } catch (err) {
-    console.error(err)
+    console.error(err) // Affiche l'erreur dans la console si ça échoue
   } finally {
-    loading.value = false
+    loading.value = false // Désactive l'état de chargement, peu importe le résultat
   }
 }
 
+// =============================================
+// FONCTIONS D'OUVERTURE DES MODALS
+// =============================================
+// Ouvre le modal pour ajouter une nouvelle maintenance
 const openAddModal = () => {
-  isEdit.value = false
+  isEdit.value = false // On est pas en mode édition
+  // Initialise le formulaire avec des valeurs par défaut
   maintenanceForm.value = { 
     equipement_id: '', 
-    type_maintenance: 'preventive', 
-    date_prevue: new Date().toISOString().split('T')[0],
+    type_maintenance: 'preventive', // Par défaut : préventive
+    date_prevue: new Date().toISOString().split('T')[0], // Par défaut : aujourd'hui
     panne_id: '',
     technicien_id: '',
     diagnostic: '',
     cout: '',
     observations: ''
   }
-  showModal.value = true
+  showModal.value = true // Affiche le modal
 }
 
+// Ouvre le modal pour modifier une maintenance existante
 const openEditModal = (maintenance) => {
-  isEdit.value = true
+  isEdit.value = true // On est en mode édition
+  // Copie les données de la maintenance dans le formulaire
   maintenanceForm.value = { 
     ...maintenance, 
     equipement_id: maintenance.equipement_id,
     panne_id: maintenance.panne_id || '',
     technicien_id: maintenance.technicien_id || ''
   }
-  showModal.value = true
+  showModal.value = true // Affiche le modal
 }
 
+// Ouvre le modal pour terminer une maintenance (seulement si elle est en cours)
 const openCompleteModal = (maintenance) => {
-  selectedMaintenance.value = maintenance
+  selectedMaintenance.value = maintenance // Sauvegarde la maintenance sélectionnée
+  // Initialise le formulaire de terminaison avec les données de la maintenance
   completeForm.value = {
     diagnostic: maintenance.diagnostic || '',
     cout: maintenance.cout || '',
     observations: maintenance.observations || '',
-    date_fin: new Date().toISOString().split('T')[0]
+    date_fin: new Date().toISOString().split('T')[0] // Par défaut : aujourd'hui
   }
-  showCompleteModal.value = true
+  showCompleteModal.value = true // Affiche le modal
 }
 
+// Ouvre le modal pour afficher les détails d'une maintenance
 const showDetail = (maintenance) => {
-  selectedMaintenance.value = maintenance
-  showDetailModal.value = true
+  selectedMaintenance.value = maintenance // Sauvegarde la maintenance sélectionnée
+  showDetailModal.value = true // Affiche le modal
 }
 
+// =============================================
+// FONCTIONS DE SOUMISSION DES FORMULAIRES
+// =============================================
+// Enregistre la maintenance (ajout ou modification)
 const submitMaintenance = async () => {
-  submitting.value = true
+  submitting.value = true // Active l'état de soumission (désactive le bouton)
   try {
     if (isEdit.value) {
+      // Si on est en mode édition : on met à jour la maintenance existante
       await maintenanceStore.updateMaintenance(maintenanceForm.value.id, maintenanceForm.value)
     } else {
+      // Sinon : on crée une nouvelle maintenance
       await maintenanceStore.createMaintenance(maintenanceForm.value)
     }
+    // Affiche une notification de succès
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Maintenance enregistrée', life: 3000 })
-    showModal.value = false
-    await fetchData()
+    showModal.value = false // Ferme le modal
+    await fetchData() // Actualise la liste des maintenances
   } catch (err) {
+    // Si ça échoue : affiche une notification d'erreur
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'enregistrement', life: 3000 })
   } finally {
-    submitting.value = false
+    submitting.value = false // Désactive l'état de soumission
   }
 }
 
+// Démarre une maintenance (change son statut de "planifiée" à "en cours")
 const startMaintenance = async (maintenance) => {
   try {
     await maintenanceStore.startMaintenance(maintenance.id, { technicien_id: maintenance.technicien_id })
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Maintenance démarrée', life: 3000 })
-    await fetchData()
+    await fetchData() // Actualise la liste
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec du démarrage', life: 3000 })
   }
 }
 
+// Termine une maintenance (change son statut à "terminée")
 const submitComplete = async () => {
   submitting.value = true
   try {
     await maintenanceStore.completeMaintenance(selectedMaintenance.value.id, completeForm.value)
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Maintenance terminée', life: 3000 })
-    showCompleteModal.value = false
-    await fetchData()
+    showCompleteModal.value = false // Ferme le modal
+    await fetchData() // Actualise la liste
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la terminaison', life: 3000 })
   } finally {
@@ -360,16 +438,21 @@ const submitComplete = async () => {
   }
 }
 
+// =============================================
+// FONCTION DE SUPPRESSION
+// =============================================
+// Demande une confirmation avant de supprimer une maintenance
 const confirmDelete = (maintenance) => {
   confirm.require({
     message: 'Êtes-vous sûr de vouloir supprimer cette maintenance ?',
     header: 'Confirmation de suppression',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
+      // Si l'utilisateur clique sur "Accepter" : on supprime
       try {
         await maintenanceStore.deleteMaintenance(maintenance.id)
         toast.add({ severity: 'success', summary: 'Succès', detail: 'Maintenance supprimée', life: 3000 })
-        await fetchData()
+        await fetchData() // Actualise la liste
       } catch (err) {
         toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la suppression', life: 3000 })
       }
@@ -377,11 +460,10 @@ const confirmDelete = (maintenance) => {
   })
 }
 
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('fr-FR')
-}
-
+// =============================================
+// CYCLE DE VIE : Ce qui se passe quand la page se charge
+// =============================================
+// OnMounted : s'exécute immédiatement après que la page soit affichée
 onMounted(fetchData)
 </script>
 

@@ -1,3 +1,8 @@
+<!-- =============================================
+  FICHIER : views/agence/dashboard/DashboardView.vue
+  RÔLE : Page du tableau de bord principal
+  Affiche des cartes avec des chiffres (statistiques), des graphiques, et les dernières activités
+============================================== -->
 <template>
   <AgenceLayout>
     <div class="p-6 max-w-7xl mx-auto">
@@ -7,7 +12,7 @@
           <p class="text-neutral-500 mt-1">Bienvenue, <strong>{{ authStore.user?.name }}</strong></p>
         </div>
         <div class="flex items-center gap-4">
-          <!-- Agence filter for global users -->
+          <!-- Filtre agence pour Super Admin et Gestionnaire Général (ils voient toutes les agences) -->
           <div v-if="authStore.isSuperAdmin || authStore.isGestionnaireGeneral" class="flex items-center gap-2">
             <label class="text-sm text-neutral-600">Agence:</label>
             <select v-model="selectedAgenceId" @change="fetchStats" class="px-3 py-2 border border-neutral-300 rounded-lg bg-white">
@@ -16,12 +21,14 @@
             </select>
           </div>
           <span class="text-sm text-neutral-400 italic">Dernière mise à jour: {{ lastUpdate }}</span>
+          <!-- Badge du rôle de l'utilisateur (ex: "Chef d'Agence", "Technicien") -->
           <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase" :class="roleBadgeClass">
             {{ roleLabel }}
           </span>
         </div>
       </div>
 
+      <!-- Si les données sont en cours de chargement, on affiche un petit spinner -->
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="flex items-center gap-2">
           <div class="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full"></div>
@@ -29,9 +36,11 @@
         </div>
       </div>
 
+      <!-- Sinon, on affiche le contenu du tableau de bord -->
       <div v-else>
-        <!-- Cartes Statistiques Principales -->
+        <!-- Cartes Statistiques Principales (1ère rangée : 4 cartes) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Carte 1 : Nombre total d'équipements -->
           <div class="card stat-card border-l-4 border-primary-500">
             <div class="stat-icon bg-primary-50 text-primary-600">
               <i class="pi pi-box text-2xl"></i>
@@ -42,6 +51,7 @@
             </div>
           </div>
           
+          <!-- Carte 2 : Nombre de pannes -->
           <div class="card stat-card border-l-4 border-danger-500">
             <div class="stat-icon bg-danger-50 text-danger-600">
               <i class="pi pi-exclamation-triangle text-2xl"></i>
@@ -52,6 +62,7 @@
             </div>
           </div>
           
+          <!-- Carte 3 : Taux de résolution des pannes -->
           <div class="card stat-card border-l-4 border-success-500">
             <div class="stat-icon bg-success-50 text-success-600">
               <i class="pi pi-check-circle text-2xl"></i>
@@ -62,6 +73,7 @@
             </div>
           </div>
           
+          <!-- Carte 4 : Coût total des maintenances -->
           <div class="card stat-card border-l-4 border-warning-500">
             <div class="stat-icon bg-warning-50 text-warning-600">
               <i class="pi pi-euro text-2xl"></i>
@@ -73,7 +85,7 @@
           </div>
         </div>
         
-        <!-- Deuxième rangée de cartes -->
+        <!-- Deuxième rangée de cartes (encore 4 cartes) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div class="card stat-card border-l-4 border-primary-500">
             <div class="stat-icon bg-primary-50 text-primary-600">
@@ -117,7 +129,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <!-- Pannes par statut -->
+          <!-- Graphique en donut : Pannes par statut (ex: Déclarée, En cours, Résolue) -->
           <div class="lg:col-span-1 card p-6">
             <h3 class="text-lg font-semibold text-neutral-800 mb-6 flex items-center gap-2">
               <i class="pi pi-pie-chart text-primary-500"></i> Pannes par statut
@@ -130,7 +142,7 @@
             </div>
           </div>
           
-          <!-- Équipements par catégorie -->
+          <!-- Graphique en donut : Équipements par catégorie (ex: Ordinateur, Imprimante) -->
           <div class="lg:col-span-1 card p-6">
             <h3 class="text-lg font-semibold text-neutral-800 mb-6 flex items-center gap-2">
               <i class="pi pi-tags text-primary-500"></i> Par Catégorie
@@ -143,7 +155,7 @@
             </div>
           </div>
 
-          <!-- Activités et Transferts -->
+          <!-- 2 petites cartes + Activités récentes -->
           <div class="lg:col-span-1 space-y-6">
             <div class="grid grid-cols-2 gap-4">
               <div class="card p-5 bg-gradient-to-br from-white to-primary-50">
@@ -171,6 +183,7 @@
               </div>
             </div>
 
+            <!-- Activité récente des 7 derniers jours -->
             <div class="card p-6">
               <h3 class="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <i class="pi pi-history text-primary-500"></i> Activité (7 jours)
@@ -197,7 +210,7 @@
           </div>
         </div>
         
-        <!-- Graphiques de tendances -->
+        <!-- Graphiques de tendances (2 graphiques côte à côte : Pannes et Maintenances sur 14 jours) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div class="card p-6">
             <h3 class="text-lg font-semibold text-neutral-800 mb-6 flex items-center gap-2">
@@ -224,7 +237,7 @@
           </div>
         </div>
 
-        <!-- Vue Président / Global -->
+        <!-- Vue pour Super Admin / Gestionnaire Général : Répartition des équipements par agence -->
         <div v-if="authStore.isSuperAdmin || authStore.isGestionnaireGeneral" class="space-y-6">
           <div class="card p-6">
             <h3 class="text-lg font-semibold text-neutral-800 mb-6 flex items-center gap-2">
@@ -244,10 +257,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/authStore'
-import AgenceLayout from '@/layouts/AgenceLayout.vue'
-import api from '@/api/axiosConfig'
+// =============================================
+// 1. IMPORTS : Ce qu'on a besoin pour faire fonctionner la page
+// =============================================
+import { ref, computed, onMounted } from 'vue' // ref pour les variables qui changent, computed pour les calculs, onMounted pour quand la page s'affiche
+import { useAuthStore } from '@/stores/authStore' // Pour savoir qui est connecté et son rôle
+import AgenceLayout from '@/layouts/AgenceLayout.vue' // Le layout principal (menu, en-tête)
+import api from '@/api/axiosConfig' // Axios configuré pour discuter avec le serveur backend
+
+// Les trucs pour les graphiques Chart.js
 import {
   Chart as ChartJS,
   Title,
@@ -260,22 +278,34 @@ import {
   PointElement,
   LineElement
 } from 'chart.js'
+// Les composants Vue pour afficher les graphiques
 import { Bar, Doughnut, Line } from 'vue-chartjs'
 
+// On enregistre les éléments Chart.js pour qu'ils fonctionnent
 ChartJS.register(
   Title, Tooltip, Legend, 
   BarElement, CategoryScale, LinearScale, 
   ArcElement, PointElement, LineElement
 )
 
-const authStore = useAuthStore()
-const stats = ref({})
-const agences = ref([])
-const loading = ref(false)
-const selectedAgenceId = ref('')
-const lastUpdate = ref(new Date().toLocaleTimeString())
+// =============================================
+// 2. INITIALISATIONS
+// =============================================
+const authStore = useAuthStore() // On récupère le store d'authentification
 
-// Options des graphiques
+// =============================================
+// 3. VARIABLES RÉACTIVES : Elles changent, et la page se met à jour automatiquement !
+// =============================================
+const stats = ref({}) // Objet qui contient toutes les statistiques (chiffres, données pour les graphiques)
+const agences = ref([]) // Tableau qui contient la liste des agences (pour le filtre)
+const loading = ref(false) // Si vrai, on affiche le "Chargement..."
+const selectedAgenceId = ref('') // ID de l'agence qu'on a sélectionnée dans le filtre
+const lastUpdate = ref(new Date().toLocaleTimeString()) // Heure à laquelle on a récupéré les données pour la dernière fois
+
+// =============================================
+// 4. OPTIONS DES GRAPHIQUES : Comment les graphiques doivent s'afficher
+// =============================================
+// Options pour les graphiques en donut (Doughnut)
 const pieOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -284,6 +314,7 @@ const pieOptions = {
   }
 }
 
+// Options pour les graphiques en barre (Bar)
 const barOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -296,6 +327,7 @@ const barOptions = {
   }
 }
 
+// Options pour les graphiques en ligne (Line)
 const lineOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -308,14 +340,17 @@ const lineOptions = {
   }
 }
 
-// Données formatées pour les graphiques
+// =============================================
+// 5. DONNÉES POUR LES GRAPHIQUES (computed) : Elles se calculent automatiquement quand stats change
+// =============================================
+// Données pour le graphique "Équipements par catégorie"
 const categoryChartData = computed(() => {
-  if (!stats.value.equipements_par_categorie?.length) return null
+  if (!stats.value.equipements_par_categorie?.length) return null // Si pas de données, on ne montre rien
   
   return {
-    labels: stats.value.equipements_par_categorie.map(c => c.nom),
+    labels: stats.value.equipements_par_categorie.map(c => c.nom), // Les noms des catégories (ex: "Ordinateur", "Imprimante")
     datasets: [{
-      data: stats.value.equipements_par_categorie.map(c => c.equipements_count),
+      data: stats.value.equipements_par_categorie.map(c => c.equipements_count), // Le nombre d'équipements par catégorie
       backgroundColor: [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'
       ],
@@ -324,13 +359,14 @@ const categoryChartData = computed(() => {
   }
 })
 
+// Données pour le graphique "Pannes par statut"
 const pannesStatutData = computed(() => {
   if (!stats.value.pannes_statut?.length) return null
   
   return {
-    labels: stats.value.pannes_statut.map(p => p.statut),
+    labels: stats.value.pannes_statut.map(p => p.statut), // Les statuts (ex: "Déclarée", "En cours")
     datasets: [{
-      data: stats.value.pannes_statut.map(p => p.count),
+      data: stats.value.pannes_statut.map(p => p.count), // Le nombre de pannes par statut
       backgroundColor: [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
       ],
@@ -339,14 +375,15 @@ const pannesStatutData = computed(() => {
   }
 })
 
+// Données pour le graphique "Tendance des pannes (14 jours)"
 const pannesTrendData = computed(() => {
   if (!stats.value.pannes_trend?.length) return null
   
   return {
-    labels: stats.value.pannes_trend.map(t => t.date),
+    labels: stats.value.pannes_trend.map(t => t.date), // Les dates des 14 derniers jours
     datasets: [{
       label: 'Pannes',
-      data: stats.value.pannes_trend.map(t => t.count),
+      data: stats.value.pannes_trend.map(t => t.count), // Le nombre de pannes par jour
       borderColor: '#3b82f6',
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
       tension: 0.3,
@@ -355,34 +392,40 @@ const pannesTrendData = computed(() => {
   }
 })
 
+// Données pour le graphique "Tendance des maintenances (14 jours)"
 const maintenancesTrendData = computed(() => {
   if (!stats.value.maintenances_trend?.length) return null
   
   return {
-    labels: stats.value.maintenances_trend.map(t => t.date),
+    labels: stats.value.maintenances_trend.map(t => t.date), // Les dates des 14 derniers jours
     datasets: [{
       label: 'Maintenances',
-      data: stats.value.maintenances_trend.map(t => t.count),
+      data: stats.value.maintenances_trend.map(t => t.count), // Le nombre de maintenances par jour
       backgroundColor: '#10b981',
       borderRadius: 6
     }]
   }
 })
 
+// Données pour le graphique "Répartition par agence" (seulement pour Super Admin et Gestionnaire Général)
 const agencyChartData = computed(() => {
   if (!stats.value.equipements_par_agence?.length) return null
   
   return {
-    labels: stats.value.equipements_par_agence.map(a => a.nom),
+    labels: stats.value.equipements_par_agence.map(a => a.nom), // Les noms des agences
     datasets: [{
       label: 'Équipements',
-      data: stats.value.equipements_par_agence.map(a => a.total),
+      data: stats.value.equipements_par_agence.map(a => a.total), // Le nombre d'équipements par agence
       backgroundColor: '#3b82f6',
       borderRadius: 6
     }]
   }
 })
 
+// =============================================
+// 6. RÔLE DE L'UTILISATEUR (computed) : Pour afficher son rôle en clair et la bonne couleur
+// =============================================
+// roleLabel : Transforme le code du rôle en texte humain (ex: "super_admin" → "Super Admin")
 const roleLabel = computed(() => ({
   super_admin: 'Super Admin',
   gestionnaire_stock_general: 'G. Stock Général',
@@ -392,6 +435,7 @@ const roleLabel = computed(() => ({
   agent: 'Agent'
 }[authStore.userRole] || authStore.userRole))
 
+// roleBadgeClass : Donne la classe CSS pour le badge du rôle (couleur différente par rôle)
 const roleBadgeClass = computed(() => ({
   super_admin: 'bg-danger-100 text-danger-700',
   gestionnaire_stock_general: 'bg-warning-100 text-warning-700',
@@ -401,27 +445,40 @@ const roleBadgeClass = computed(() => ({
   agent: 'bg-neutral-100 text-neutral-700'
 }[authStore.userRole] || 'bg-neutral-100 text-neutral-700'))
 
+// =============================================
+// 7. FONCTIONS
+// =============================================
+// fetchStats() : Récupère toutes les statistiques du serveur backend
 const fetchStats = async () => {
-  loading.value = true
+  loading.value = true // On active le "Chargement..."
   try {
     const params = {}
+    // Si on a sélectionné une agence dans le filtre, on ajoute son ID aux paramètres de la requête
     if (selectedAgenceId.value) {
       params.agence_id = selectedAgenceId.value
     }
+    // On envoie une requête GET à l'API /dashboard
     const { data } = await api.get('/dashboard', { params })
+    // On met à jour nos variables avec les données reçues
     stats.value = data.stats || {}
     agences.value = data.agences || []
+    // Si l'API nous renvoie des infos sur l'utilisateur, on met à jour le store
     if (data.user) authStore.user = { ...authStore.user, ...data.user }
+    // On met à jour l'heure de la dernière mise à jour
     lastUpdate.value = new Date().toLocaleTimeString()
   } catch (e) {
-    console.error('Erreur dashboard', e)
+    console.error('Erreur dashboard', e) // Si y'a une erreur, on l'affiche dans la console
   } finally {
-    loading.value = false
+    loading.value = false // On arrête le "Chargement..." dans tous les cas
   }
 }
 
+// =============================================
+// 8. CYCLE DE VIE : Ce qui se passe automatiquement
+// =============================================
+// onMounted() : S'exécute DÈS que la page est affichée à l'écran
 onMounted(() => {
-  fetchStats()
+  fetchStats() // On récupère les stats immédiatement
 })
 </script>
 

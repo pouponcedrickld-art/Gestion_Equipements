@@ -1,5 +1,12 @@
 <?php
 
+// =============================================
+// FICHIER : PanneWorkflowService.php
+// RÔLE : Service qui gère TOUT le workflow (cycle de vie) des pannes
+// Il s'assure que chaque transition de statut est autorisée, et met à jour à la fois la panne ET l'équipement
+// Il garde aussi l'historique de chaque changement !
+// =============================================
+
 namespace App\Services;
 
 use App\Events\PanneDeclaree;
@@ -18,25 +25,26 @@ use RuntimeException;
  * Service de workflow métier pour la gestion des pannes.
  *
  * Objectifs :
- * - Centraliser les transitions autorisées
- * - Mettre à jour Panne + Equipement
- * - Historiser chaque changement de statut
- * - Déclencher les événements système
+ * - Centraliser les transitions autorisées (on ne peut pas passer n'importe où !)
+ * - Mettre à jour Panne + Equipement en même temps (transaction DB)
+ * - Historiser chaque changement de statut (pour savoir qui a fait quoi)
+ * - Déclencher les événements système (notifications, etc.)
  */
 class PanneWorkflowService
 {
-    /**
-     * Statuts normalisés (compatibles avec la migration pannes).
-     */
+    // =============================================
+    // LES STATUTS POSSIBLES POUR UNE PANNE
+    // =============================================
     public const STATUT_DECLAREE = 'declaree';
     public const STATUT_EN_COURS = 'en_cours';
     public const STATUT_EN_MAINTENANCE = 'en_maintenance';
     public const STATUT_RESOLUE = 'resolue';
     public const STATUT_IRRECUPERABLE = 'irrecuperable';
 
-    /**
-     * Transitions autorisées.
-     */
+    // =============================================
+    // LES TRANSITIONS AUTORISÉES (d'un statut à un autre)
+    // =============================================
+    // Exemple : depuis "déclarée", on peut aller vers "en cours", "en maintenance", etc.
     private const TRANSITIONS = [
         self::STATUT_DECLAREE => [
             self::STATUT_EN_COURS,
@@ -55,25 +63,30 @@ class PanneWorkflowService
             self::STATUT_IRRECUPERABLE,
             'cloturee',
         ],
-        self::STATUT_RESOLUE => [],
-        self::STATUT_IRRECUPERABLE => [],
+        self::STATUT_RESOLUE => [], // pas de transition depuis résolu
+        self::STATUT_IRRECUPERABLE => [], // pas de transition depuis irrécupérable
     ];
 
 
+    // =============================================
+    // MÉTHODE : DÉCLARER UNE PANNE
+    // =============================================
     /**
      * Déclarer une panne.
      *
      * - Met à jour le statut vers declaree (par défaut)
      * - Met à jour l'équipement vers en_panne
      * - Historise la transition
-     * - Déclenche PanneDeclaree
+     * - Déclenche PanneDeclaree (événement)
      */
     public function declarer(Panne $panne, User $actor, array $payload = []): Panne
     {
+        // On utilise une transaction DB : si quelque chose casse, on annule TOUT
         return DB::transaction(function () use ($panne, $actor, $payload) {
+            // On verrouille l'équipement pour qu'il ne soit pas modifié en même temps par quelqu'un d'autre
             $equipement = $panne->equipement()->lockForUpdate()->firstOrFail();
 
-            // Mise à jour équipement
+            // Mise à jour de l'équipement : il est maintenant en panne
             $this->applyEquipementEtat($equipement, 'en_panne');
 
             $statutAvant = $panne->statut;
@@ -82,12 +95,13 @@ class PanneWorkflowService
                 'date_declaration' => $panne->date_declaration ?? now(),
             ])->save();
 
+            // On ajoute une ligne à l'historique
             $this->createHistory($panne, $actor, $statutAvant, self::STATUT_DECLAREE, $payload);
 
-            // Event + notification (si listeners existent)
+            // On déclenche l'événement "Panne déclarée" (pour les notifications, etc.)
             event(new PanneDeclaree($panne, $actor));
 
-            // Send notification
+            // On envoie une notification aux personnes concernées
             $recipients = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock', 'technicien_maintenance']))
                 ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
                 ->get();
@@ -106,6 +120,10 @@ class PanneWorkflowService
             return $panne;
         });
     }
+
+    // =============================================
+    // MÉTHODES RACCOURCIS POUR LES TRANSITIONS
+    // =============================================
 
     /**
      * Transmettre la panne (agent/stock -> technicien).
@@ -149,7 +167,7 @@ class PanneWorkflowService
         // Convention: cloturee.
         $panne = $this->transition($panne, $actor, 'cloturee', $payload);
 
-        // Send panne resolue notification
+        // On envoie une notification pour dire que la panne est résolue
         $equipement = $panne->equipement()->firstOrFail();
         $recipients = User::whereHas('roles', fn($q) => $q->whereIn('name', ['super_admin', 'gestionnaire_stock_general', 'chef_agence', 'gestionnaire_stock']))
             ->where(fn($q) => $q->where('agence_id', $equipement->agence_actuelle_id)->orWhereHas('roles', fn($rq) => $rq->whereIn('name', ['super_admin', 'gestionnaire_stock_general'])))
@@ -170,29 +188,34 @@ class PanneWorkflowService
     }
 
 
+    // =============================================
+    // MÉTHODE GÉNÉRIQUE : FAIRE UNE TRANSITION
+    // =============================================
     /**
      * Transition générique.
      */
     private function transition(Panne $panne, User $actor, string $nouveauStatut, array $payload): Panne
     {
         return DB::transaction(function () use ($panne, $actor, $nouveauStatut, $payload) {
+            // On verrouille la panne
             $panne = Panne::query()->whereKey($panne->id)->lockForUpdate()->firstOrFail();
             $statutAvant = $panne->statut;
 
+            // On vérifie que la transition est autorisée (on ne peut pas passer n'importe où !)
             $this->assertTransitionAutorisee($statutAvant, $nouveauStatut);
 
             // Mapping vers statut équipemement (statut_global)
             $equipement = $panne->equipement()->lockForUpdate()->firstOrFail();
             $this->applyEquipementEtatPourPanne($equipement, $nouveauStatut);
 
-            // Mise à jour panne (champs optionnels payload)
+            // Mise à jour de la panne
             $update = [
                 'statut' => $nouveauStatut,
-                // Résolution
+                // Si c'est résolu, on met la date de résolution
                 'date_resolution' => $nouveauStatut === self::STATUT_RESOLUE ? ($panne->date_resolution ?? now()) : $panne->date_resolution,
             ];
 
-            // Champs optionnels métier (utilisés aussi dans l'historique)
+            // On ajoute les champs optionnels (diagnostic, coût, etc.)
             $update = array_merge($update, Arr::only($payload, [
                 'diagnostic_technicien',
                 'action_realisee',
@@ -204,15 +227,16 @@ class PanneWorkflowService
             $panne->fill($update);
             $panne->save();
 
+            // On ajoute l'historique
             $this->createHistory($panne, $actor, $statutAvant, $nouveauStatut, $payload);
-
-            // TODO: événements spécifiques par transition (si besoin)
-            // Pour l’instant, on centralise l’historique.
 
             return $panne;
         });
     }
 
+    // =============================================
+    // MÉTHODE : VÉRIFIER SI LA TRANSITION EST AUTORISÉE
+    // =============================================
     /**
      * Vérifie qu’une transition est autorisée.
      */
@@ -224,16 +248,15 @@ class PanneWorkflowService
         }
     }
 
+    // =============================================
+    // MÉTHODE : METTRE À JOUR L'ÉQUIPEMENT SELON LE STATUT DE LA PANNE
+    // =============================================
     /**
      * Met à jour l’équipement (statut_global/etat) à partir du statut de panne.
      */
     private function applyEquipementEtatPourPanne(Equipement $equipement, string $statutPanne): void
     {
-        // Ici on respecte la logique existante du projet :
-        // - la panne force au minimum en_panne
-        // - en_maintenance force en_maintenance
-        // - résolue / irrécupérable sort de l’état panne
-
+        // On définit le mapping : selon le statut de la panne, quel est le statut de l'équipement ?
         $mapping = match ($statutPanne) {
             self::STATUT_DECLAREE => ['statut_global' => 'en_panne'],
             self::STATUT_EN_COURS => ['statut_global' => 'en_panne'],
@@ -244,24 +267,24 @@ class PanneWorkflowService
             default => null,
         };
 
-
         if (!$mapping) {
             return;
         }
 
-        // Utilise les helpers de tracabilité existants si le projet les utilise.
-        // Par sécurité on fait simple: update.
         $equipement->update($mapping);
-
-        // Si votre Equipement::createMouvement supporte les valeurs,
-        // on peut aussi tracer ici, mais ce refactor est volontairement minimal.
     }
 
+    // =============================================
+    // MÉTHODE AUXILIAIRE : METTRE À JOUR LE STATUT DE L'ÉQUIPEMENT
+    // =============================================
     private function applyEquipementEtat(Equipement $equipement, string $statutGlobal): void
     {
         $equipement->update(['statut_global' => $statutGlobal]);
     }
 
+    // =============================================
+    // MÉTHODE : CRÉER UNE LIGNE D'HISTORIQUE
+    // =============================================
     /**
      * Crée une ligne d’historique.
      */

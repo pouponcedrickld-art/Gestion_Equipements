@@ -1,12 +1,15 @@
 <template>
   <div class="layout-wrapper">
-    <!-- Sidebar -->
+    <!-- 1. SIDEBAR (la barre de menu à gauche) -->
     <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+      <!-- 1a. Logo en haut de la sidebar -->
       <div class="logo">
         <h2>GESTPARK</h2>
       </div>
       
+      <!-- 1b. Menu de navigation : les liens vers les pages -->
       <nav class="menu">
+        <!-- Pour chaque élément du menu (généré selon le rôle de l'utilisateur), on fait un lien -->
         <router-link
           v-for="item in menuItems"
           :key="item.route"
@@ -14,19 +17,25 @@
           class="menu-item"
           :class="{ active: $route.path === item.route }"
         >
-          <i :class="item.icon"></i>
-          <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+          <i :class="item.icon"></i> <!-- Icône de l'élément -->
+          <span v-if="!sidebarCollapsed">{{ item.label }}</span> <!-- Texte de l'élément (si sidebar pas réduite) -->
         </router-link>
       </nav>
       
+      <!-- 1c. Bas de la sidebar : infos utilisateur et bouton déconnexion -->
       <div class="sidebar-footer">
+        <!-- Infos de l'utilisateur connecté -->
         <div class="user-info">
+          <!-- Badge avec le rôle (couleur selon le rôle) -->
           <span class="role-badge" :class="userRoleClass">
             {{ authStore.userRole }}
           </span>
+          <!-- Nom de l'utilisateur -->
           <p>{{ authStore.user?.name }}</p>
+          <!-- Nom de l'agence de l'utilisateur -->
           <small>{{ authStore.user?.agence?.nom }}</small>
         </div>
+        <!-- Bouton de déconnexion -->
         <button @click="logout" class="logout-btn">
           <i class="pi pi-sign-out"></i>
           <span v-if="!sidebarCollapsed">Déconnexion</span>
@@ -34,16 +43,21 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- 2. CONTENU PRINCIPAL (à droite de la sidebar) -->
     <main class="main-content">
+      <!-- 2a. Topbar (barre en haut) -->
       <header class="top-bar">
+        <!-- Bouton pour réduire/agrandir la sidebar -->
         <button @click="toggleSidebar" class="toggle-btn">
           <i class="pi pi-bars"></i>
         </button>
+        <!-- Titre de la page (ex: "Tableau de bord") -->
         <h1>{{ pageTitle }}</h1>
+        <!-- Composant pour les notifications (cloche) -->
         <NotificationCenter />
       </header>
       
+      <!-- 2b. Zone où s'affiche le contenu de la page (ce qui est passé via <slot />) -->
       <div class="content">
         <slot />
       </div>
@@ -52,25 +66,52 @@
 </template>
 
 <script setup>
+// =============================================
+// IMPORTS : ce qu'on a besoin pour le layout
+// =============================================
+// Importe les fonctions de Vue 3 (ref pour variables réactives, computed pour propriétés calculées)
 import { ref, computed } from 'vue'
+// Importe les fonctions de Vue Router (useRoute pour savoir quelle page on est, useRouter pour naviguer)
 import { useRoute, useRouter } from 'vue-router'
+// Importe le store d'authentification (pour infos utilisateur, rôle, etc.)
 import { useAuthStore } from '@/stores/authStore'
+// Importe la fonction qui génère le menu SELON LE RÔLE DE L'UTILISATEUR (dans utils/permissions.js)
 import { getMenuItems } from '@/utils/permissions'
+// Importe le composant pour les notifications (la cloche en haut à droite)
 import NotificationCenter from '@/components/notifications/NotificationCenter.vue'
 
+// =============================================
+// INITIALISATIONS
+// =============================================
+// route : contient les infos de la page actuelle (chemin, paramètres, etc.)
 const route = useRoute()
+// router : permet de naviguer vers d'autres pages
 const router = useRouter()
+// authStore : le store d'authentification
 const authStore = useAuthStore()
 
+// =============================================
+// VARIABLES RÉACTIVES (ref)
+// =============================================
+// sidebarCollapsed : true si la sidebar est réduite, false sinon (défaut : false)
 const sidebarCollapsed = ref(false)
 
+// =============================================
+// PROPRIÉTÉS CALCULÉES (computed)
+// =============================================
+// menuItems : récupère la liste des éléments du menu ADAPTÉE AU RÔLE DE L'UTILISATEUR
+// C'est une computed, donc ça se met à jour automatiquement si le rôle change !
 const menuItems = computed(() => getMenuItems())
 
+// pageTitle : trouve le titre de la page en fonction de la route actuelle
 const pageTitle = computed(() => {
+  // Cherche dans le menu l'élément qui a la même route que la page actuelle
   const item = menuItems.value.find(i => i.route === route.path)
+  // Si on trouve un élément, on utilise son label, sinon on met "GESTPARK"
   return item?.label || 'GESTPARK'
 })
 
+// userRoleClass : donne la classe CSS pour le badge du rôle (couleur différente selon le rôle)
 const userRoleClass = computed(() => {
   const classes = {
     super_admin: 'badge-admin',
@@ -80,15 +121,24 @@ const userRoleClass = computed(() => {
     technicien_maintenance: 'badge-tech',
     agent: 'badge-agent'
   }
+  // Retourne la classe correspondant au rôle, ou une chaîne vide si pas trouvé
   return classes[authStore.userRole] || ''
 })
 
+// =============================================
+// FONCTIONS
+// =============================================
+// toggleSidebar : inverse l'état de la sidebar (réduite ↔ agrandie)
 const toggleSidebar = () => {
+  // Inverse la valeur : si c'était true → false, si false → true
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
+// logout : déconnecte l'utilisateur et redirige vers la page de login
 const logout = async () => {
+  // 1. Appelle la fonction logout du store d'authentification (authStore.js)
   await authStore.logout()
+  // 2. Redirige l'utilisateur vers la page de login
   router.push('/login')
 }
 </script>
@@ -200,11 +250,11 @@ const logout = async () => {
   margin-bottom: 8px;
 }
 
-.badge-admin { background: #fee2e2; color: #ef4444; }
-.badge-gestionnaire { background: #fef3c7; color: #f59e0b; }
-.badge-chef { background: #ede9fe; color: #8b5cf6; }
-.badge-tech { background: #e0f2fe; color: #06b6d4; }
-.badge-agent { background: #dcfce7; color: #10b981; }
+.badge-admin { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.badge-gestionnaire { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.badge-chef { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+.badge-tech { background: rgba(6, 182, 212, 0.2); color: #06b6d4; }
+.badge-agent { background: rgba(16, 185, 129, 0.2); color: #10b981; }
 
 .user-info p {
   margin: 0;
@@ -235,9 +285,9 @@ const logout = async () => {
 }
 
 .logout-btn:hover {
-  background: #fee2e2;
+  background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
-  border-color: #fca5a5;
+  border-color: #ef4444;
 }
 
 .main-content {

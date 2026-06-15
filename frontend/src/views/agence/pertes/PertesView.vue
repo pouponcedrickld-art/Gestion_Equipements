@@ -3,8 +3,8 @@
     <div class="pertes-container">
       <div class="header-bar">
         <div class="header-left">
-          <h2>Gestion des Pertes & Casse</h2>
-          <p>Signalez et validez les pertes, vols ou casse de matériel</p>
+          <h2>Gestion des Pertes & Cassures</h2>
+          <p>Signalez et validez les pertes, vols ou cassures de matériel</p>
         </div>
         <div class="header-right">
           <button class="add-btn" @click="openAddModal">
@@ -17,15 +17,10 @@
         <div class="filters-row">
           <div class="search-box">
             <i class="pi pi-search"></i>
-            <input v-model="search" type="text" placeholder="Rechercher une déclaration...">
+            <InputText v-model="search" placeholder="Rechercher une déclaration..." />
           </div>
           <div class="select-box">
-            <select v-model="filters.statut">
-              <option value="">Tous les statuts</option>
-              <option value="en attente">En attente</option>
-              <option value="validée">Validée</option>
-              <option value="clôturée">Clôturée</option>
-            </select>
+            <Dropdown v-model="filters.statut" :options="statutOptions" placeholder="Tous les statuts" />
           </div>
         </div>
       </div>
@@ -70,47 +65,27 @@
         </div>
       </div>
 
-      <Dialog 
-        v-model:visible="showModal" 
-        :header="isEdit ? 'Modifier la Déclaration' : 'Nouvelle Déclaration'" 
-        :style="{ width: '500px' }" 
-        modal
-        class="p-fluid dark-modal"
-      >
+      <Dialog v-model:visible="showModal" :header="isEdit ? 'Modifier la Déclaration' : 'Nouvelle Déclaration'" :style="{ width: '500px' }" modal class="p-fluid dark-modal">
         <form @submit.prevent="submitPerte" class="perte-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Type</label>
-            <select v-model="perteForm.type" class="w-full" required>
-              <option value="perte">Perte</option>
-              <option value="vol">Vol</option>
-              <option value="casse">Casse</option>
-            </select>
+            <Dropdown v-model="perteForm.type" :options="typeOptions" required />
           </div>
           <div class="field mb-4">
             <label class="font-bold block mb-2">Équipement</label>
-            <select v-model="perteForm.equipement_id" class="w-full" required>
-              <option value="">Sélectionner un équipement</option>
-              <option v-for="eq in equipements" :key="eq.id" :value="eq.id">{{ eq.nom }} ({{ eq.reference }})</option>
-            </select>
+            <Dropdown v-model="perteForm.equipement_id" :options="equipementOptions" option-label="label" option-value="id" placeholder="Sélectionner un équipement" required />
           </div>
           <div class="field mb-4">
             <label class="font-bold block mb-2">Agent</label>
-            <select v-model="perteForm.agent_id" class="w-full" required>
-              <option value="">Sélectionner un agent</option>
-              <option v-for="a in agents" :key="a.id" :value="a.id">{{ a.nom }} {{ a.prenom }}</option>
-            </select>
+            <Dropdown v-model="perteForm.agent_id" :options="agentOptions" option-label="label" option-value="id" placeholder="Sélectionner un agent" required />
           </div>
           <div class="field mb-4">
             <label class="font-bold block mb-2">Description</label>
-            <textarea v-model="perteForm.description" rows="4" class="w-full" required></textarea>
+            <Textarea v-model="perteForm.description" rows="4" placeholder="Décrire la perte/vol/cassure" required />
           </div>
           <div v-if="isEdit" class="field mb-4">
             <label class="font-bold block mb-2">Statut</label>
-            <select v-model="perteForm.statut" class="w-full">
-              <option value="en attente">En attente</option>
-              <option value="validée">Validée</option>
-              <option value="clôturée">Clôturée</option>
-            </select>
+            <Dropdown v-model="perteForm.statut" :options="statutOptions" />
           </div>
           <div class="modal-footer">
             <Button label="Annuler" class="p-button-secondary" @click="showModal = false" />
@@ -130,6 +105,9 @@ import { useEquipementStore } from '@/stores/equipementStore.js'
 import { useAgentStore } from '@/stores/agentStore.js'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
+import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
 
 const perteStore = usePerteStore()
@@ -148,11 +126,36 @@ const showModal = ref(false)
 const isEdit = ref(false)
 const perteForm = ref({})
 
+// Options
+const statutOptions = computed(() => [
+  { label: 'En attente', value: 'en attente' },
+  { label: 'Validée', value: 'validée' },
+  { label: 'Clôturée', value: 'clôturée' }
+])
+const typeOptions = computed(() => [
+  { label: 'Perte', value: 'perte' },
+  { label: 'Vol', value: 'vol' },
+  { label: 'Cassure', value: 'cassure' }
+])
+const equipementOptions = computed(() => 
+  equipements.value.map(eq => ({ 
+    label: `${eq.nom} (${eq.reference})`, 
+    value: eq.id 
+  }))
+)
+const agentOptions = computed(() => 
+  agents.value.map(agent => ({ 
+    label: `${agent.nom} ${agent.prenom}`, 
+    value: agent.id 
+  }))
+)
+
+// Filtres
 const filteredPertes = computed(() => {
   return pertes.value.filter(p => {
     const matchesSearch = !search.value || 
-      p.equipement?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
-      p.agent?.nom.toLowerCase().includes(search.value.toLowerCase())
+      (p.equipement?.nom.toLowerCase().includes(search.value.toLowerCase()) ||
+        p.agent?.nom.toLowerCase().includes(search.value.toLowerCase()))
     const matchesStatut = !filters.value.statut || p.statut === filters.value.statut
     return matchesSearch && matchesStatut
   })
@@ -229,43 +232,227 @@ const formatDate = (date) => {
 }
 
 const formatType = (type) => {
-  return { perte: 'Perte', vol: 'Vol', casse: 'Casse' }[type] || type
+  return { perte: 'Perte', vol: 'Vol', cassure: 'Cassure' }[type] || type
 }
 
 onMounted(fetchData)
 </script>
 
 <style scoped>
-.pertes-container { padding: 24px; color: #f8fafc; }
-.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.header-bar h2 { margin: 0; font-size: 1.5rem; }
-.header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
-.add-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.add-btn:hover { background: #2563eb; }
-.filters-card { background: #1e293b; border: 1px solid #334155; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
-.filters-row { display: flex; gap: 16px; flex-wrap: wrap; }
-.search-box { position: relative; flex: 1; min-width: 200px; }
-.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.search-box input, select { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px 12px 10px 40px; border-radius: 8px; width: 100%; }
-select { padding-left: 12px; width: 180px; }
-.table-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { background: #0f172a; padding: 14px 16px; text-align: left; color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-.data-table td { padding: 14px 16px; border-bottom: 1px solid #334155; }
-.type-badge, .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-.type-badge.perte { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
-.type-badge.vol { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-.type-badge.casse { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.status-badge.en-attente { background: rgba(107, 114, 128, 0.15); color: #94a3b8; }
-.status-badge.validée { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-.status-badge.clôturée { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.actions { display: flex; gap: 8px; }
-.validate-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.edit-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.delete-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.loading-state, .empty-state { padding: 60px; text-align: center; color: #94a3b8; }
-.loading-state i { font-size: 2rem; margin-bottom: 12px; color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.perte-form select, .perte-form textarea { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px; border-radius: 6px; width: 100%; }
-:deep(.dark-modal) .p-dialog-content, :deep(.dark-modal) .p-dialog-header { background: #1e293b; color: #f8fafc; border-color: #334155; }
+.pertes-container {
+  padding: 24px;
+  color: #f8fafc;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-bar h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.header-bar p {
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.add-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.add-btn:hover {
+  background: #2563eb;
+}
+
+.filters-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  z-index: 1;
+}
+
+.search-box :deep(.p-inputtext) {
+  padding-left: 36px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+}
+
+.table-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #0f172a;
+  padding: 14px 16px;
+  text-align: left;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.type-badge,
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.type-badge.perte {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.type-badge.vol {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.type-badge.cassure {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-badge.en attente {
+  background: rgba(107, 114, 128, 0.15);
+  color: #94a3b8;
+}
+
+.status-badge.validée {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.status-badge.clôturée {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.validate-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background: #334155;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.loading-state,
+.empty-state {
+  padding: 60px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.loading-state i {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  color: #3b82f6;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.perte-form :deep(.p-dropdown),
+.perte-form :deep(.p-inputtext),
+.perte-form :deep(.p-textarea) {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+}
+
+.perte-form :deep(.p-dropdown .p-dropdown-label),
+.perte-form :deep(.p-dropdown .p-dropdown-item) {
+  color: #f8fafc;
+}
+
+.perte-form :deep(.p-dropdown-panel) {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+:deep(.dark-modal) .p-dialog-content,
+:deep(.dark-modal) .p-dialog-header {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
 </style>

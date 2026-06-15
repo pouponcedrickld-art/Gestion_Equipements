@@ -1,4 +1,10 @@
 <?php
+// =============================================
+// FICHIER : DashboardAgenceController.php
+// RÔLE : Contrôleur qui gère le dashboard de l'application
+// Fournit toutes les statistiques et données pour le tableau de bord
+// =============================================
+
 namespace App\Http\Controllers\Agence;
 
 use App\Http\Controllers\Controller;
@@ -15,17 +21,27 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardAgenceController extends Controller
 {
+    // =============================================
+    // MÉTHODE PRINCIPALE : Récupère toutes les stats du dashboard
+    // =============================================
     public function index(Request $r)
     {
+        // Récupère l'utilisateur connecté
         $user = $r->user();
+        // Vérifie si l'utilisateur a un rôle global (peut voir toutes les agences)
         $isGlobal = $user->hasRole(['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance']);
+        // Récupère l'ID de l'agence sélectionnée (si présente dans les paramètres de la requête)
         $agenceId = $r->query('agence_id');
 
+        // Crée une clé de cache unique pour les stats
         $cacheKey = 'dashboard_stats_' . ($isGlobal ? 'global' : $user->agence_id) . ($agenceId ? '_' . $agenceId : '');
+        // Récupère les stats depuis le cache (valides 5 minutes = 300 secondes)
         $stats = Cache::remember($cacheKey, 300, function () use ($isGlobal, $user, $agenceId) {
             $stats = [];
 
+            // Si l'utilisateur est global (peut voir toutes les agences)
             if ($isGlobal) {
+                // Fonction helper pour ajouter le filtre par agence aux requêtes
                 $baseQuery = function ($query) use ($agenceId) {
                     if ($agenceId) {
                         $query->where('agence_actuelle_id', $agenceId);
@@ -33,6 +49,7 @@ class DashboardAgenceController extends Controller
                     return $query;
                 };
 
+                // Récupère toutes les statistiques globales
                 $stats = [
                     'total_equipements' => Equipement::when($agenceId, function ($q, $agenceId) {
                         return $q->where('agence_actuelle_id', $agenceId);
@@ -59,7 +76,7 @@ class DashboardAgenceController extends Controller
                         $q->whereHas('user', fn($u) => $u->where('agence_id', $agenceId));
                     })->where('statut', 'actif')->count(),
                     
-                    // New indicators
+                    // Nouveaux indicateurs
                     'nombre_pannes' => Panne::when($agenceId, function ($q, $agenceId) {
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
                     })->count(),
@@ -77,12 +94,14 @@ class DashboardAgenceController extends Controller
                     })->where('garantie_date_fin', '>=', now())->where('garantie_date_fin', '<=', now()->addDays(30))->count(),
                 ];
 
+                // Équipements répartis par agence
                 $stats['equipements_par_agence'] = Agence::when($agenceId, function ($q, $agenceId) {
                     return $q->where('id', $agenceId);
                 })->where('type', 'sous_agence')
                     ->withCount('equipementsActuels as total')
                     ->get(['id', 'nom']);
                 
+                // Équipements répartis par catégorie
                 $stats['equipements_par_categorie'] = \App\Models\Categorie::withCount([
                     'equipements' => function ($q) use ($agenceId) {
                         if ($agenceId) {
@@ -91,6 +110,7 @@ class DashboardAgenceController extends Controller
                     }
                 ])->get(['id', 'nom', 'equipements_count']);
 
+                // Activité récente des 7 derniers jours
                 $stats['activite_recente'] = [
                     'transferts' => Transfert::when($agenceId, function ($q, $agenceId) {
                         $q->where('agence_source_id', $agenceId)->orWhere('agence_destination_id', $agenceId);
@@ -102,11 +122,12 @@ class DashboardAgenceController extends Controller
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
                     })->where('created_at', '>=', now()->subDays(7))->count(),
                     'maintenances' => Maintenance::when($agenceId, function ($q, $agenceId) {
-                        $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
+                        $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId);
                     })->where('created_at', '>=', now()->subDays(7))->count(),
                 ];
 
                 // Données pour les graphiques
+                // Tendance des pannes sur les 14 derniers jours
                 $stats['pannes_trend'] = Panne::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
                     ->when($agenceId, function ($q, $agenceId) {
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
@@ -116,6 +137,7 @@ class DashboardAgenceController extends Controller
                     ->orderBy('date')
                     ->get();
                     
+                // Tendance des maintenances sur les 14 derniers jours
                 $stats['maintenances_trend'] = Maintenance::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
                     ->when($agenceId, function ($q, $agenceId) {
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
@@ -125,13 +147,16 @@ class DashboardAgenceController extends Controller
                     ->orderBy('date')
                     ->get();
                     
+                // Répartition des pannes par statut
                 $stats['pannes_statut'] = Panne::select('statut', DB::raw('count(*) as count'))
                     ->when($agenceId, function ($q, $agenceId) {
                         $q->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $agenceId));
                     })
                     ->groupBy('statut')
                     ->get();
-            } else {
+            } 
+            // Si l'utilisateur est dans une agence spécifique (pas global)
+            else {
                 $aid = $agenceId ?? $user->agence_id;
                 $stats = [
                     'total_equipements' => Equipement::where('agence_actuelle_id', $aid)->count(),
@@ -146,7 +171,7 @@ class DashboardAgenceController extends Controller
                     'pannes_a_traiter' => Panne::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->where('statut', 'declaree')->count(),
                     'agents_count' => \App\Models\Agent::whereHas('user', fn($q) => $q->where('agence_id', $aid))->count(),
                     
-                    // New indicators
+                    // Nouveaux indicateurs
                     'nombre_pannes' => Panne::whereHas('equipement', fn($q) => $q->where('agence_actuelle_id', $aid))->count(),
                     'taux_resolution' => $this->calculateResolutionRate($aid),
                     'cout_maintenance' => $this->calculateMaintenanceCost($aid),
@@ -156,8 +181,10 @@ class DashboardAgenceController extends Controller
                     'garanties_expirant' => Equipement::where('agence_actuelle_id', $aid)->where('garantie_date_fin', '>=', now())->where('garantie_date_fin', '<=', now()->addDays(30))->count(),
                 ];
 
+                // Équipements par catégorie pour une agence
                 $stats['equipements_par_categorie'] = \App\Models\Categorie::withCount(['equipements' => fn($q) => $q->where('agence_actuelle_id', $aid)])->get(['id', 'nom', 'equipements_count']);
                 
+                // Tendance des pannes
                 $stats['pannes_trend'] = Panne::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
                     ->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $aid))
                     ->where('created_at', '>=', now()->subDays(14))
@@ -165,6 +192,7 @@ class DashboardAgenceController extends Controller
                     ->orderBy('date')
                     ->get();
                     
+                // Tendance des maintenances
                 $stats['maintenances_trend'] = Maintenance::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
                     ->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $aid))
                     ->where('created_at', '>=', now()->subDays(14))
@@ -172,6 +200,7 @@ class DashboardAgenceController extends Controller
                     ->orderBy('date')
                     ->get();
                     
+                // Répartition des pannes par statut
                 $stats['pannes_statut'] = Panne::select('statut', DB::raw('count(*) as count'))
                     ->whereHas('equipement', fn($eq) => $eq->where('agence_actuelle_id', $aid))
                     ->groupBy('statut')
@@ -181,6 +210,7 @@ class DashboardAgenceController extends Controller
             return $stats;
         });
 
+        // Retourne les données en JSON
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -193,6 +223,11 @@ class DashboardAgenceController extends Controller
         ]);
     }
     
+    // =============================================
+    // MÉTHODES AUXILIAIRES
+    // =============================================
+    
+    // Calcule le taux de résolution des pannes
     private function calculateResolutionRate($agenceId = null)
     {
         $total = Panne::when($agenceId, function ($q, $agenceId) {
@@ -208,6 +243,7 @@ class DashboardAgenceController extends Controller
         return round(($resolu / $total) * 100, 2);
     }
     
+    // Calcule le coût total des maintenances
     private function calculateMaintenanceCost($agenceId = null)
     {
         return Maintenance::when($agenceId, function ($q, $agenceId) {
@@ -215,6 +251,7 @@ class DashboardAgenceController extends Controller
         })->sum('cout');
     }
     
+    // Calcule le temps moyen de réparation (en heures)
     private function calculateAvgRepairTime($agenceId = null)
     {
         $pannes = Panne::when($agenceId, function ($q, $agenceId) {

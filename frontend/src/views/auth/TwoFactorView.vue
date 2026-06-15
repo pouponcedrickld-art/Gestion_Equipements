@@ -1,21 +1,31 @@
+<!-- =============================================
+  FICHIER : views/auth/TwoFactorView.vue
+  RÔLE : Page de double authentification (2FA)
+  Demande un code à 6 chiffres → appelle authStore.verify2FA()
+  Si ok → redirige vers dashboard
+============================================== -->
 <template>
   <div class="twofa-box">
     <h1>GESTPARK</h1>
     <p class="subtitle">Double authentification</p>
 
+    <!-- Formulaire de saisie du code 2FA -->
     <form @submit.prevent="handleVerify">
       <div class="form-group">
         <label>Code à 6 chiffres</label>
         <input v-model="code" type="text" maxlength="6" placeholder="000000" required />
       </div>
 
+      <!-- Bouton de vérification -->
       <button type="submit" :disabled="loading">
         {{ loading ? 'Vérification...' : 'Vérifier' }}
       </button>
 
+      <!-- Message d'erreur si le code est invalide -->
       <p v-if="error" class="error">{{ error }}</p>
     </form>
 
+    <!-- Bouton pour retourner à la page de login -->
     <button @click="goBack" class="back-btn">
       <i class="pi pi-arrow-left"></i> Retour
     </button>
@@ -23,30 +33,47 @@
 </template>
 
 <script setup>
+// =============================================
+// 1. IMPORTS
+// =============================================
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore.js'
 
+// =============================================
+// 2. INITIALISATIONS
+// =============================================
 const router = useRouter()
 const authStore = useAuthStore()
 
-const code = ref('')
-const loading = ref(false)
-const error = ref('')
+// =============================================
+// 3. VARIABLES RÉACTIVES
+// =============================================
+const code = ref('') // Code 2FA saisi par l'utilisateur
+const loading = ref(false) // True pendant la vérification
+const error = ref('') // Message d'erreur
 
+// =============================================
+// 4. FONCTIONS
+// =============================================
+// handleVerify() : Vérifie le code 2FA
 const handleVerify = async () => {
   loading.value = true
   error.value = ''
   try {
+    // Appelle verify2FA du store avec le code
     await authStore.verify2FA(code.value)
+    // Si ça fonctionne → redirige vers le dashboard
     router.push('/')
   } catch (err) {
+    // Si erreur → affiche le message
     error.value = err.response?.data?.message || 'Code invalide'
   } finally {
     loading.value = false
   }
 }
 
+// goBack() : Retourne à la page de login et réinitialise les variables du store
 const goBack = () => {
   authStore.requires2FA = false
   authStore.tempUserId = null

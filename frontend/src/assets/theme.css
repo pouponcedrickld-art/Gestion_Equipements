@@ -1,22 +1,22 @@
 :root {
-  /* Colors from Login Page */
-  --primary: #facc15;
-  --primary-hover: #eab308;
-  --primary-light: rgba(250, 204, 21, 0.2);
+  /* Dark Theme Colors */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.2);
   
-  --secondary: #78716c;
-  --secondary-light: #fefaf0;
+  --secondary: #475569;
+  --secondary-light: #334155;
   
-  --bg-app: #fbf9f4;
-  --bg-card: #ffffff;
-  --bg-input: #fafafa;
+  --bg-app: #0f172a;
+  --bg-card: #1e293b;
+  --bg-input: #1e293b;
   
-  --text-dark: #000000;
-  --text-main: #111827;
-  --text-muted: #78716c;
+  --text-dark: #f8fafc;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
   --text-light: #ffffff;
   
-  --border-color: #e2e8f0;
+  --border-color: #334155;
   --error: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
@@ -28,16 +28,16 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
   
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(250, 204, 21, 0.25);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(59, 130, 246, 0.25);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 
-  /* Sidebar Specific (adapted to match the theme) */
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #111827;
-  --sidebar-active-bg: #fefaf0;
-  --sidebar-active-text: #000000;
-  --sidebar-border: #e2e8f0;
+  /* Sidebar Specific */
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #e2e8f0;
+  --sidebar-active-bg: #334155;
+  --sidebar-active-text: #f8fafc;
+  --sidebar-border: #334155;
 }
 
 /* Base Styles */
@@ -55,7 +55,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
 }
 
-/* Global Button Styles - Unified & Professional */
+/* Global Button Styles */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -81,14 +81,14 @@ h1, h2, h3, h4, h5, h6 {
 /* Variants */
 .btn-primary {
   background-color: var(--primary);
-  color: var(--text-dark);
-  box-shadow: 0 4px 6px -1px rgba(250, 204, 21, 0.2), 0 2px 4px -1px rgba(250, 204, 21, 0.1);
+  color: var(--text-light);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2), 0 2px 4px -1px rgba(59, 130, 246, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgba(250, 204, 21, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -108,9 +108,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-danger {
-  background-color: #fee2e2;
+  background-color: rgba(239, 68, 68, 0.2);
   color: #ef4444;
-  border-color: #fca5a5;
+  border-color: #ef4444;
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -120,9 +120,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-success {
-  background-color: #dcfce7;
+  background-color: rgba(16, 185, 129, 0.2);
   color: #10b981;
-  border-color: #86efac;
+  border-color: #10b981;
 }
 
 .btn-success:hover:not(:disabled) {
@@ -191,6 +191,7 @@ label {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
 }
 
 /* Table Style */
@@ -266,43 +267,6 @@ tr:hover td {
 .text-primary { color: var(--primary); }
 .text-muted { color: var(--text-muted); }
 
-/* Professional Data Grid Table */
-.grid-table, .p-datatable.professional-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-}
-
-.p-datatable.professional-table .p-datatable-thead > tr > th {
-  background-color: var(--bg-input) !important;
-  color: var(--text-dark) !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  letter-spacing: 0.05em !important;
-  padding: 1.25rem 1rem !important;
-  border-bottom: 2px solid var(--border-color) !important;
-}
-
-.p-datatable.professional-table .p-datatable-tbody > tr > td {
-  padding: 1.25rem 1rem !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-
-.p-datatable.professional-table .p-datatable-tbody > tr:last-child > td {
-  border-bottom: none !important;
-}
-
-.p-datatable.professional-table .p-datatable-tbody > tr:hover > td {
-  background-color: var(--secondary-light) !important;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
@@ -323,89 +287,57 @@ tr:hover td {
   background: var(--secondary);
 }
 
-/* Global Form Overrides */
-.p-fluid .field {
-  margin-bottom: 1.5rem;
-}
-
-.p-inputtext, .p-dropdown, .p-inputnumber-input, .p-calendar .p-inputtext {
+/* PrimeVue Component Styling - Dark Theme */
+.p-inputtext, 
+.p-dropdown, 
+.p-inputnumber-input, 
+.p-calendar .p-inputtext,
+.p-textarea {
   background: var(--bg-input) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--radius-md) !important;
   padding: 12px 14px !important;
+  color: var(--text-main) !important;
   transition: all 0.2s !important;
 }
 
-.p-inputtext:focus, .p-dropdown:focus, .p-inputnumber-input:focus, .p-calendar .p-inputtext:focus {
+.p-inputtext:focus, 
+.p-dropdown:focus, 
+.p-inputnumber-input:focus, 
+.p-calendar .p-inputtext:focus,
+.p-textarea:focus {
   border-color: var(--primary) !important;
   background: var(--bg-card) !important;
   box-shadow: 0 0 0 3px var(--primary-light) !important;
 }
 
-/* Professional Form Layout */
-.form-view-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+.p-dropdown .p-dropdown-label {
+  color: var(--text-main) !important;
 }
 
-.form-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  padding: 2.5rem;
-  border: 1px solid var(--border-color);
+.p-dropdown .p-dropdown-trigger {
+  color: var(--text-muted) !important;
 }
 
-.form-header {
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
+.p-dropdown-panel {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
-.form-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-dark);
+.p-dropdown-item {
+  color: var(--text-main) !important;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
+.p-dropdown-item:hover {
+  background: var(--secondary-light) !important;
 }
 
-/* Page Headers */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
+.p-dropdown-item.p-highlight {
+  background: var(--primary-light) !important;
+  color: var(--text-dark) !important;
 }
 
-.page-title-section h1 {
-  margin: 0;
-  font-size: 1.875rem;
-}
-
-.page-title-section p {
-  margin: 0.25rem 0 0;
-  color: var(--text-muted);
-}
-
-/* Modern Stats Cards (Grid version) */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-}
-
-/* Professional Dialog/Modal Uniformity */
+/* PrimeVue Dialog */
 .p-dialog {
   background: var(--bg-card) !important;
   border-radius: var(--radius-xl) !important;
@@ -414,7 +346,7 @@ tr:hover td {
 }
 
 .p-dialog .p-dialog-header {
-  background: var(--bg-input) !important;
+  background: var(--bg-card) !important;
   color: var(--text-dark) !important;
   padding: 1.5rem 2rem !important;
   border-bottom: 1px solid var(--border-color) !important;
@@ -427,6 +359,15 @@ tr:hover td {
   font-size: 1.25rem !important;
 }
 
+.p-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--text-muted) !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-header-icon:hover {
+  background: var(--secondary-light) !important;
+  color: var(--text-dark) !important;
+}
+
 .p-dialog .p-dialog-content {
   background: var(--bg-card) !important;
   padding: 2rem !important;
@@ -434,7 +375,7 @@ tr:hover td {
 }
 
 .p-dialog .p-dialog-footer {
-  background: var(--bg-input) !important;
+  background: var(--bg-card) !important;
   padding: 1.25rem 2rem !important;
   border-top: 1px solid var(--border-color) !important;
   border-bottom-left-radius: var(--radius-xl) !important;
@@ -443,33 +384,51 @@ tr:hover td {
 
 /* Mask Backdrop */
 .p-dialog-mask {
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(4px) !important;
 }
 
-/* Form elements inside Dialogs */
-.p-dialog .field label {
-  color: var(--text-dark) !important;
-  font-weight: 700 !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.p-dialog .p-button {
-  padding: 0.75rem 1.5rem !important;
+/* PrimeVue Buttons */
+.p-button {
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  color: var(--text-light) !important;
   border-radius: var(--radius-md) !important;
+  transition: all 0.2s !important;
 }
 
-.p-dialog .p-button-secondary.p-button-text {
-  color: var(--text-muted) !important;
+.p-button:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
 }
 
-.p-dialog .p-button-secondary.p-button-text:hover {
+.p-button.p-button-secondary {
   background: var(--secondary-light) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
 }
 
-/* Specific button styles for confirmation */
-.p-dialog .p-button-danger {
-  background: var(--error) !important;
-  border-color: var(--error) !important;
+.p-button.p-button-secondary:hover {
+  background: var(--border-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* PrimeVue Calendar */
+.p-datepicker {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.p-datepicker table td > span {
+  color: var(--text-main) !important;
+}
+
+.p-datepicker table td.p-datepicker-today > span {
+  background: var(--primary) !important;
   color: white !important;
+}
+
+.p-datepicker table td > span:hover {
+  background: var(--secondary-light) !important;
 }
