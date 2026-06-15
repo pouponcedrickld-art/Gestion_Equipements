@@ -77,7 +77,7 @@ class DemandeMaterielController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'quantite' => 'required|integer|min:1',
             'urgence' => 'required|in:Basse,Moyenne,Haute',
             'motif' => 'required|string',
@@ -86,7 +86,7 @@ class DemandeMaterielController extends Controller
         ]);
 
         $demande = DemandeMateriel::findOrFail($id);
-        $demande->update($request->all());
+        $demande->update($validated);
 
         return response()->json([
             'message' => 'Demande mise à jour avec succès',

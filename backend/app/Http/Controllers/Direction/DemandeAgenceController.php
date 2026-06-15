@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Direction;
 use App\Http\Controllers\Controller;
 use App\Models\DemandeMateriel;
 use App\Http\Requests\Agence\StoreDemandeMaterielRequest;
+use App\Events\DemandeMaterielApprouvee;
+use App\Notifications\DemandeMaterielTraiteeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -57,6 +59,14 @@ class DemandeAgenceController extends Controller
             'observations' => $request->observations,
             'traite_par_id' => Auth::id(),
         ]);
+
+        if (in_array($request->decision, ['Approuver', 'Partiel'])) {
+            event(new DemandeMaterielApprouvee($demande, $demande->chefAgence));
+        }
+
+        if ($demande->chefAgence) {
+            $demande->chefAgence->notify(new DemandeMaterielTraiteeNotification($demande, $request->decision));
+        }
 
         return response()->json([
             'message' => 'Demande traitée avec succès',

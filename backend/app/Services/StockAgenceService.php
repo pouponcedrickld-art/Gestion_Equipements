@@ -142,6 +142,43 @@ class StockAgenceService
     }
 
     /**
+     * Incrémenter le stock d'une agence spécifique (utilisé pour les retours de stock)
+     */
+    public function incrementerStock(int $agenceId, Transfert $transfert): ?StockAgence
+    {
+        return DB::transaction(function () use ($agenceId, $transfert) {
+            $equipementId = $transfert->equipement_id;
+            $equipement = $transfert->equipement ?: Equipement::find($equipementId);
+
+            if (!$equipement) {
+                return null;
+            }
+
+            $stock = StockAgence::firstOrCreate(
+                [
+                    'agence_id' => $agenceId,
+                    'equipement_id' => $equipementId,
+                    'categorie_id' => $equipement->categorie_id,
+                ],
+                [
+                    'quantite' => 0,
+                    'quantite_disponible' => 0,
+                    'quantite_reservee' => 0,
+                ]
+            );
+
+            $quantite = $this->determinerQuantite($equipement);
+
+            $stock->increment('quantite', $quantite);
+            $stock->increment('quantite_disponible', $quantite);
+            $stock->date_derniere_mise_a_jour = now();
+            $stock->save();
+
+            return $stock;
+        });
+    }
+
+    /**
      * Déterminer la quantité à modifier pour un équipement
      */
     private function determinerQuantite(Equipement $equipement): int

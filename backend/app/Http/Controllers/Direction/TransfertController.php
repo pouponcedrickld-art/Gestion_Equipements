@@ -7,6 +7,7 @@ use App\Models\Transfert;
 use App\Models\Equipement;
 use App\Models\Agence;
 use App\Models\DemandeMateriel;
+use App\Events\TransfertCree;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -111,12 +112,19 @@ class TransfertController extends Controller
 
     protected function mapForKanban($item, $type)
     {
+        $equipement = $item->equipement;
+        $nomMateriel = $equipement?->nom;
+        if (!$nomMateriel && $equipement) {
+            $nomMateriel = ($equipement->marque ?? '') . ' ' . ($equipement->modele ?? '');
+        }
+        $nomMateriel = $nomMateriel ?: 'Équipement #' . $item->equipement_id;
+
         return [
             'id' => $type . '_' . $item->id,
             'real_id' => $item->id,
             'type' => $type,
-            'nom_materiel' => $item->equipement->nom ?? ($item->equipement->marque . ' ' . $item->equipement->modele),
-            'agence' => $item->agenceDestination->nom,
+            'nom_materiel' => $nomMateriel,
+            'agence' => $item->agenceDestination?->nom ?? 'N/A',
             'date' => $item->date_expedition ?? $item->date_demande,
             'statut' => $item->statut
         ];
@@ -142,14 +150,16 @@ class TransfertController extends Controller
                 'agence_source_id' => $equipement->agence_actuelle_id,
                 'demande_par_id' => $user->id,
                 'date_demande' => now(),
-                'statut' => 'brouillon',
+                'statut' => 'demande',
                 'quantite' => 1,
             ]));
+
+            event(new TransfertCree());
 
             return response()->json([
                 'success' => true,
                 'data' => $transfert,
-                'message' => 'Transfert créé (Brouillon)'
+                'message' => 'Transfert créé avec succès'
             ], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -487,8 +497,8 @@ class TransfertController extends Controller
             'success' => true,
             'data' => [
                 'total' => $query->count(),
-                'en_transit' => $query->byStatut('en_transit')->count(),
-                'en_attente' => $query->byStatut('en_attente_expedition')->count(),
+                'en_transit' => (clone $query)->byStatut('expedie')->count(),
+                'en_attente' => (clone $query)->byStatut('demande')->count(),
             ]
         ]);
     }
