@@ -15,7 +15,7 @@
       <!-- Layout deux colonnes -->
       <div class="two-col-layout animate-card">
 
-        <!-- ─── SIDEBAR GAUCHE ─── -->
+        <!-- SIDEBAR GAUCHE -->
         <aside class="sidebar">
 
           <!-- Photo -->
@@ -120,7 +120,7 @@
 
         </aside>
 
-        <!-- ─── CONTENU PRINCIPAL ─── -->
+        <!-- CONTENU PRINCIPAL -->
         <div class="main-content">
           <form @submit.prevent="handleSubmit" class="p-fluid">
 
@@ -156,7 +156,7 @@
                     <small class="p-error" v-if="errors.modele">{{ errors.modele[0] }}</small>
                   </div>
                 </div>
-                <div class="col-12 md:col-4">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Numéro de série</label>
                     <InputText
@@ -168,13 +168,20 @@
                     <small class="p-error" v-if="errors.numero_serie">{{ errors.numero_serie[0] }}</small>
                   </div>
                 </div>
+                <div class="col-12 md:col-6">
+                  <div class="field">
+                    <label class="font-bold text-sm">Fournisseur</label>
+                    <InputText v-model="form.fournisseur" placeholder="Fournisseur" class="p-inputtext-sm" :class="{ 'p-invalid': errors.fournisseur }" />
+                    <small class="p-error" v-if="errors.fournisseur">{{ errors.fournisseur[0] }}</small>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Inventaire & Acquisition -->
             <div class="main-card">
               <div class="card-section-label">
-                <i class="pi pi-clipboard"></i> Inventaire &amp; acquisition
+                <i class="pi pi-clipboard"></i> Inventaire & acquisition
               </div>
 
               <div class="grid grid-tight">
@@ -258,10 +265,7 @@ const errors = ref({})
 
 const form = ref({
   nom: '',
-  reference: '',
   numero_serie: '',
-  imei: '',
-  code_inventaire: '',
   marque: '',
   modele: '',
   categorie_id: null,
@@ -289,8 +293,11 @@ const etatOptions = [
   { label: 'Perdu', value: 'perdu' }
 ]
 
-const categories = computed(() => categorieStore.categoriesList)
-const users = computed(() => userStore.users)
+const categories = computed(() => {
+  if (categorieStore.categoriesList?.length) return categorieStore.categoriesList
+  if (categorieStore.categories?.length) return categorieStore.categories
+  return []
+})
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]
@@ -308,6 +315,14 @@ const removePhoto = () => {
 }
 
 const handleSubmit = async () => {
+  // Validation client basique
+  if (!form.value.nom || !form.value.categorie_id) {
+    if (!form.value.nom) errors.value.nom = ['Le nom est obligatoire']
+    if (!form.value.categorie_id) errors.value.categorie_id = ['Vous devez sélectionner une catégorie']
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez remplir les champs obligatoires', life: 3000 })
+    return
+  }
+
   loading.value = true
   errors.value = {}
 
@@ -334,22 +349,33 @@ const handleSubmit = async () => {
 }
 
 onMounted(async () => {
-  await categorieStore.fetchCategories()
+  // Charger les catégories (liste simple)
+  try {
+    await categorieStore.fetchCategoriesList()
+  } catch (err) {
+    console.error('Erreur lors du chargement de la liste des catégories, tentative via index...', err)
+    try {
+      await categorieStore.fetchCategories({ per_page: 100 })
+    } catch (indexErr) {
+      console.error('Échec critique du chargement des catégories:', indexErr)
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les catégories', life: 3000 })
+    }
+  }
 
   if (route.query.categorie_id) {
-    form.value.categorie_id = parseInt(route.query.categorie_id)
+    const catId = parseInt(route.query.categorie_id)
+    if (!isNaN(catId)) {
+      form.value.categorie_id = catId
+    }
   }
 
   if (isEditing.value) {
     loading.value = true
     try {
-      const equipement = await equipementStore.fetchEquipement(route.params.id)
+      const equipement = await equipementStore.fetchEquipementById(route.params.id)
       form.value = {
         nom: equipement.nom || '',
-        reference: equipement.reference || '',
         numero_serie: equipement.numero_serie || '',
-        imei: equipement.imei || '',
-        code_inventaire: equipement.code_inventaire || '',
         marque: equipement.marque || '',
         modele: equipement.modele || '',
         categorie_id: equipement.categorie_id,
@@ -387,7 +413,6 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-/* ── Header ── */
 .form-header {
   display: flex;
   align-items: center;
@@ -408,7 +433,6 @@ onMounted(async () => {
   border: 1px solid var(--border-color);
 }
 
-/* ── Layout deux colonnes ── */
 .two-col-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -416,7 +440,6 @@ onMounted(async () => {
   align-items: start;
 }
 
-/* ── Sidebar ── */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -431,7 +454,6 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
-/* ── Cartes principale ── */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -446,7 +468,6 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
-/* ── Label de section ── */
 .card-section-label {
   display: flex;
   align-items: center;
@@ -455,16 +476,15 @@ onMounted(async () => {
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.25rem;
- 
+  letter-spacing: 0.06em;
+  margin-bottom: 0.85rem;
+
   i {
     color: var(--primary-hover);
     font-size: 1rem;
   }
 }
 
-/* ── Photo ── */
 .photo-upload-placeholder {
   height: 200px;
   display: flex;
@@ -478,7 +498,6 @@ onMounted(async () => {
   border-radius: var(--radius-md);
   background: var(--bg-input);
   transition: all 0.2s;
- 
   &:hover {
     border-color: var(--primary);
     color: var(--text-dark);
@@ -507,7 +526,6 @@ onMounted(async () => {
   }
 }
 
-/* ── Badges de statut ── */
 .status-badges {
   display: flex;
   flex-wrap: wrap;
@@ -538,8 +556,15 @@ onMounted(async () => {
     box-shadow: var(--shadow-sm);
   }
 }
- 
-/* ── Badge catégorie dans specs ── */
+
+.grid-tight {
+  margin: -0.4rem;
+
+  > [class*="col"] {
+    padding: 0.4rem;
+  }
+}
+
 .category-badge {
   font-size: 0.7rem;
   font-weight: 700;
@@ -551,14 +576,13 @@ onMounted(async () => {
   text-transform: none;
   letter-spacing: 0;
 }
- 
-/* ── Spécifications ── */
+
 .specs-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
- 
+
 .specs-empty {
   display: flex;
   align-items: center;
@@ -571,16 +595,35 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-/* ── Footer ── */
 .form-footer {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   padding: 1.5rem 0;
   margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
-/* ── Responsive ── */
+:deep(.p-inputtext-sm) {
+  padding: 0.45rem 0.75rem;
+}
+
+:deep(.p-dropdown),
+:deep(.p-inputnumber-input),
+:deep(.p-calendar .p-inputtext) {
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+
+  &:enabled:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+  }
+}
+
+.hidden {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .two-col-layout {
     grid-template-columns: 1fr;

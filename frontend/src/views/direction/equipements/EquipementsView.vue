@@ -236,7 +236,7 @@
         <div v-else-if="equipementStore.equipements.length === 0" class="empty-state-grid">
           <i class="pi pi-box"></i>
           <p>Aucun équipement trouvé</p>
-          <Button v-if="canManageEquipements" label="Ajouter un équipement" icon="pi pi-plus" class="p-button-outlined" @click="$router.push('/equipements/ajouter')" />
+          <Button v-if="canManageEquipements" label="Ajouter un équipement" icon="pi pi-plus" class="p-button-outlined" @click="$router.push('/equipements/nouveau')" />
         </div>
       </div>
 

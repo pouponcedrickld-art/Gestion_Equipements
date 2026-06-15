@@ -293,7 +293,7 @@ console.log('API Base URL:', apiBaseUrl)
 const loadEquipement = async () => {
   loading.value = true
   try {
-    const data = await equipementStore.fetchEquipement(route.params.id)
+    const data = await equipementStore.fetchEquipementById(route.params.id)
     console.log('Equipement data loaded:', data)
     equipement.value = data
   } catch (error) {

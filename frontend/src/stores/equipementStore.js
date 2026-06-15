@@ -91,7 +91,7 @@ export const useEquipementStore = defineStore('equipement', {
 
       try {
         const response = await equipementApi.show(id)
-        return response.data
+        return response.data.data
       } catch (error) {
         this.error = error.response?.data?.message || "Erreur lors du chargement de l'équipement "
         console.error('Erreur fetchEquipementById:', error)
@@ -107,22 +107,31 @@ export const useEquipementStore = defineStore('equipement', {
 
       try {
         const formData = new FormData()
-        Object.keys(data).forEach(key => {
-          const value = data[key]
+        
+        // On s'assure de traiter les données proprement
+        const rawData = { ...data }
+        
+        Object.keys(rawData).forEach(key => {
+          const value = rawData[key]
           if (value !== null && value !== undefined) {
             if (value instanceof Date) {
               formData.append(key, value.toISOString().split('T')[0])
             } else if (key === 'specifications' && typeof value === 'object') {
               formData.append(key, JSON.stringify(value))
+            } else if (key === 'photo' && !(value instanceof File)) {
+              // Ne pas ajouter si c'est une chaîne (URL) ou autre chose qu'un File
             } else {
               formData.append(key, value)
             }
           }
         })
 
-        // Log des données envoyées
-        console.log('Données envoyées au serveur:', data)
-        console.log('FormData:', [...formData.entries()])
+        // Log des données envoyées pour le débogage
+        console.log('Données brutes avant envoi:', rawData)
+        console.log('Contenu du FormData envoyé:')
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1])
+        }
 
         const response = await equipementApi.store(formData)
 
