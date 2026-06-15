@@ -268,11 +268,6 @@ onMounted(fetchEquipements)
   flex-shrink: 0;
 }
 
-.bg-info { background: var(--info); }
-.bg-success { background: var(--success); }
-.bg-warning { background: var(--warning); }
-.bg-error { background: var(--error); }
-.bg-dark { background: var(--text-dark); }
 .bg-muted { background: var(--text-muted); }
 
 /* Loader & States */

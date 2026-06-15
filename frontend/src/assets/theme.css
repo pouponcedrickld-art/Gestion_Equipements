@@ -40,6 +40,16 @@
   --sidebar-border: #e2e8f0;
 }
 
+/* Background Utilities */
+.bg-dark { background: var(--text-dark); }
+.bg-error { background: var(--error); }
+.bg-success { background: var(--success); }
+.bg-warning { background: var(--warning); }
+.bg-info { background: var(--info); }
+.bg-primary { background: var(--primary); }
+.bg-app { background: var(--bg-app); }
+.bg-card { background: var(--bg-card); }
+
 /* Base Styles */
 body {
   margin: 0;
@@ -265,6 +275,14 @@ tr:hover td {
 .uppercase { text-transform: uppercase; }
 .text-primary { color: var(--primary); }
 .text-muted { color: var(--text-muted); }
+.text-error { color: var(--error); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-info { color: var(--info); }
+.text-dark { color: var(--text-dark); }
+.text-light { color: var(--text-light); }
+.text-primary-hover { color: var(--primary-hover); }
+.text-danger { color: var(--error); }
 
 /* Professional Data Grid Table */
 .grid-table, .p-datatable.professional-table {

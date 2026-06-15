@@ -260,11 +260,6 @@ onMounted(async () => {
   text-transform: uppercase;
 }
 
-.bg-info { background: var(--info); }
-.bg-success { background: var(--success); }
-.bg-warning { background: var(--warning); }
-.bg-error { background: var(--error); }
-.bg-dark { background: var(--text-dark); }
 .bg-muted { background: var(--text-muted); }
 
 .item-body { padding: 1.5rem; }

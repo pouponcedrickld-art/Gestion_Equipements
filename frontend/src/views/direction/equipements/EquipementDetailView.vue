@@ -657,17 +657,7 @@ watch(() => route.params.id, (newId) => {
   font-weight: 500;
 }
 
-.text-danger {
-  color: #ef4444 !important;
-}
 
-.text-warning {
-  color: #f59e0b !important;
-}
-
-.text-success {
-  color: #10b981 !important;
-}
 
 :deep(.p-tablist-content) {
   background: transparent !important;

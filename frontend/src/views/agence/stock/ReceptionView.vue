@@ -307,7 +307,7 @@ onMounted(async () => {
 .equipement-cell { display: flex; flex-direction: column; .equip-name { font-weight: 600; color: #1e293b; } .equip-sn { color: #94a3b8; font-size: 0.75rem; } }
 .agence-cell { font-weight: 600; &.source { color: #6366f1; } }
 .actions-cell { display: flex; gap: 0.75rem; align-items: center; }
-.text-success { color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+
 
 .form-group { display: flex; flex-direction: column; gap: 0.5rem; label { font-weight: 600; color: #475569; } }
 .confirmation-content { display: flex; align-items: center; gap: 1rem; }

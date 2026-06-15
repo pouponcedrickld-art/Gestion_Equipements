@@ -349,7 +349,5 @@ const getMouvementLabel = (type) => {
 :deep(.p-tab) { background: transparent !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.85rem !important; }
 :deep(.p-tab-active) { color: #3b82f6 !important; border-color: #3b82f6 !important; }
 
-.text-danger { color: #ef4444 !important; }
-.text-warning { color: #f59e0b !important; }
-.text-success { color: #10b981 !important; }
+
 </style>

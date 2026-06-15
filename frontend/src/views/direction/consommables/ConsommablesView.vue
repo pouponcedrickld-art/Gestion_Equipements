@@ -595,7 +595,5 @@ onMounted(() => {
   :deep(.p-datatable-tbody > tr > td) { padding: 0.75rem; font-size: 0.85rem; }
 }
 
-.text-danger { color: #ef4444 !important; font-weight: 700; }
-.text-warning { color: #f59e0b !important; font-weight: 700; }
-.text-success { color: #10b981 !important; font-weight: 700; }
+
 </style>
