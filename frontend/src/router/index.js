@@ -113,6 +113,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['chef_agence', 'gestionnaire_stock'] }
   },
   {
+    path: '/direction/retours',
+    name: 'DirectionRetours',
+    component: () => import('@/views/direction/stock/RetoursDirectionView.vue'),
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
+  },
+  {
     path: '/transferts',
     name: 'Transferts',
     component: () => import('@/views/direction/transferts/TransfertsView.vue'),
