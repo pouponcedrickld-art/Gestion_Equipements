@@ -21,7 +21,7 @@
             label="Nouveau Transfert" 
             icon="pi pi-plus" 
             class="p-button-success p-button-raised action-btn"
-            @click="$router.push('/transferts/nouveau')"
+            @click="router.push('/transferts/nouveau')"
           />
         </div>
       </div>
@@ -187,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useTransfertStore } from '@/stores/transfertStore'
@@ -219,47 +219,6 @@ const refusDialogVisible = ref(false)
 const refusObservations = ref('')
 const transfertARefuser = ref(null)
 
-// ... reste du script ...
-
-const ouvrirRefusDialog = (trans) => {
-  transfertARefuser.value = trans
-  refusObservations.value = ''
-  refusDialogVisible.value = true
-}
-
-const fermerRefusDialog = () => {
-  refusDialogVisible.value = false
-  transfertARefuser.value = null
-}
-
-const confirmerRefus = async () => {
-  if (!refusObservations.value.trim()) {
-    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Indiquez un motif' })
-    return
-  }
-  try {
-    await transfertStore.refuserTransfert(transfertARefuser.value.id, refusObservations.value)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert rejeté/annulé' })
-    fermerRefusDialog()
-    await Promise.all([
-      transfertStore.fetchTransferts(),
-      fetchApprovedDemandes()
-    ])
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'opération' })
-  }
-}
-
-const router = useRouter()
-const toast = useToast()
-const transfertStore = useTransfertStore()
-
-const loading = ref(false)
-const loadingApprovedDemandes = ref(false) // État chargement demandes
-const approvedDemandes = ref([]) // Liste des demandes approuvées
-const selectedStatut = ref(null)
-const searchQuery = ref('')
-
 // Récupérer les demandes approuvées prêtes pour transfert
 const fetchApprovedDemandes = async () => {
   loadingApprovedDemandes.value = true
@@ -280,7 +239,7 @@ const createTransfertFromDemande = async (demande) => {
   try {
     const res = await transfertApi.creerDepuisDemande(demande.id)
     if (res.data && res.data.success) {
-      toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert généré avec succès' })
+      toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert généré avec succès', life: 3000 })
       // Rafraîchir les données
       await Promise.all([
         fetchApprovedDemandes(),
@@ -288,7 +247,7 @@ const createTransfertFromDemande = async (demande) => {
       ])
     }
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: err.response?.data?.message || 'Échec de la création du transfert' })
+    toast.add({ severity: 'error', summary: 'Erreur', detail: err.response?.data?.message || 'Échec de la création du transfert', life: 3000 })
   }
 }
 
@@ -336,32 +295,64 @@ const getStatutSeverity = (s) => {
 const formatDate = (date) => date ? new Date(date).toLocaleDateString() : 'N/A'
 
 const viewDetails = (trans) => router.push(`/transferts/${trans.id}`)
+
 const approveTransfert = async (trans) => {
   try {
     await transfertStore.approuverTransfert(trans.id)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert approuvé' })
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert approuvé', life: 3000 })
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'approbation' })
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'approbation', life: 3000 })
   }
 }
+
 // --- Expédition de l'équipement ---
 const shipTransfert = async (trans) => {
   try {
     await transfertStore.expedierTransfert(trans.id)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement expédié' })
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement expédié', life: 3000 })
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'expédition' })
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'expédition', life: 3000 })
   }
 }
 
 const receiveTransfert = async (trans) => {
   try {
     await transfertStore.recevoirTransfert(trans.id)
-    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement reçu' })
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Équipement reçu', life: 3000 })
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la réception' })
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de la réception', life: 3000 })
   }
 }
+
+const ouvrirRefusDialog = (trans) => {
+  transfertARefuser.value = trans
+  refusObservations.value = ''
+  refusDialogVisible.value = true
+}
+
+const fermerRefusDialog = () => {
+  refusDialogVisible.value = false
+  transfertARefuser.value = null
+}
+
+const confirmerRefus = async () => {
+  if (!refusObservations.value.trim()) {
+    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Indiquez un motif', life: 3000 })
+    return
+  }
+  try {
+    await transfertStore.refuserTransfert(transfertARefuser.value.id, refusObservations.value)
+    toast.add({ severity: 'success', summary: 'Succès', detail: 'Transfert rejeté/annulé', life: 3000 })
+    fermerRefusDialog()
+    await Promise.all([
+      transfertStore.fetchTransferts(),
+      fetchApprovedDemandes()
+    ])
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'opération', life: 3000 })
+  }
+}
+
 // --- Chargement des transferts ---
 onMounted(async () => {
   loading.value = true
