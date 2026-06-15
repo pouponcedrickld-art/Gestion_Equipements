@@ -243,9 +243,11 @@ const logout = async () => {
 .main-content {
   flex: 1;
   min-height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
+  background-color: var(--bg-app);
 }
 
 .top-bar {
@@ -253,12 +255,11 @@ const logout = async () => {
   color: var(--text-main);
   padding: 0 30px;
   height: 70px;
+  min-height: 70px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
   z-index: 90;
 }
 
@@ -269,9 +270,12 @@ const logout = async () => {
 }
 
 .content {
-  padding: 30px;
+  padding: 2rem;
   flex: 1;
   background-color: var(--bg-app);
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .toggle-btn {

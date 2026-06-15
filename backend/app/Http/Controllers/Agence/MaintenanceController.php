@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Agence;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MaintenanceRequest;
+use App\Http\Resources\MaintenanceResource;
 use App\Models\Maintenance;
 use App\Services\MaintenanceWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class MaintenanceController extends Controller
@@ -19,7 +21,7 @@ class MaintenanceController extends Controller
     /**
      * Liste des maintenances avec filtres
      * Query params: start_date, end_date, month, type_maintenance, statut
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -31,7 +33,7 @@ class MaintenanceController extends Controller
         // Cas 1: Filtrage par mois (month parameter)
         if ($request->has('month')) {
             $month = $request->input('month');
-            
+
             // Valider le format YYYY-MM
             if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
                 return response()->json([
@@ -45,7 +47,7 @@ class MaintenanceController extends Controller
             [$year, $monthNum] = explode('-', $month);
             $startDate = "{$year}-{$monthNum}-01";
             $endDate = date('Y-m-t', strtotime($startDate)); // Dernier jour du mois
-        } 
+        }
         // Cas 2: Filtrage par plage de dates explicite
         elseif ($request->has('start_date') && $request->has('end_date')) {
             $startDate = $request->input('start_date');
@@ -59,7 +61,7 @@ class MaintenanceController extends Controller
                     'errors' => ['dates' => ['Les dates doivent être valides']]
                 ], 422);
             }
-        } 
+        }
         // Cas 3: Aucun filtre de date - retourner le mois en cours
         else {
             $startDate = date('Y-m-01');
@@ -75,8 +77,15 @@ class MaintenanceController extends Controller
             $filters['statut'] = $request->input('statut');
         }
 
+        // Get current user's agence id (if not super admin or gestionnaire stock general)
+        $user = Auth::user();
+        $agenceId = null;
+        if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general'])) {
+            $agenceId = $user->agence_id;
+        }
+
         // Récupérer les maintenances via le service
-        $maintenances = $this->workflowService->getByPeriod($startDate, $endDate, $filters);
+        $maintenances = $this->workflowService->getByPeriod($startDate, $endDate, $filters, $agenceId);
 
         // Pagination manuelle (limite à 100 par page)
         $perPage = 100;
@@ -86,7 +95,7 @@ class MaintenanceController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $paginatedMaintenances,
+            'data' => MaintenanceResource::collection($paginatedMaintenances),
             'meta' => [
                 'total' => $total,
                 'per_page' => $perPage,
@@ -98,7 +107,7 @@ class MaintenanceController extends Controller
 
     /**
      * Détails d'une maintenance avec relations eager-loaded
-     * 
+     *
      * @param int $id
      * @return JsonResponse
      */
@@ -113,7 +122,7 @@ class MaintenanceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $maintenance
+                'data' => new MaintenanceResource($maintenance)
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -130,7 +139,7 @@ class MaintenanceController extends Controller
 
     /**
      * Créer une maintenance préventive
-     * 
+     *
      * @param MaintenanceRequest $request
      * @return JsonResponse
      */
@@ -139,13 +148,160 @@ class MaintenanceController extends Controller
         // Vérifier l'autorisation de planifier
         Gate::authorize('planifier', Maintenance::class);
 
-        // Créer la maintenance via le service
-        $maintenance = $this->workflowService->planifierPreventive($request->validated());
+        try {
+            // Créer la maintenance via le service
+            $maintenance = $this->workflowService->planifierPreventive($request->validated());
+            $maintenance->load(['equipement', 'panne', 'technicienUser']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Maintenance créée avec succès',
-            'data' => $maintenance
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance créée avec succès',
+                'data' => new MaintenanceResource($maintenance)
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Mettre à jour une maintenance
+     *
+     * @param MaintenanceRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function update(MaintenanceRequest $request, int $id): JsonResponse
+    {
+        try {
+            $maintenance = $this->workflowService->getMaintenanceWithRelations($id);
+
+            Gate::authorize('update', $maintenance);
+
+            $updatedMaintenance = $this->workflowService->update($id, $request->validated());
+            $updatedMaintenance->load(['equipement', 'panne', 'technicienUser']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance mise à jour avec succès',
+                'data' => new MaintenanceResource($updatedMaintenance)
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maintenance non trouvée'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Supprimer une maintenance
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        try {
+            $maintenance = $this->workflowService->getMaintenanceWithRelations($id);
+
+            Gate::authorize('delete', $maintenance);
+
+            $this->workflowService->delete($id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance supprimée avec succès'
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maintenance non trouvée'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Démarrer une maintenance
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function start(Request $request, int $id): JsonResponse
+    {
+        try {
+            $maintenance = $this->workflowService->getMaintenanceWithRelations($id);
+
+            Gate::authorize('start', $maintenance);
+
+            $data = $request->only(['technicien_id', 'diagnostic']);
+            $updatedMaintenance = $this->workflowService->start($id, $data);
+            $updatedMaintenance->load(['equipement', 'panne', 'technicienUser']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance démarrée avec succès',
+                'data' => new MaintenanceResource($updatedMaintenance)
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maintenance non trouvée'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
+     * Terminer une maintenance
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function complete(Request $request, int $id): JsonResponse
+    {
+        try {
+            $maintenance = $this->workflowService->getMaintenanceWithRelations($id);
+
+            Gate::authorize('complete', $maintenance);
+
+            $data = $request->only(['diagnostic', 'cout', 'observations', 'action_realisee']);
+            $updatedMaintenance = $this->workflowService->complete($id, $data);
+            $updatedMaintenance->load(['equipement', 'panne', 'technicienUser']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance terminée avec succès',
+                'data' => new MaintenanceResource($updatedMaintenance)
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Maintenance non trouvée'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 }

@@ -107,50 +107,52 @@ const handleLogin = async () => {
 
 <style scoped>
 /* ==========================================================================
-   1. GLOBAL CONTAINER & FONDS (Mobile First)
+   1. GLOBAL CONTAINER & FONDS (Mobile First - Ajusté anti-scroll)
    ========================================================================== */
 .login-container {
   width: 100%;
   min-height: 100vh;
-  background-color: #fbf9f4; /* Fond légèrement cassé/crème de l'image */
+  height: 100vh; /* Force la hauteur exacte de l'écran */
+  background-color: #ffffff;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center; /* Centre parfaitement au milieu */
   padding: 1rem;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden; /* Supprime définitivement le scroll */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Boîte blanche principale */
 .login-box {
   width: 100%;
+  max-width: 100%;
   background: #ffffff;
-  padding: 2.5rem 1.5rem;
+  padding: 1rem 0.5rem; /* Marges internes réduites */
   box-sizing: border-box;
 }
 
 /* ==========================================================================
-   2. EN-TÊTE (Logo, Titre, Sous-titre)
+   2. EN-TÊTE (Espaces réduits)
    ========================================================================== */
 .header-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .logo-wrapper {
-  width: 72px;
-  height: 72px;
-  background-color: #facc15; /* Jaune vif du logo */
-  border-radius: 16px;
+  width: 64px;
+  height: 64px;
+  background-color: #facc15;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 10px;
   box-sizing: border-box;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .logo-wrapper svg {
@@ -160,7 +162,7 @@ const handleLogin = async () => {
 
 h1 {
   color: #000000;
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   margin: 0;
@@ -168,15 +170,15 @@ h1 {
 }
 
 .separator {
-  width: 45px;
+  width: 40px;
   height: 1.5px;
   background-color: #78716c;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 .subtitle {
   color: #78716c;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 400;
   margin: 0;
   text-align: center;
@@ -186,15 +188,15 @@ h1 {
    3. FORMULAIRE & INPUTS
    ========================================================================== */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 label {
   display: block;
   color: #000000;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .password-wrapper {
@@ -205,104 +207,92 @@ label {
 
 input {
   width: 100%;
-  padding: 11px 14px;
+  padding: 10px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background-color: #fafafa;
   color: #111827;
   font-size: 0.95rem;
   box-sizing: border-box;
-  transition: all 0.2s ease;
 }
 
 input:focus {
   outline: none;
   border-color: #facc15;
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
 }
 
 .toggle-password {
   position: absolute;
-  right: 14px;
+  right: 12px;
   color: #94a3b8;
   display: flex;
   align-items: center;
-  cursor: pointer;
 }
 
-/* Bouton Se Connecter Jaune */
+/* Bouton Se Connecter */
 .btn-submit {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   background-color: #facc15;
   color: #000000;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 1.25rem;
-  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.25);
-  transition: all 0.2s ease;
-}
-
-.btn-submit:hover:not(:disabled) {
-  background-color: #eab308;
-  box-shadow: 0 6px 16px rgba(250, 204, 21, 0.35);
-}
-
-.btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  margin-top: 0.75rem;
+  box-shadow: 0 4px 10px rgba(250, 204, 21, 0.2);
 }
 
 .error-msg {
   color: #ef4444;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-align: center;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 /* ==========================================================================
-   4. ENCART COMPTES DE DÉMO
+   4. ENCART COMPTES DE DÉMO (Compact)
    ========================================================================== */
 .demo-card {
-  background-color: #fefaf0; /* Teinte beige très claire */
+  background-color: #fefaf0;
   border-radius: 10px;
-  padding: 1.25rem;
-  margin-top: 2rem;
+  padding: 1rem;
+  margin-top: 1.5rem;
   box-sizing: border-box;
 }
 
 .demo-card h3 {
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   color: #44403c;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
 .demo-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .demo-list span {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
   color: #57534e;
 }
 
 /* ==========================================================================
-   5. RESPONSIVE DESIGN (Tablettes & Écrans PC)
+   5. RESPONSIVE DESIGN (Écrans PC et Tablettes)
    ========================================================================== */
 @media (min-width: 640px) {
   .login-box {
-    max-width: 460px;
-    border-radius: 24px; /* Coins très arrondis du container central */
-    padding: 3.5rem 3rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+    max-width: 440px;
+    padding: 2rem;
+  }
+  
+  h1 {
+    font-size: 2.2rem;
   }
 }
 </style>

@@ -47,4 +47,12 @@ class Maintenance extends Model
     {
         return $this->belongsTo(User::class, 'technicien_id');
     }
+
+    // Scope for agence
+    public function scopeForAgence($query, $agenceId)
+    {
+        return $query->whereHas('equipement', function ($q) use ($agenceId) {
+            $q->where('agence_actuelle_id', $agenceId);
+        });
+    }
 }

@@ -8,71 +8,71 @@
         </button>
       </div>
 
-    <div v-if="agenceStore.loading" class="loading">
-      <i class="pi pi-spin pi-spinner"></i> Chargement...
-    </div>
+      <div v-if="agenceStore.loading" class="loading">
+        <i class="pi pi-spin pi-spinner"></i> Chargement...
+      </div>
 
-    <div v-else class="agences-grid">
-      <!-- Siège -->
-      <div v-if="agenceStore.agenceGenerale" class="agence-card generale">
-        <div class="card-header">
-          <span class="badge badge-generale">SIÈGE</span>
-          <h3>{{ agenceStore.agenceGenerale.nom }}</h3>
+      <div v-else class="agences-grid">
+        <!-- Siège -->
+        <div v-if="agenceStore.agenceGenerale" class="agence-card generale">
+          <div class="card-header">
+            <span class="badge badge-generale">SIÈGE</span>
+            <h3>{{ agenceStore.agenceGenerale.nom }}</h3>
+          </div>
+          <div class="card-body">
+            <p><i class="pi pi-map-marker"></i> {{ agenceStore.agenceGenerale.ville || '—' }}</p>
+            <p><i class="pi pi-envelope"></i> {{ agenceStore.agenceGenerale.email || '—' }}</p>
+            <p><i class="pi pi-phone"></i> {{ agenceStore.agenceGenerale.telephone || '—' }}</p>
+          </div>
+          <div class="card-footer">
+            <span>{{ agenceStore.sousAgences.length }} sous-agences</span>
+            <div class="actions">
+              <button @click="showAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Afficher">
+                <i class="pi pi-eye"></i>
+              </button>
+              <button @click="editAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Modifier">
+                <i class="pi pi-pencil"></i>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <p><i class="pi pi-map-marker"></i> {{ agenceStore.agenceGenerale.ville || '—' }}</p>
-          <p><i class="pi pi-envelope"></i> {{ agenceStore.agenceGenerale.email || '—' }}</p>
-          <p><i class="pi pi-phone"></i> {{ agenceStore.agenceGenerale.telephone || '—' }}</p>
-        </div>
-        <div class="card-footer">
-          <span>{{ agenceStore.sousAgences.length }} sous-agences</span>
-          <div class="actions">
-            <button @click="showAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Afficher">
-              <i class="pi pi-eye"></i>
-            </button>
-            <button @click="editAgence(agenceStore.agenceGenerale)" class="btn-icon" title="Modifier">
-              <i class="pi pi-pencil"></i>
-            </button>
+
+        <!-- Sous-agences -->
+        <div v-for="a in agenceStore.sousAgences" :key="a.id" class="agence-card">
+          <div class="card-header">
+            <span class="badge badge-sous">SOUS-AGENCE</span>
+            <h3>{{ a.nom }}</h3>
+          </div>
+          <div class="card-body">
+            <p><i class="pi pi-map-marker"></i> {{ a.ville || '—' }}</p>
+            <p><i class="pi pi-user"></i> {{ a.responsable?.name || 'Pas de responsable' }}</p>
+          </div>
+          <div class="card-footer">
+            <span :class="a.statut">{{ a.statut }}</span>
+            <div class="actions">
+              <button @click="showAgence(a)" class="btn-icon" title="Afficher">
+                <i class="pi pi-eye"></i>
+              </button>
+              <button @click="editAgence(a)" class="btn-icon" title="Modifier">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button @click="deleteAgence(a)" class="btn-icon btn-danger" title="Supprimer">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Sous-agences -->
-      <div v-for="a in agenceStore.sousAgences" :key="a.id" class="agence-card">
-        <div class="card-header">
-          <span class="badge badge-sous">SOUS-AGENCE</span>
-          <h3>{{ a.nom }}</h3>
-        </div>
-        <div class="card-body">
-          <p><i class="pi pi-map-marker"></i> {{ a.ville || '—' }}</p>
-          <p><i class="pi pi-user"></i> {{ a.responsable?.name || 'Pas de responsable' }}</p>
-        </div>
-        <div class="card-footer">
-          <span :class="a.statut">{{ a.statut }}</span>
-          <div class="actions">
-            <button @click="showAgence(a)" class="btn-icon" title="Afficher">
-              <i class="pi pi-eye"></i>
-            </button>
-            <button @click="editAgence(a)" class="btn-icon" title="Modifier">
-              <i class="pi pi-pencil"></i>
-            </button>
-            <button @click="deleteAgence(a.id)" class="btn-icon btn-danger" title="Supprimer">
-              <i class="pi pi-trash"></i>
-            </button>
-          </div>
-        </div>
+      <!-- Modal Formulaire -->
+      <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
+        <AgenceFormView :edit-data="editingAgence" @saved="onSaved" @cancel="showForm = false" />
       </div>
-    </div>
 
-    <!-- Modal Formulaire -->
-    <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
-      <AgenceFormView :edit-data="editingAgence" @saved="onSaved" @cancel="showForm = false" />
-    </div>
-
-    <!-- Modal Détails -->
-    <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
-      <AgenceDetailView :agence="viewingAgence" @close="showDetail = false" />
-    </div>
+      <!-- Modal Détails -->
+      <div v-if="showDetail" class="modal-overlay" @click.self="showDetail = false">
+        <AgenceDetailView :agence="viewingAgence" @close="showDetail = false" />
+      </div>
     </div>
   </DirectionLayout>
 </template>
@@ -83,19 +83,57 @@ import { useAgenceStore } from '@/stores/agenceStore'
 import DirectionLayout from '@/layouts/DirectionLayout.vue'
 import AgenceFormView from './AgenceFormView.vue'
 import AgenceDetailView from './AgenceDetailView.vue'
+import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 
 const agenceStore = useAgenceStore()
 const showForm = ref(false)
 const showDetail = ref(false)
 const editingAgence = ref(null)
 const viewingAgence = ref(null)
+const toast = useToast()
+const confirm = useConfirm()
 
 onMounted(() => agenceStore.fetchAgences())
 
 const showAgence = (a) => { viewingAgence.value = a; showDetail.value = true }
 const editAgence = (a) => { editingAgence.value = { ...a }; showForm.value = true }
-const deleteAgence = async (id) => { if (!confirm('Supprimer ?')) return; await agenceStore.deleteAgence(id) }
-const onSaved = () => { showForm.value = false; editingAgence.value = null; agenceStore.fetchAgences() }
+const deleteAgence = async (a) => {
+  confirm.require({
+    message: 'Êtes-vous sûr de vouloir supprimer cette agence ?',
+    header: 'Confirmation de suppression',
+    icon: 'pi pi-exclamation-triangle',
+    accept: async () => {
+      try {
+        await agenceStore.deleteAgence(a.id)
+        toast.add({
+          severity: 'success',
+          summary: 'Succès',
+          detail: 'Agence supprimée avec succès',
+          life: 3000
+        })
+      } catch (err) {
+        toast.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de supprimer l\'agence',
+          life: 3000
+        })
+      }
+    }
+  })
+}
+const onSaved = () => {
+  showForm.value = false
+  editingAgence.value = null
+  agenceStore.fetchAgences()
+  toast.add({
+    severity: 'success',
+    summary: 'Succès',
+    detail: 'Agence enregistrée avec succès',
+    life: 3000
+  })
+}
 </script>
 
 <style scoped>

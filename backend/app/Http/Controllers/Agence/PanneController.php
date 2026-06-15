@@ -11,7 +11,6 @@ use App\Http\Requests\Agence\DiagnostiquerPanneRequest;
 use App\Http\Requests\Agence\StorePanneRequest;
 use App\Http\Requests\Agence\TransmettreMaintenanceRequest;
 use App\Http\Requests\Agence\DeciderPanneRequest;
-
 use App\Http\Resources\PanneResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,8 +67,6 @@ class PanneController extends Controller
      */
     public function store(StorePanneRequest $request)
     {
-
-
         $user = Auth::user();
 
         // Vérification scope multi-agences : l'équipement doit être dans l'agence courante de l'utilisateur.
@@ -78,19 +75,11 @@ class PanneController extends Controller
             return response()->json(['message' => 'Accès refusé: équipement hors de votre agence'], 403);
         }
 
-        $payload = [
-            'description' => $request->description,
-            'niveau_gravite' => $request->niveau_gravite,
-            'photos' => $request->photos ?? [],
-        ];
-
-
         $createdPanne = null;
 
-        DB::transaction(function () use (&$createdPanne, $request, $user, $payload, $equipement) {
+        DB::transaction(function () use (&$createdPanne, $request, $user, $equipement) {
             // Crée d’abord la panne en mode "declaree" (statut normalisé)
             $createdPanne = Panne::create([
-
                 'equipement_id' => $request->equipement_id,
                 'agent_id' => $request->agent_id,
                 'date_declaration' => now(),
@@ -103,8 +92,7 @@ class PanneController extends Controller
 
             // Applique les règles workflow via service
             $this->panneWorkflowService->declarer($createdPanne, $user, [
-
-                'commentaire' => $panne->description,
+                'commentaire' => $createdPanne->description,
             ]);
 
             // Tracabilité "mouvement" (gérée en partie par le projet existant)
@@ -115,11 +103,11 @@ class PanneController extends Controller
             );
         });
 
-        $panne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories']);
+        $createdPanne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories']);
 
         return response()->json([
             'message' => 'Panne déclarée avec succès',
-            'data' => new PanneResource($panne),
+            'data' => new PanneResource($createdPanne),
         ], 201);
     }
 
@@ -139,9 +127,7 @@ class PanneController extends Controller
         return response()->json(
             new PanneResource(
                 $panne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories'])
-            )
         );
-
     }
 
     /**
@@ -151,7 +137,6 @@ class PanneController extends Controller
      */
     public function update(Request $request, Panne $panne)
     {
-
         $request->validate([
             'description' => 'nullable|string',
             'niveau_gravite' => 'nullable|in:mineure,majeure,critique',
@@ -208,14 +193,14 @@ class PanneController extends Controller
         });
     }
 
+
+
     /**
      * Endpoint dédié: transmettre au technicien.
      * (déplace l’état vers en_cours)
      */
     public function transmettreMaintenance(TransmettreMaintenanceRequest $request, $id)
     {
-
-
         $user = Auth::user();
         $panne = Panne::query()->with('equipement')->findOrFail($id);
 
@@ -243,8 +228,6 @@ class PanneController extends Controller
      */
     public function diagnostiquer(DiagnostiquerPanneRequest $request, $id)
     {
-
-
         $user = Auth::user();
         $panne = Panne::query()->with('equipement')->findOrFail($id);
 
@@ -256,6 +239,11 @@ class PanneController extends Controller
             'diagnostic_technicien' => $request->diagnostic_technicien,
         ]);
 
+        event(new \App\Events\PanneDiagnosticEnregistre(
+            panne: $panne->fresh(),
+            technicien: $user
+        ));
+
         $panne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories']);
 
         return response()->json([
@@ -263,6 +251,80 @@ class PanneController extends Controller
             'data' => new PanneResource($panne),
         ]);
     }
+
+    /**
+     * Endpoint dédié: mise à jour diagnostic/coût/résultat (workflow “correctif”).
+     */
+    public function updateResultat(\App\Http\Requests\Agence\UpdatePanneDiagnosticResultRequest $request, $id)
+    {
+        $user = Auth::user();
+        $panne = Panne::query()->with('equipement')->findOrFail($id);
+
+        if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance']) && $panne->equipement?->agence_actuelle_id !== $user->agence_id) {
+            return response()->json(['message' => 'Accès refusé: panne hors de votre agence'], 403);
+        }
+
+        $payload = $request->only([
+            'diagnostic_technicien',
+            'action_realisee',
+            'cout_reparation',
+            'solution',
+            'decision_finale',
+        ]);
+
+        // Ici: on historise la donnée via payload dans la transition correctif.
+        // On ne change pas forcément le statut avec cette étape; on force le statut en_maintenance si non final.
+        $panne->fill($payload);
+        $panne->save();
+
+        $this->panneWorkflowService->passerEnMaintenance($panne, $user, [
+            'diagnostic_technicien' => $payload['diagnostic_technicien'] ?? $panne->diagnostic_technicien,
+            'action_realisee' => $payload['action_realisee'] ?? $panne->action_realisee,
+            'cout_reparation' => $payload['cout_reparation'] ?? $panne->cout_reparation,
+            'decision_finale' => $payload['decision_finale'] ?? $panne->decision_finale,
+            'solution' => $payload['solution'] ?? $panne->solution,
+        ]);
+
+        $panne->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories']);
+
+        return response()->json([
+            'message' => 'Résultat mis à jour',
+            'data' => new PanneResource($panne),
+        ]);
+    }
+
+    /**
+     * Endpoint dédié: clôture.
+     */
+    public function cloturer(\App\Http\Requests\Agence\CloturerPanneRequest $request, $id)
+    {
+        $user = Auth::user();
+        $panne = Panne::query()->with('equipement')->findOrFail($id);
+
+        if (!$user->hasRole(['super_admin', 'gestionnaire_stock_general', 'technicien_maintenance']) && $panne->equipement?->agence_actuelle_id !== $user->agence_id) {
+            return response()->json(['message' => 'Accès refusé: panne hors de votre agence'], 403);
+        }
+
+        $payload = $request->only(['commentaire', 'action_realisee', 'cout_reparation', 'solution', 'decision_finale']);
+
+        $panneUpdated = $this->panneWorkflowService->cloturer($panne, $user, [
+            'action_realisee' => $payload['action_realisee'] ?? null,
+            'cout_reparation' => $payload['cout_reparation'] ?? null,
+            'solution' => $payload['solution'] ?? null,
+            'decision_finale' => $payload['decision_finale'] ?? null,
+            'commentaire' => $request->commentaire,
+        ]);
+
+        event(new \App\Events\PanneCloturee(panne: $panneUpdated->fresh(), technicienOuActeur: $user, coutEstimatif: $payload['cout_reparation'] ?? null, commentaires: $request->commentaire, solution: $payload['solution'] ?? null, decisionFinale: $payload['decision_finale'] ?? null));
+
+        $panneUpdated->load(['equipement', 'agent', 'gestionnaireStock', 'technicien', 'maintenances', 'statusHistories']);
+
+        return response()->json([
+            'message' => 'Panne clôturée',
+            'data' => new PanneResource($panneUpdated),
+        ]);
+    }
+
 
     /**
      * Décision finale technicien (réparer / remplacement / irrécupérable).
@@ -307,7 +369,6 @@ class PanneController extends Controller
      * Supprimer (à éviter en production si historique obligatoire).
      */
     public function destroy(Panne $panne)
-
     {
         $user = Auth::user();
 
@@ -320,4 +381,3 @@ class PanneController extends Controller
         return response()->json(['message' => 'Panne supprimée avec succès']);
     }
 }
-

@@ -40,20 +40,19 @@ class AlerteMaintenancePrevue extends Notification implements ShouldQueue
         $equipement = $this->maintenance->equipement;
         $typeLibelle = $this->maintenance->type_maintenance === 'preventive' ? 'Préventive' : 'Corrective';
         $datePrevueFormatee = $this->maintenance->date_prevue->translatedFormat('l d F Y à H:i');
-        
+
         return (new MailMessage)
             ->subject('🔧 Alerte : Maintenance prévue dans les prochaines heures')
             ->greeting('Bonjour ' . $notifiable->name . ',')
             ->line("**Une maintenance {$typeLibelle} est planifiée** pour l'un de vos équipements.")
             ->line('')
             ->line('## 📋 Détails de la maintenance')
-            ->line("**Équipement :** {$equipement->reference} ({$equipement->marque} {$equipement->modele})")
+            ->line("**Équipement :** " . ($equipement->reference ?? 'N/A') . " (" . ($equipement->marque ?? '') . " " . ($equipement->modele ?? '') . ")")
             ->line("**Date prévue :** {$datePrevueFormatee}")
-            ->line("**Responsable :** {$this->maintenance->responsable}")
+            ->line("**Responsable :** " . ($this->maintenance->responsable ?? 'N/A'))
             ->line("**Type :** Maintenance {$typeLibelle}")
-            ->line("**Durée estimée :** {$this->maintenance->duree_estimee}h")
             ->line('')
-            ->action('📅 Consulter le calendrier de maintenance', url('/maintenances/calendrier'))
+            ->action('📋 Voir les maintenances', url('/'))
             ->line('')
             ->line('Merci de vous assurer que l\'équipement sera disponible à la date prévue.')
             ->salutation('Cordialement, L\'équipe de gestion des équipements');
@@ -68,11 +67,11 @@ class AlerteMaintenancePrevue extends Notification implements ShouldQueue
     {
         return [
             'maintenance_id' => $this->maintenance->id,
-            'equipement_reference' => $this->maintenance->equipement->reference,
+            'equipement_reference' => $this->maintenance->equipement->reference ?? null,
             'date_prevue' => $this->maintenance->date_prevue,
             'responsable' => $this->maintenance->responsable,
             'type_maintenance' => $this->maintenance->type_maintenance,
-            'message' => "Maintenance prévue pour {$this->maintenance->equipement->reference} le {$this->maintenance->date_prevue->format('d/m/Y')}",
+            'message' => "Maintenance prévue pour " . ($this->maintenance->equipement->reference ?? 'N/A') . " le " . $this->maintenance->date_prevue->format('d/m/Y'),
         ];
     }
 }

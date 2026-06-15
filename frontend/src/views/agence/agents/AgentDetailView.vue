@@ -1,50 +1,52 @@
 <template>
   <div class="agent-detail">
     <div class="detail-header">
-      <h3>
-        <i class="pi pi-user"></i>
+      <h3 class="text-xl font-extrabold text-dark">
+        <i class="pi pi-user text-primary"></i>
         Agent : {{ agent?.prenom }} {{ agent?.nom }}
       </h3>
-      <button @click="$emit('close')" class="close-btn">
+      <button @click="$emit('close')" class="btn btn-outline btn-icon">
         <i class="pi pi-times"></i>
       </button>
     </div>
     <div class="detail-body" v-if="agent">
       <div class="detail-row">
         <span class="label">Matricule:</span>
-        <span class="value">{{ agent.matricule || '—' }}</span>
+        <span class="value font-bold text-dark">{{ agent.matricule || '—' }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Nom:</span>
-        <span class="value">{{ agent.nom || '—' }}</span>
+        <span class="value font-bold text-dark">{{ agent.nom || '—' }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Prénom:</span>
-        <span class="value">{{ agent.prenom || '—' }}</span>
+        <span class="value font-bold text-dark">{{ agent.prenom || '—' }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Téléphone:</span>
-        <span class="value">{{ agent.telephone || '—' }}</span>
+        <span class="value text-dark">{{ agent.telephone || '—' }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Email:</span>
-        <span class="value">{{ agent.email || '—' }}</span>
+        <span class="value text-dark">{{ agent.email || '—' }}</span>
       </div>
-      <div class="detail-item">
+      <div class="detail-row">
         <span class="label">Poste:</span>
-        <span class="value">{{ agent.poste || '—' }}</span>
+        <span class="value text-dark font-medium">{{ agent.poste || '—' }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Statut:</span>
-        <span class="value" :class="agent.statut">{{ agent.statut === 'actif' ? 'Actif' : 'Inactif' }}</span>
+        <span class="status-pill" :class="agent.statut === 'actif' ? 'status-active' : 'status-danger'">
+          {{ agent.statut === 'actif' ? 'Actif' : 'Inactif' }}
+        </span>
       </div>
       <div class="detail-row" v-if="agent.user">
         <span class="label">Compte utilisateur:</span>
-        <span class="value">{{ agent.user.name }}</span>
+        <span class="value font-bold text-primary">{{ agent.user.name }}</span>
       </div>
     </div>
-    <div class="detail-footer">
-      <button @click="$emit('close')" class="btn-secondary">Fermer</button>
+    <div class="detail-footer mt-6 pt-6 border-t border-color flex justify-end">
+      <button @click="$emit('close')" class="btn btn-secondary btn-md">Fermer</button>
     </div>
   </div>
 </template>
@@ -58,43 +60,22 @@ const emit = defineEmits(['close'])
 
 <style scoped>
 .agent-detail {
-  background: #1e293b;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 600px;
-  padding: 25px;
+  max-width: 500px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
 }
 
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #334155;
-}
-
-.detail-header h3 {
-  color: #e2e8f0;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.close-btn {
-  background: #334155;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.2rem;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
-  background: #475569;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detail-body {
@@ -106,48 +87,38 @@ const emit = defineEmits(['close'])
 .detail-row {
   display: flex;
   justify-content: space-between;
-  padding: 10px 15px;
-  background: #0f172a;
-  border-radius: 8px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .detail-row .label {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .detail-row .value {
-  color: #e2e8f0;
+  font-size: 0.95rem;
 }
 
-.detail-row .value.actif {
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: #dcfce7;
   color: #10b981;
 }
 
-.detail-row .value.inactif {
+.status-danger {
+  background: #fee2e2;
   color: #ef4444;
-}
-
-.detail-footer {
-  margin-top: 25px;
-  padding-top: 15px;
-  border-top: 1px solid #334155;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.btn-secondary {
-  background: #334155;
-  color: #e2e8f0;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.2s;
-}
-
-.btn-secondary:hover {
-  background: #475569;
 }
 </style>

@@ -55,41 +55,105 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
 }
 
-/* Global Button Style */
+/* Global Button Styles - Unified & Professional */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 11px 20px;
+  font-weight: 700;
   border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
   gap: 8px;
+  text-decoration: none;
+  font-family: inherit;
+  white-space: nowrap;
 }
 
+/* Sizes */
+.btn-xs { padding: 4px 8px; font-size: 0.7rem; gap: 4px; }
+.btn-sm { padding: 8px 14px; font-size: 0.8rem; gap: 6px; }
+.btn-md { padding: 11px 20px; font-size: 0.95rem; }
+.btn-lg { padding: 14px 28px; font-size: 1.1rem; }
+.btn-xl { padding: 18px 36px; font-size: 1.25rem; }
+
+/* Variants */
 .btn-primary {
   background-color: var(--primary);
   color: var(--text-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 6px -1px rgba(250, 204, 21, 0.2), 0 2px 4px -1px rgba(250, 204, 21, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  box-shadow: 0 6px 16px rgba(250, 204, 21, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(250, 204, 21, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-secondary {
-  background-color: var(--bg-input);
+  background-color: var(--bg-card);
   color: var(--text-main);
-  border: 1px solid var(--border-color);
+  border-color: var(--border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--bg-card);
+  background-color: var(--bg-input);
   border-color: var(--primary);
+  color: var(--text-dark);
+}
+
+.btn-danger {
+  background-color: #fee2e2;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.btn-success {
+  background-color: #dcfce7;
+  color: #10b981;
+  border-color: #86efac;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--text-dark);
+  background: var(--primary-light);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Global Input Style */
@@ -202,41 +266,210 @@ tr:hover td {
 .text-primary { color: var(--primary); }
 .text-muted { color: var(--text-muted); }
 
-/* Status Badges */
-.badge {
-  padding: 4px 12px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  display: inline-block;
-}
-.badge-success { background: #dcfce7; color: #10b981; }
-.badge-danger { background: #fee2e2; color: #ef4444; }
-.badge-warning { background: #fef3c7; color: #f59e0b; }
-.badge-info { background: #e0f2fe; color: #3b82f6; }
-
-/* Dashboard Specific Stat Cards */
-.stat-card {
+/* Professional Data Grid Table */
+.grid-table, .p-datatable.professional-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   background: var(--bg-card);
-  padding: 1.5rem;
   border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  overflow: hidden;
   box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--primary);
-  transition: transform 0.2s;
+  border: 1px solid var(--border-color);
 }
-.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+.p-datatable.professional-table .p-datatable-thead > tr > th {
+  background-color: var(--bg-input) !important;
+  color: var(--text-dark) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em !important;
+  padding: 1.25rem 1rem !important;
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+.p-datatable.professional-table .p-datatable-tbody > tr > td {
+  padding: 1.25rem 1rem !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.p-datatable.professional-table .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+.p-datatable.professional-table .p-datatable-tbody > tr:hover > td {
+  background-color: var(--secondary-light) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+  border: 3px solid var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Global Form Overrides */
+.p-fluid .field {
+  margin-bottom: 1.5rem;
+}
+
+.p-inputtext, .p-dropdown, .p-inputnumber-input, .p-calendar .p-inputtext {
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 14px !important;
+  transition: all 0.2s !important;
+}
+
+.p-inputtext:focus, .p-dropdown:focus, .p-inputnumber-input:focus, .p-calendar .p-inputtext:focus {
+  border-color: var(--primary) !important;
+  background: var(--bg-card) !important;
+  box-shadow: 0 0 0 3px var(--primary-light) !important;
+}
+
+/* Professional Form Layout */
+.form-view-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.form-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.form-header {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.form-header h2 {
+  margin: 0;
   font-size: 1.5rem;
-  background: var(--secondary-light);
-  color: var(--primary-hover);
+  color: var(--text-dark);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Page Headers */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.page-title-section h1 {
+  margin: 0;
+  font-size: 1.875rem;
+}
+
+.page-title-section p {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+}
+
+/* Modern Stats Cards (Grid version) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Professional Dialog/Modal Uniformity */
+.p-dialog {
+  background: var(--bg-card) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.p-dialog .p-dialog-header {
+  background: var(--bg-input) !important;
+  color: var(--text-dark) !important;
+  padding: 1.5rem 2rem !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  border-top-left-radius: var(--radius-xl) !important;
+  border-top-right-radius: var(--radius-xl) !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-title {
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+
+.p-dialog .p-dialog-content {
+  background: var(--bg-card) !important;
+  padding: 2rem !important;
+  color: var(--text-main) !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background: var(--bg-input) !important;
+  padding: 1.25rem 2rem !important;
+  border-top: 1px solid var(--border-color) !important;
+  border-bottom-left-radius: var(--radius-xl) !important;
+  border-bottom-right-radius: var(--radius-xl) !important;
+}
+
+/* Mask Backdrop */
+.p-dialog-mask {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Form elements inside Dialogs */
+.p-dialog .field label {
+  color: var(--text-dark) !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.p-dialog .p-button {
+  padding: 0.75rem 1.5rem !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.p-dialog .p-button-secondary.p-button-text {
+  color: var(--text-muted) !important;
+}
+
+.p-dialog .p-button-secondary.p-button-text:hover {
+  background: var(--secondary-light) !important;
+}
+
+/* Specific button styles for confirmation */
+.p-dialog .p-button-danger {
+  background: var(--error) !important;
+  border-color: var(--error) !important;
+  color: white !important;
 }
