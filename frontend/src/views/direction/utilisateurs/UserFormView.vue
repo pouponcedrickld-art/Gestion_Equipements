@@ -7,90 +7,100 @@
         </div>
         <h2 class="text-xl font-extrabold text-dark">{{ editData ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}</h2>
       </div>
-      <button @click="$emit('cancel')" class="btn btn-outline btn-icon"><i class="pi pi-times"></i></button>
+      <Button @click="$emit('cancel')" icon="pi pi-times" class="p-button-text p-button-rounded" />
     </div>
 
-    <form @submit.prevent="handleSubmit" class="mt-6">
+    <form @submit.prevent="handleSubmit" class="p-fluid mt-6">
       <!-- Section Liaison Agent -->
       <div class="form-section mb-6" v-if="!editData">
         <div class="section-title">
           <i class="pi pi-link"></i> Liaison Agent
         </div>
-        <div class="form-group">
+        <div class="field">
           <label>Lier à un agent existant (optionnel)</label>
           <div class="search-select-custom">
             <div class="relative mb-2">
               <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs"></i>
-              <input v-model="agentSearch" placeholder="Filtrer les agents..." class="pl-8 text-sm" />
+              <InputText v-model="agentSearch" placeholder="Filtrer les agents..." class="pl-8 text-xs" />
             </div>
-            <select v-model="formData.agent_id" @change="onAgentSelect" class="text-sm">
-              <option :value="null">-- Aucun / Nouvel utilisateur indépendant --</option>
-              <option v-for="a in filteredAgents" :key="a.id" :value="a.id">
-                {{ a.nom }} {{ a.prenom }} ({{ a.matricule }})
-              </option>
-            </select>
+            <Dropdown 
+              v-model="formData.agent_id" 
+              :options="filteredAgents" 
+              optionLabel="display" 
+              optionValue="id" 
+              placeholder="-- Aucun / Nouvel utilisateur indépendant --" 
+              class="w-full" 
+              @change="onAgentSelect"
+              filter
+            />
           </div>
         </div>
       </div>
 
       <!-- Informations de base -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Nom complet *</label>
-          <input v-model="formData.name" required placeholder="Ex: Jean Dupont" />
+          <InputText v-model="formData.name" required placeholder="Ex: Jean Dupont" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Email professionnel *</label>
-          <input v-model="formData.email" type="email" required placeholder="email@exemple.com" />
+          <InputText v-model="formData.email" type="email" required placeholder="email@exemple.com" />
         </div>
       </div>
 
       <!-- Mot de passe et Rôle -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-group" v-if="!editData">
+      <div class="grid">
+        <div class="col-12 md:col-6 field" v-if="!editData">
           <label>Mot de passe *</label>
-          <input v-model="formData.password" type="password" required placeholder="••••••••" />
+          <InputText v-model="formData.password" type="password" required placeholder="••••••••" />
         </div>
-        <div class="form-group" v-else>
+        <div class="col-12 md:col-6 field" v-else>
           <label>Changer mot de passe</label>
-          <input v-model="formData.password" type="password" placeholder="Laisser vide si inchangé" />
+          <InputText v-model="formData.password" type="password" placeholder="Laisser vide si inchangé" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Rôle du compte *</label>
-          <select v-model="formData.role" required>
-            <option value="">-- Choisir un rôle --</option>
-            <option value="super_admin">Super Admin</option>
-            <option value="gestionnaire_stock_general">Stock Général</option>
-            <option value="chef_agence">Chef d'Agence</option>
-            <option value="gestionnaire_stock">Stock Local</option>
-            <option value="technicien_maintenance">Technicien</option>
-            <option value="agent">Agent</option>
-          </select>
+          <Dropdown 
+            v-model="formData.role" 
+            :options="roleOptions" 
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="-- Choisir un rôle --" 
+            required
+            class="w-full"
+          />
         </div>
       </div>
 
       <!-- Agence et Téléphone -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Agence de rattachement *</label>
-          <select v-model="formData.agence_id" required>
-            <option value="">-- Choisir une agence --</option>
-            <option v-for="a in agences" :key="a.id" :value="a.id">{{ a.nom }}</option>
-          </select>
+          <Dropdown 
+            v-model="formData.agence_id" 
+            :options="agences" 
+            optionLabel="nom" 
+            optionValue="id" 
+            placeholder="-- Choisir une agence --" 
+            required
+            class="w-full"
+            filter
+          />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Téléphone</label>
-          <input v-model="formData.telephone" placeholder="+229 ..." />
+          <InputText v-model="formData.telephone" placeholder="+229 ..." />
         </div>
       </div>
 
       <!-- Poste et Statut -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Poste / Fonction</label>
-          <input v-model="formData.poste" placeholder="Ex: Responsable IT, Comptable..." />
+          <InputText v-model="formData.poste" placeholder="Ex: Responsable IT, Comptable..." />
         </div>
-        <div class="form-group flex flex-col justify-end">
+        <div class="col-12 md:col-6 field flex flex-col justify-end">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" v-model="formData.actif" class="w-auto h-auto" />
             <span class="text-sm font-bold" :class="formData.actif ? 'text-success' : 'text-danger'">
@@ -105,11 +115,8 @@
 
       <!-- Actions -->
       <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-color">
-        <button type="button" @click="$emit('cancel')" class="btn btn-secondary btn-md">Annuler</button>
-        <button type="submit" class="btn btn-primary btn-md" :disabled="saving">
-          <i v-if="saving" class="pi pi-spin pi-spinner mr-2"></i>
-          {{ saving ? 'Traitement...' : (editData ? 'Mettre à jour' : 'Créer le compte') }}
-        </button>
+        <Button type="button" @click="$emit('cancel')" label="Annuler" class="p-button-secondary" />
+        <Button type="submit" :loading="saving" :label="saving ? 'Traitement...' : (editData ? 'Mettre à jour' : 'Créer le compte')" />
       </div>
       
       <div v-if="error" class="error-msg mt-4">
@@ -124,6 +131,9 @@
 import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/userStore.js'
 import { useAgentStore } from '@/stores/agentStore.js'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
 
 const props = defineProps({
   editData: Object,
@@ -138,6 +148,25 @@ const saving = ref(false)
 const error = ref(null)
 const availableAgents = ref([])
 const agentSearch = ref('')
+
+const roleOptions = [
+  { label: 'Super Admin', value: 'super_admin' },
+  { label: 'Stock Général', value: 'gestionnaire_stock_general' },
+  { label: 'Chef d\'Agence', value: 'chef_agence' },
+  { label: 'Stock Local', value: 'gestionnaire_stock' },
+  { label: 'Technicien', value: 'technicien_maintenance' },
+  { label: 'Agent', value: 'agent' }
+]
+
+const filteredAgents = computed(() => {
+  if (!agentSearch.value) return availableAgents.value.map(a => ({ ...a, display: `${a.nom} ${a.prenom} (${a.matricule})` }))
+  const s = agentSearch.value.toLowerCase()
+  return availableAgents.value.filter(a => 
+    a.nom?.toLowerCase().includes(s) || 
+    a.prenom?.toLowerCase().includes(s) || 
+    a.matricule?.toLowerCase().includes(s)
+  ).map(a => ({ ...a, display: `${a.nom} ${a.prenom} (${a.matricule})` }))
+})
 
 const formData = reactive({
   name: '',
@@ -166,16 +195,6 @@ const resetForm = () => {
   error.value = null
   agentSearch.value = ''
 }
-
-const filteredAgents = computed(() => {
-  if (!agentSearch.value) return availableAgents.value
-  const s = agentSearch.value.toLowerCase()
-  return availableAgents.value.filter(a => 
-    a.nom.toLowerCase().includes(s) || 
-    a.prenom.toLowerCase().includes(s) || 
-    a.matricule.toLowerCase().includes(s)
-  )
-})
 
 onMounted(async () => {
   if (!props.editData) {
@@ -265,13 +284,6 @@ const handleSubmit = async () => {
   justify-content: center;
   color: var(--primary-hover);
   font-size: 1.4rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 1.25rem;
 }
 
 .form-section {

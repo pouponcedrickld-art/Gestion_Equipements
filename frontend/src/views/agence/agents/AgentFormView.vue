@@ -2,46 +2,50 @@
   <div class="modal-form">
     <div class="form-header">
       <h2>{{ editData ? 'Modifier l\'agent' : 'Nouvel agent' }}</h2>
-      <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
+      <Button @click="$emit('cancel')" icon="pi pi-times" class="p-button-text p-button-rounded" />
     </div>
-    <form @submit.prevent="handleSubmit">
-      <div class="form-group" v-if="editData">
+    <form @submit.prevent="handleSubmit" class="p-fluid">
+      <div class="field" v-if="editData">
         <label>Matricule</label>
-        <input v-model="formData.matricule" disabled class="disabled-input" />
+        <InputText v-model="formData.matricule" disabled />
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Nom *</label>
-          <input v-model="formData.nom" required placeholder="Nom" />
+          <InputText v-model="formData.nom" required placeholder="Nom" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Prénom *</label>
-          <input v-model="formData.prenom" required placeholder="Prénom" />
+          <InputText v-model="formData.prenom" required placeholder="Prénom" />
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Téléphone</label>
-          <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
+          <InputText v-model="formData.telephone" placeholder="Numéro de téléphone" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Email</label>
-          <input v-model="formData.email" type="email" placeholder="Email" />
+          <InputText v-model="formData.email" type="email" placeholder="Email" />
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Poste</label>
           <div class="poste-select-container">
-            <select v-model="formData.poste" class="poste-select">
-              <option value="">-- Choisir un poste --</option>
-              <option v-for="p in availablePostes" :key="p" :value="p">{{ p }}</option>
-              <option value="NEW_POSTE">+ Nouveau poste...</option>
-            </select>
-            <input 
+            <Dropdown 
+              v-model="formData.poste" 
+              :options="posteOptions" 
+              optionLabel="label" 
+              optionValue="value" 
+              placeholder="-- Choisir un poste --" 
+              class="w-full" 
+              filter
+            />
+            <InputText 
               v-if="formData.poste === 'NEW_POSTE' || showNewPosteInput" 
               v-model="newPosteName" 
               placeholder="Saisir le nom du nouveau poste"
@@ -51,20 +55,25 @@
             />
           </div>
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Statut</label>
-          <select v-model="formData.statut">
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-          </select>
+          <Dropdown 
+            v-model="formData.statut" 
+            :options="statutOptions" 
+            optionLabel="label" 
+            optionValue="value" 
+            class="w-full" 
+          />
         </div>
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary" :disabled="saving">
-          {{ saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer') }}
-        </button>
+        <Button label="Annuler" class="p-button-secondary" @click="$emit('cancel')" />
+        <Button 
+          type="submit" 
+          :loading="saving" 
+          :label="saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer')" 
+        />
       </div>
       <p v-if="error" class="error">{{ error }}</p>
     </form>
@@ -72,8 +81,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted, nextTick } from 'vue'
+import { ref, reactive, watch, onMounted, nextTick, computed } from 'vue'
 import { useAgentStore } from '@/stores/agentStore.js'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
 
 const props = defineProps({
   editData: Object,
@@ -88,6 +100,17 @@ const availablePostes = ref([])
 const showNewPosteInput = ref(false)
 const newPosteName = ref('')
 const newPosteInput = ref(null)
+
+const statutOptions = [
+  { label: 'Actif', value: 'actif' },
+  { label: 'Inactif', value: 'inactif' }
+]
+
+const posteOptions = computed(() => {
+  const options = availablePostes.value.map(p => ({ label: p, value: p }))
+  options.push({ label: '+ Nouveau poste...', value: 'NEW_POSTE' })
+  return options
+})
 
 const formData = reactive({
   matricule: '',
@@ -193,11 +216,12 @@ const handleSubmit = async () => {
 
 <style scoped>
 .modal-form {
-  background: #1e293b;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 550px;
   padding: 25px;
+  border: 1px solid var(--border-color);
 }
 
 .form-header {
@@ -205,96 +229,38 @@ const handleSubmit = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
 }
 
 .form-header h2 {
-  color: #e2e8f0;
+  color: var(--text-dark);
   margin: 0;
   font-size: 1.3rem;
+  font-weight: 800;
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 1.3rem;
-  cursor: pointer;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  color: #cbd5e1;
-  font-size: 0.9rem;
-}
-
-.form-group input,
-.form-group select {
+.poste-select-container {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  background: #0f172a;
-  color: #e2e8f0;
-  box-sizing: border-box;
 }
 
 .mt-2 {
   margin-top: 8px;
 }
 
-.disabled-input {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
-  cursor: not-allowed;
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
-}
-
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #334155;
-  color: #e2e8f0;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .error {
-  color: #ef4444;
+  color: var(--error);
   margin-top: 10px;
   text-align: center;
+  font-weight: 600;
 }
 </style>
