@@ -74,6 +74,34 @@ class AuthController extends Controller
     }
 
 
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => [
+                'required',
+                'min:6',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+            ],
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Le mot de passe actuel est incorrect.'
+            ], 422);
+        }
+
+        $user->password = $request->new_password;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Mot de passe modifié avec succès.'
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

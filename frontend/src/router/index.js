@@ -185,6 +185,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general'] }
   },
   {
+    path: '/mon-compte',
+    name: 'MonCompte',
+    component: () => import('@/views/auth/MonCompteView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/maintenances/calendrier',
     name: 'MaintenanceCalendar',
     component: () => import('@/views/agence/maintenances/MaintenanceCalendarView.vue'),

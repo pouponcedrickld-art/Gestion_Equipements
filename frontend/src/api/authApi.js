@@ -6,4 +6,5 @@ export default {
     logout: () => api.post('/logout'),
     me: () => api.get('/me'),
     refresh: () => api.post('/refresh'),
+    changePassword: (data) => api.post('/change-password', data),
 }
