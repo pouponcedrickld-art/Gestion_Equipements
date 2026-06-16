@@ -4,16 +4,18 @@ export default {
     // CRUD de base
     index: (params = {}) => api.get('/equipements', { params }),
     show: (id) => api.get(`/equipements/${id}`),
-    store: (data) => api.post('/equipements', data),
+    store: (data) => {
+        if (data instanceof FormData) {
+            return api.post('/equipements', data);
+        }
+        return api.post('/equipements', data);
+    },
     update: (id, data) => {
-        // Si c'est un FormData, on utilise POST avec _method=PATCH pour Laravel
         if (data instanceof FormData) {
             if (!data.has('_method')) {
                 data.append('_method', 'PATCH');
             }
-            return api.post(`/equipements/${id}`, data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            return api.post(`/equipements/${id}`, data);
         }
         return api.put(`/equipements/${id}`, data);
     },
@@ -24,14 +26,10 @@ export default {
     generateQr: (id) => api.post(`/equipements/${id}/qr`),
     
     // Import/Export
-    import: (formData) => api.post('/equipements/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    import: (formData) => api.post('/equipements/import', formData),
     previewImport: (formData) => {
         formData.append('preview_only', 'true')
-        return api.post('/equipements/import', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        return api.post('/equipements/import', formData)
     },
     downloadTemplate: () => api.get('/equipements/import/template', {
         responseType: 'blob'

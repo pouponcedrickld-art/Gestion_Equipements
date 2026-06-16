@@ -142,7 +142,7 @@ class EquipementController extends Controller
                     'etat' => 'required|string',
                     'localisation' => 'nullable|string|max:255',
                     'responsable_id' => 'nullable|exists:users,id',
-                    'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                    'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
                     'specifications' => 'nullable|string',
                     'quantite' => 'nullable|integer|min:1',
                     'quantite_a_creer' => 'nullable|integer|min:1|max:100',
@@ -152,8 +152,10 @@ class EquipementController extends Controller
                     'categorie_id.required' => 'Vous devez sélectionner une catégorie.',
                     'categorie_id.exists' => 'La catégorie sélectionnée est invalide.',
                     'etat.required' => 'L\'état de l\'équipement est obligatoire.',
-                    'photo.image' => 'Le fichier doit être une image.',
-                    'photo.max' => 'La photo ne doit pas dépasser 2Mo.',
+                    'photo.image' => 'Le fichier doit être une image (JPG, PNG, WebP ou GIF).',
+                    'photo.mimes' => 'Format accepté : JPG, PNG, WebP ou GIF.',
+                    'photo.max' => 'La photo ne doit pas dépasser 5Mo.',
+                    'photo.uploaded' => 'Le fichier n\'a pas pu être téléchargé. Vérifiez la taille ou le format.',
                 ]);
             } catch (ValidationException $e) {
                 \Log::error('STORE VALIDATION ERROR:', ['errors' => $e->errors(), 'request' => $request->all()]);
@@ -183,6 +185,10 @@ class EquipementController extends Controller
                 }
             }
 
+            if (isset($validated['specifications']) && is_string($validated['specifications'])) {
+                $validated['specifications'] = json_decode($validated['specifications'], true);
+            }
+
             $quantite = $request->input('quantite_a_creer', 1);
             $modeEnregistrement = $request->input('mode_enregistrement', 'individuel');
             $equipements_crees = [];
@@ -210,6 +216,10 @@ class EquipementController extends Controller
                     'is_lot' => true,
                     'marque' => $validated['marque'] ?? null,
                     'modele' => $validated['modele'] ?? null,
+                    'numero_serie' => $validated['numero_serie'] ?? null,
+                    'imei' => $validated['imei'] ?? null,
+                    'fournisseur' => $validated['fournisseur'] ?? null,
+                    'specifications' => $validated['specifications'] ?? null,
                     'quantite' => $quantite,
                     'categorie_id' => $validated['categorie_id'],
                     'date_acquisition' => $validated['date_acquisition'] ?? null,
@@ -223,8 +233,8 @@ class EquipementController extends Controller
                     'statut_global' => $this->mapStatut($validated['etat']),
                     'photo' => $photoPath,
                     'lot_reference' => $this->generateUniqueLotReference(),
-                    'reference' => $this->generateUniqueReference(),
-                    'code_inventaire' => $this->generateUniqueCodeInventaire(),
+                    'reference' => $validated['reference'] ?? $this->generateUniqueReference(),
+                    'code_inventaire' => $validated['code_inventaire'] ?? $this->generateUniqueCodeInventaire(),
                 ];
 
                 $equipement = Equipement::create($equipementData);
@@ -247,6 +257,10 @@ class EquipementController extends Controller
                         'is_lot' => false,
                         'marque' => $validated['marque'] ?? null,
                         'modele' => $validated['modele'] ?? null,
+                        'numero_serie' => $quantite === 1 ? ($validated['numero_serie'] ?? null) : null,
+                        'imei' => $quantite === 1 ? ($validated['imei'] ?? null) : null,
+                        'fournisseur' => $validated['fournisseur'] ?? null,
+                        'specifications' => $validated['specifications'] ?? null,
                         'categorie_id' => $validated['categorie_id'],
                         'date_acquisition' => $validated['date_acquisition'] ?? null,
                         'prix_achat' => $validated['prix_achat'] ?? null,
@@ -259,8 +273,8 @@ class EquipementController extends Controller
                         'statut_global' => $this->mapStatut($validated['etat']),
                         'photo' => $photoPath,
                         'lot_reference' => $lotReference,
-                        'reference' => $this->generateUniqueReference(),
-                        'code_inventaire' => $this->generateUniqueCodeInventaire(),
+                        'reference' => ($quantite === 1 && !empty($validated['reference'])) ? $validated['reference'] : $this->generateUniqueReference(),
+                        'code_inventaire' => ($quantite === 1 && !empty($validated['code_inventaire'])) ? $validated['code_inventaire'] : $this->generateUniqueCodeInventaire(),
                     ];
 
                     $equipement = Equipement::create($equipementData);
@@ -379,7 +393,7 @@ class EquipementController extends Controller
                 'localisation' => 'nullable|string|max:255',
                 'responsable_id' => 'nullable|exists:users,id',
                 'quantite' => 'nullable|integer|min:1',
-                'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
                 'specifications' => 'nullable|string',
             ]);
 
