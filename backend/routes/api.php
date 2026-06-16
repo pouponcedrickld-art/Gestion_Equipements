@@ -29,6 +29,7 @@ Route::post('/2fa/verify', [AuthController::class, 'verify2FA']);
 
 // ROUTES PROTÉGÉES (Auth simple)
 Route::middleware(['auth:sanctum', 'user.active'])->group(function () {
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/refresh', [AuthController::class, 'refresh']);

@@ -299,14 +299,29 @@ const categories = computed(() => {
   return []
 })
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const MAX_SIZE = 5 * 1024 * 1024 // 5Mo
+
 const handleFileChange = (event) => {
   const file = event.target.files[0]
-  if (file) {
-    form.value.photo = file
-    const reader = new FileReader()
-    reader.onload = (e) => photoPreview.value = e.target.result
-    reader.readAsDataURL(file)
+  if (!file) return
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    toast.add({ severity: 'error', summary: 'Format non supporté', detail: 'Formats acceptés : JPG, PNG, WebP, GIF', life: 4000 })
+    event.target.value = ''
+    return
   }
+
+  if (file.size > MAX_SIZE) {
+    toast.add({ severity: 'error', summary: 'Fichier trop volumineux', detail: 'La photo ne doit pas dépasser 5 Mo', life: 4000 })
+    event.target.value = ''
+    return
+  }
+
+  form.value.photo = file
+  const reader = new FileReader()
+  reader.onload = (e) => photoPreview.value = e.target.result
+  reader.readAsDataURL(file)
 }
 
 const removePhoto = () => {

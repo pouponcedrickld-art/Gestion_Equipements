@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { toRaw } from 'vue'
 import equipementApi from '@/api/equipementApi'
 
 export const useEquipementStore = defineStore('equipement', {
@@ -107,30 +108,29 @@ export const useEquipementStore = defineStore('equipement', {
 
       try {
         const formData = new FormData()
-        
-        // On s'assure de traiter les données proprement
-        const rawData = { ...data }
-        
-        Object.keys(rawData).forEach(key => {
-          const value = rawData[key]
-          if (value !== null && value !== undefined) {
-            if (value instanceof Date) {
-              formData.append(key, value.toISOString().split('T')[0])
-            } else if (key === 'specifications' && typeof value === 'object') {
-              formData.append(key, JSON.stringify(value))
-            } else if (key === 'photo' && !(value instanceof File)) {
-              // Ne pas ajouter si c'est une chaîne (URL) ou autre chose qu'un File
-            } else {
-              formData.append(key, value)
-            }
-          }
-        })
+        const rawData = toRaw(data)
 
-        // Log des données envoyées pour le débogage
-        console.log('Données brutes avant envoi:', rawData)
-        console.log('Contenu du FormData envoyé:')
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1])
+        for (const [key, value] of Object.entries(rawData)) {
+          if (value === null || value === undefined) continue
+
+          if (key === 'photo') {
+            if (value instanceof File || value instanceof Blob) {
+              formData.append('photo', value, value.name)
+            }
+            continue
+          }
+
+          if (key === 'specifications') {
+            formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value)
+            continue
+          }
+
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+            continue
+          }
+
+          formData.append(key, value)
         }
 
         const response = await equipementApi.store(formData)
@@ -148,7 +148,6 @@ export const useEquipementStore = defineStore('equipement', {
           throw new Error(response.data.message)
         }
       } catch (err) {
-        // Log détaillé des erreurs
         console.error('Erreur createEquipement complète:', err)
         console.error('Réponse du serveur:', err.response?.data)
         this.error = err.response?.data?.message || err.message
@@ -165,20 +164,30 @@ export const useEquipementStore = defineStore('equipement', {
       try {
         const formData = new FormData()
         formData.append('_method', 'PUT')
+        const rawData = toRaw(data)
 
-        Object.keys(data).forEach(key => {
-          const value = data[key]
-          if (value !== null && value !== undefined) {
-            if (value instanceof Date) {
-              formData.append(key, value.toISOString().split('T')[0])
-            } else if (key === 'specifications' && typeof value === 'object') {
-              formData.append(key, JSON.stringify(value))
-            } else if (key === 'photo' && !(value instanceof File)) {
-            } else {
-              formData.append(key, value)
+        for (const [key, value] of Object.entries(rawData)) {
+          if (value === null || value === undefined) continue
+
+          if (key === 'photo') {
+            if (value instanceof File || value instanceof Blob) {
+              formData.append('photo', value, value.name)
             }
+            continue
           }
-        })
+
+          if (key === 'specifications') {
+            formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value)
+            continue
+          }
+
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString().split('T')[0])
+            continue
+          }
+
+          formData.append(key, value)
+        }
 
         const response = await equipementApi.update(id, formData)
 

@@ -42,6 +42,7 @@ export const getMenuItems = () => {
         { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', visible: true },
         { label: 'Rapports', icon: 'pi pi-chart-bar', route: '/rapports', visible: !['agent', 'technicien_maintenance'].includes(role) },
         { label: 'Utilisateurs', icon: 'pi pi-user-edit', route: '/users', visible: ['super_admin', 'gestionnaire_stock_general'].includes(role) },
+        { label: 'Mon Compte', icon: 'pi pi-cog', route: '/mon-compte', visible: true },
     ]
     return items.filter(item => item.visible)
 }

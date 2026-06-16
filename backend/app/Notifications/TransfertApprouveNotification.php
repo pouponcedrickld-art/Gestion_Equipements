@@ -2,53 +2,45 @@
 
 namespace App\Notifications;
 
+use App\Models\Transfert;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TransfertApprouveNotification extends Notification
+class TransfertApprouveNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
+    public Transfert $transfert;
+
+    public function __construct(Transfert $transfert)
     {
-        //
+        $this->transfert = $transfert;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject("Transfert #{$this->transfert->id} approuvé")
+            ->line("Le transfert de {$this->transfert->equipement?->nom} vers {$this->transfert->agenceDestination?->nom} a été approuvé.")
+            ->action('Voir le transfert', url("/transferts/{$this->transfert->id}"))
+            ->line("Vous pouvez maintenant procéder à l'expédition.");
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'type' => 'transfert_approuve',
+            'transfert_id' => $this->transfert->id,
+            'message' => "Transfert #{$this->transfert->id} approuvé : {$this->transfert->equipement?->nom} → {$this->transfert->agenceDestination?->nom}",
+            'equipement' => $this->transfert->equipement?->nom,
+            'destination' => $this->transfert->agenceDestination?->nom,
         ];
     }
 }

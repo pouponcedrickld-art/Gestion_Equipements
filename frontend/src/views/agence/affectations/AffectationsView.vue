@@ -54,7 +54,7 @@
                 <td>
                   <div class="agent-info">
                     <span class="agent-name">{{ a.agent?.nom }} {{ a.agent?.prenom }}</span>
-                    <small>{{ a.agent?.service }}</small>
+                    <small>{{ a.agent?.poste || '' }}</small>
                   </div>
                 </td>
                 <td>

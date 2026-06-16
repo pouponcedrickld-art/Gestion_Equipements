@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\StockAgenceService;
+use App\Events\TransfertCree;
+use App\Events\TransfertValide;
 use Illuminate\Support\Facades\App;
 
 class Transfert extends Model
@@ -18,7 +20,7 @@ class Transfert extends Model
         'agence_source_id',
         'agence_destination_id',
         'type_transfert', // livraison_generale, retour_generale, transfert_interne
-        'statut', // brouillon, en_attente_expedition, en_transit, recu, annule, refuse
+        'statut', // demande, approuve, expedie, recu, refuse
         'date_demande',
         'date_expedition',
         'date_reception',
@@ -108,6 +110,8 @@ class Transfert extends Model
             'statut' => 'approuve',
             'valide_par_id' => $userId
         ]);
+
+        event(new TransfertValide($this->equipement, $this->agenceDestination));
     }
 
     public function refuser($userId, $observations = null)
@@ -118,11 +122,16 @@ class Transfert extends Model
             'statut' => 'refuse',
             'valide_par_id' => $userId,
             'motif_refus' => $observations,
-            'observations' => $this->observations . "\nRefusé/Annulé : " . $observations
+            'observations' => ($this->observations ?? '') . "\nRefusé/Annulé : " . ($observations ?? '')
         ]);
 
-        // Si le transfert a déjà été expédié ou reçu, on ajuste le stock si nécessaire
-        if ($oldStatus === 'expedie' || $oldStatus === 'recu') {
+        // Ajuster le stock selon l'ancien statut
+        if ($oldStatus === 'expedie') {
+            // Stock retiré de la source lors de l'expédition → on le remet à la source
+            $stockService = App::make(StockAgenceService::class);
+            $stockService->incrementerStock($this->agence_source_id, $this);
+        } elseif ($oldStatus === 'recu') {
+            // Stock ajouté à la destination lors de la réception → on l'enlève
             $stockService = App::make(StockAgenceService::class);
             $stockService->decrementerStock($this, 'rejet');
         }
@@ -134,6 +143,10 @@ class Transfert extends Model
             'statut' => 'expedie',
             'date_expedition' => now()
         ]);
+
+        // Décrementer le stock de l'agence source
+        $stockService = App::make(StockAgenceService::class);
+        $stockService->decrementerStock($this, 'expedition');
 
         // Mettre à jour le statut de l'équipement
         if ($this->equipement) {

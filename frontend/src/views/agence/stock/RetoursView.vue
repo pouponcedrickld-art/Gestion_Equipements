@@ -131,6 +131,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
 import gsap from 'gsap'
 import transfertApi from '@/api/transfertApi'
+import agenceApi from '@/api/agenceApi'
 
 // PrimeVue Components
 import Button from 'primevue/button'
@@ -231,8 +232,21 @@ const chargerEquipementsEnStock = async () => {
   }
 }
 
+const agenceGeneraleId = ref(null)
+
+const getAgenceGenerale = async () => {
+  try {
+    const response = await agenceApi.index()
+    const agences = Array.isArray(response.data) ? response.data : (response.data.data || [])
+    const generale = agences.find(a => a.type === 'generale')
+    agenceGeneraleId.value = generale?.id || null
+  } catch (err) {
+    console.error('Erreur chargement agence générale:', err)
+  }
+}
+
 const ouvrirFormulaireRetour = async () => {
-  await chargerEquipementsEnStock()
+  await Promise.all([chargerEquipementsEnStock(), getAgenceGenerale()])
   nouveauRetour.value = { equipement_id: null, observations: '' }
   retourDialogVisible.value = true
 }
@@ -250,15 +264,14 @@ const creerRetour = async () => {
 
   submittingRetour.value = true
   try {
-    // Get Siège Social (Agence Générale)
-    const agenceGenerale = 1 // Par défaut, mais on pourrait le récupérer via API
+    if (!agenceGeneraleId.value) {
+      toast.add({ severity: 'error', summary: 'Erreur', detail: 'Aucune agence générale trouvée', life: 3000 })
+      return
+    }
     await transfertApi.store({
       equipement_id: nouveauRetour.value.equipement_id,
-      agence_source_id: authStore.userAgence,
-      agence_destination_id: agenceGenerale,
+      agence_destination_id: agenceGeneraleId.value,
       type_transfert: 'retour_generale',
-      statut: 'demande',
-      date_demande: new Date(),
       observations: nouveauRetour.value.observations
     })
     toast.add({ severity: 'success', summary: 'Succès', detail: 'Retour créé avec succès', life: 3000 })

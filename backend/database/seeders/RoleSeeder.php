@@ -123,7 +123,7 @@ class RoleSeeder extends Seeder
             ['email' => 'admin@gestpark.local'],
             [
                 'name' => 'Administrateur GESTPARK',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'email_verified_at' => now(),
             ]
         );

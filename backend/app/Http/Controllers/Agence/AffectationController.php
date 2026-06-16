@@ -80,9 +80,14 @@ class AffectationController extends Controller
             foreach ($request->equipement_ids as $equipementId) {
                 $equipement = Equipement::findOrFail($equipementId);
 
-                // Vérifier si l'équipement est déjà affecté
-                if ($equipement->etat === 'actif' && $equipement->affectations()->where('statut', 'active')->exists()) {
-                    throw new \Exception("L'équipement {$equipement->nom} est déjà affecté.");
+                // Vérifier que l'équipement appartient à l'agence de l'utilisateur
+                if ($equipement->agence_actuelle_id !== $user->agence_id) {
+                    throw new \Exception("L'équipement {$equipement->nom} n'appartient pas à votre agence.");
+                }
+
+                // Vérifier si l'équipement est disponible pour affectation
+                if (!$equipement->isDisponiblePourAffectation()) {
+                    throw new \Exception("L'équipement {$equipement->nom} n'est pas disponible pour affectation.");
                 }
 
                 $affectation = Affectation::create([
@@ -150,7 +155,7 @@ class AffectationController extends Controller
 
             $equipement->update([
                 'etat' => $nouvelEtat,
-                'statut_global' => $nouvelEtat === 'actif' ? 'en_stock_agence' : 'en_maintenance'
+                'statut_global' => $nouvelEtat === 'actif' ? 'en_stock_local' : 'en_maintenance'
             ]);
 
             $equipement->createMouvement(

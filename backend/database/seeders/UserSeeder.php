@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
             ['email' => 'gestionnaire@gestpark.local'],
             [
                 'name' => 'Gestionnaire Stock Général',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'email_verified_at' => now(),
             ]
         );
@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ['email' => 'cheflome@gestpark.local'],
             [
                 'name' => 'Chef Agence Lomé',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
@@ -45,7 +45,7 @@ class UserSeeder extends Seeder
             ['email' => 'stocklome@gestpark.local'],
             [
                 'name' => 'Gestionnaire Stock Lomé',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
@@ -62,7 +62,7 @@ class UserSeeder extends Seeder
             ['email' => 'technicien@gestpark.local'],
             [
                 'name' => 'Technicien Maintenance',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]
@@ -93,7 +93,7 @@ class UserSeeder extends Seeder
             ['email' => 'agent@gestpark.local'],
             [
                 'name' => 'Agent Terrain',
-                'password' => bcrypt('password123'),
+                'password' => 'password123',
                 'agence_id' => $agenceLome?->id,
                 'email_verified_at' => now(),
             ]

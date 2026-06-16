@@ -83,6 +83,10 @@ export const useAuthStore = defineStore('auth', () => {
     return roles.includes(userRole.value)
   }
 
+  const changePassword = async (data) => {
+    return await authApi.changePassword(data)
+  }
+
   const canViewAgence = (agenceId) => {
     if (isSuperAdmin.value) return true
     return userAgence.value === agenceId
@@ -93,6 +97,6 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated, userRole, userAgence,
     isSuperAdmin, isGestionnaireGeneral, isChefAgence,
     isGestionnaireStock, isTechnicien, isAgent,
-    login, verify2FA, logout, fetchUser, hasRole, canViewAgence
+    login, verify2FA, logout, fetchUser, hasRole, changePassword, canViewAgence
   }
 })
