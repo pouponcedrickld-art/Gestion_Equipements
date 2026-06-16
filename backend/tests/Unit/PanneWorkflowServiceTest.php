@@ -24,7 +24,7 @@ class PanneWorkflowServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $panne = Panne::factory()->create([
-            'statut' => null,
+            'statut' => 'brouillon',
         ]);
 
         $result = $this->service->declarer($panne, $user);

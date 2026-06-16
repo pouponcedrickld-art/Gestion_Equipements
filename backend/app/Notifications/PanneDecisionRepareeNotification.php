@@ -30,7 +30,7 @@ class PanneDecisionRepareeNotification extends Notification
         return (new MailMessage)
             ->line('Décision: panne réparée.')
             ->line("Panne ID: {$this->panne->id}")
-            ->line("Technicien: {$this->technicien->name ?? $this->technicien->id}")
+            ->line('Technicien: '.($this->technicien->name ?? $this->technicien->id))
             ->when($this->coutEstimatif !== null, fn (MailMessage $m) => $m->line('Coût estimatif: '.$this->coutEstimatif))
             ->when($this->commentaires, fn (MailMessage $m) => $m->line('Commentaires: '.$this->commentaires));
     }

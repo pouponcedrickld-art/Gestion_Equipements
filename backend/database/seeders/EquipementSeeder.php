@@ -108,8 +108,11 @@ class EquipementSeeder extends Seeder
 
         // 2. Création massive d'équipements aléatoires (30 de plus)
         for ($i = 3; $i <= 33; $i++) {
-            $marque = $marques[array_rand($marques)];
             $categorie = $categories->random();
+            $ref = mb_strtoupper(mb_substr($categorie->nom, 0, 1)) . '-' . str_pad($i, 4, '0', STR_PAD_LEFT);
+            if (Equipement::where('reference', $ref)->exists()) continue;
+
+            $marque = $marques[array_rand($marques)];
             $etat = $etats[array_rand($etats)];
             
             // Logique de statut cohérente avec l'état
@@ -123,7 +126,7 @@ class EquipementSeeder extends Seeder
 
             Equipement::create([
                 'nom' => $categorie->nom . ' ' . $marque . ' ' . Str::random(4),
-                'reference' => mb_strtoupper(mb_substr($categorie->nom, 0, 1)) . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'reference' => $ref,
                 'numero_serie' => strtoupper(Str::random(10)),
                 'imei' => ($categorie->nom === 'Smartphone' || $categorie->nom === 'PDA') ? '35' . rand(1000000000000, 9999999999999) : null,
                 'code_inventaire' => 'INV-' . strtoupper(Str::random(8)),
@@ -143,6 +146,6 @@ class EquipementSeeder extends Seeder
             ]);
         }
 
-        echo "✅ " . (count($fixedEquipements) + 31) . " équipements créés pour peupler le dashboard !\n";
+        echo "✅ " . Equipement::count() . " équipements présents dans la base !\n";
     }
 }

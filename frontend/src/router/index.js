@@ -125,6 +125,18 @@ const routes = [
     meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'] }
   },
   {
+    path: '/transferts/nouveau',
+    name: 'NouveauTransfert',
+    component: () => import('@/views/direction/transferts/TransfertFormView.vue'),
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'] }
+  },
+  {
+    path: '/transferts/:id',
+    name: 'TransfertDetail',
+    component: () => import('@/views/direction/transferts/TransfertDetailView.vue'),
+    meta: { requiresAuth: true, roles: ['super_admin', 'gestionnaire_stock_general', 'gestionnaire_stock'] }
+  },
+  {
     path: '/demandes-materiel',
     name: 'DemandesMateriel',
     component: () => import('@/views/agence/demandes-materiel/DemandesView.vue'),

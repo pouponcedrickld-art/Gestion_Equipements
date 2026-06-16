@@ -342,7 +342,7 @@ class EquipementController extends Controller
             ], 403);
         }
 
-        $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable', 'consommables', 'mouvements.user']);
+        $equipement->load(['categorie', 'agenceProprietaire', 'agenceActuelle', 'responsable', 'consommables', 'mouvements.user', 'affectations.agent']);
         
         $relatedInLot = [];
         if ($equipement->lot_reference) {

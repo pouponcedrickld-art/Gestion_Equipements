@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PanneSeeder::class,
             MaintenanceSeeder::class,
             TransfertSeeder::class,
+            RetourSeeder::class,
             MouvementSeeder::class,
             PerteSeeder::class,
             NotificationSeeder::class,

@@ -14,6 +14,7 @@ class EquipementFactory extends Factory
     public function definition(): array
     {
         return [
+            'nom' => $this->faker->randomElement(['Ordinateur Portable', 'Imprimante', 'Scanner', 'Moniteur', 'Clavier', 'Souris', 'Routeur', 'Switch', 'Serveur', 'Tablette']),
             'reference' => 'EQ-' . $this->faker->unique()->numberBetween(1000, 9999),
             'numero_serie' => strtoupper($this->faker->bothify('??######')),
             'imei' => $this->faker->optional()->numerify('###############'),

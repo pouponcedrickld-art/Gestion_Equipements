@@ -8,6 +8,7 @@ import Tooltip from 'primevue/tooltip'
 import './assets/theme.css'
 import './assets/main.css'
 import 'primeicons/primeicons.css'
+import 'primeflex/primeflex.css'
 
 import App from './App.vue'
 import router from './router/index.js'
