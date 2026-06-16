@@ -8,7 +8,7 @@
             <i class="pi pi-calendar mr-3"></i>
             Calendrier de Maintenance
           </h1>
-          <p class="text-gray-400 mt-2">Gérez vos maintenances avec une vue professionnelle</p>
+          <p class="mt-2 calendar-subtitle">Gérez vos maintenances avec une vue professionnelle</p>
         </div>
 
         <button
@@ -21,14 +21,14 @@
       </div>
 
       <!-- Filters -->
-      <div class="bg-slate-800 rounded-xl p-4 mb-6 border border-slate-700">
+      <div class="filters-card">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="text-sm font-medium text-gray-300 mb-2 block">Agence</label>
+            <label class="filter-label">Agence</label>
             <select
               v-model="filters.agenceId"
               @change="applyFilters"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-gray-200"
+              class="filter-select"
             >
               <option value="">Toutes les agences</option>
               <option v-for="agence in agences" :key="agence.id" :value="agence.id">{{ agence.nom }}</option>
@@ -36,11 +36,11 @@
           </div>
 
           <div>
-            <label class="text-sm font-medium text-gray-300 mb-2 block">Technicien</label>
+            <label class="filter-label">Technicien</label>
             <select
               v-model="filters.technicienId"
               @change="applyFilters"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-gray-200"
+              class="filter-select"
             >
               <option value="">Tous les techniciens</option>
               <option v-for="user in techniciens" :key="user.id" :value="user.id">{{ user.name }}</option>
@@ -48,11 +48,11 @@
           </div>
 
           <div>
-            <label class="text-sm font-medium text-gray-300 mb-2 block">Statut</label>
+            <label class="filter-label">Statut</label>
             <select
               v-model="filters.statut"
               @change="applyFilters"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-gray-200"
+              class="filter-select"
             >
               <option value="">Tous les statuts</option>
               <option value="planifiee">Planifiée</option>
@@ -82,7 +82,7 @@
       </div>
 
       <!-- FullCalendar Component -->
-      <div v-else class="bg-slate-800 rounded-xl p-4 border border-slate-700">
+      <div v-else class="calendar-container">
         <FullCalendar
           ref="calendarRef"
           :options="calendarOptions"
@@ -91,7 +91,7 @@
 
       <!-- Create/Edit Maintenance Modal -->
       <Dialog v-model:visible="showModal" :header="isEdit ? 'Modifier la Maintenance' : 'Nouvelle Maintenance'"
-        :style="{ width: '600px' }" modal class="p-fluid dark-modal">
+        :style="{ width: '600px' }" modal class="p-fluid">
         <form @submit.prevent="submitMaintenance" class="maintenance-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Équipement</label>
@@ -146,7 +146,7 @@
 
       <!-- Maintenance Details Modal -->
       <Dialog v-model:visible="showDetailModal" header="Détails de la Maintenance" :style="{ width: '600px' }" modal
-        class="p-fluid dark-modal">
+        class="p-fluid">
         <div v-if="selectedMaintenance" class="detail-content">
           <div class="detail-row"><span class="label">Équipement:</span> <span class="value">{{
               selectedMaintenance.equipement?.nom }} ({{ selectedMaintenance.equipement?.reference }})</span></div>
@@ -181,7 +181,7 @@
 
       <!-- Complete Maintenance Modal -->
       <Dialog v-model:visible="showCompleteModal" header="Terminer la Maintenance" :style="{ width: '500px' }" modal
-        class="p-fluid dark-modal">
+        class="p-fluid">
         <form @submit.prevent="submitComplete" class="maintenance-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Date Fin</label>
@@ -484,8 +484,43 @@ watch(filteredMaintenances, () => {
 
 <style scoped>
 .professional-calendar {
-  color: white;
   min-height: 100vh;
+}
+
+.filters-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.filter-select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: var(--text-main);
+}
+
+.calendar-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.calendar-subtitle {
+  color: var(--text-muted);
 }
 
 .modal-footer {
@@ -498,9 +533,9 @@ watch(filteredMaintenances, () => {
 .maintenance-form select,
 .maintenance-form textarea,
 .maintenance-form input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #f8fafc;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 8px;
   border-radius: 6px;
   width: 100%;
@@ -518,19 +553,19 @@ watch(filteredMaintenances, () => {
 
 .detail-row .label {
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-muted);
   min-width: 140px;
 }
 
 .detail-row .value {
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .detail-text {
   padding: 12px;
-  background: #0f172a;
+  background: var(--bg-input);
   border-radius: 8px;
-  color: #e2e8f0;
+  color: var(--text-main);
   line-height: 1.5;
 }
 
@@ -571,20 +606,16 @@ watch(filteredMaintenances, () => {
   color: #10b981;
 }
 
-:deep(.dark-modal) .p-dialog-content,
-:deep(.dark-modal) .p-dialog-header {
-  background: #1e293b;
-  color: #f8fafc;
-  border-color: #334155;
-}
+
 
 :deep(.fc) {
-  color: white;
+  color: var(--text-main);
 }
 
 :deep(.fc .fc-button) {
   background: #3b82f6;
   border: none;
+  color: white;
 }
 
 :deep(.fc .fc-button:hover) {
@@ -592,28 +623,28 @@ watch(filteredMaintenances, () => {
 }
 
 :deep(.fc .fc-toolbar-title) {
-  color: white;
+  color: var(--text-main);
 }
 
 :deep(.fc .fc-daygrid-day-number) {
-  color: white;
+  color: var(--text-main);
 }
 
 :deep(.fc .fc-col-header-cell) {
-  background: #0f172a;
-  color: #94a3b8;
+  background: var(--bg-input);
+  color: var(--text-muted);
 }
 
 :deep(.fc .fc-daygrid-day) {
-  background: #1e293b;
-  border-color: #334155;
+  background: var(--bg-card);
+  border-color: var(--border-color);
 }
 
 :deep(.fc .fc-daygrid-day:hover) {
-  background: #334155;
+  background: var(--secondary-light);
 }
 
 :deep(.fc .fc-day-today) {
-  background: #2563eb !important;
+  background: var(--primary-light) !important;
 }
 </style>

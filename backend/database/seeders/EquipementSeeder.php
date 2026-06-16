@@ -7,6 +7,7 @@ use App\Models\Equipement;
 use App\Models\Categorie;
 use App\Models\Agence;
 use App\Models\Mouvement;
+use Illuminate\Support\Str;
 
 class EquipementSeeder extends Seeder
 {
@@ -14,10 +15,19 @@ class EquipementSeeder extends Seeder
     {
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
-        
         $categories = Categorie::all();
 
-        $equipements = [
+        if ($categories->isEmpty()) {
+            echo "⚠️ Aucune catégorie trouvée. Exécutez d'abord CategorieSeeder.\n";
+            return;
+        }
+
+        $marques = ['Zebra', 'Honeywell', 'Datalogic', 'Dell', 'HP', 'Lenovo', 'Caterpillar', 'Samsung'];
+        $etats = ['neuf', 'en_service', 'en_panne', 'en_maintenance', 'reforme', 'perdu'];
+        $statuts_globaux = ['en_stock_general', 'en_stock_local', 'affecte', 'en_transit', 'en_panne', 'en_maintenance', 'reforme'];
+
+        // 1. Création des équipements fixes (pour les relations dans les autres seeders)
+        $fixedEquipements = [
             [
                 'nom' => 'PDA Zebra MC3300',
                 'reference' => 'PDA-001',
@@ -33,10 +43,8 @@ class EquipementSeeder extends Seeder
                 'garantie_date_fin' => '2026-01-15',
                 'etat' => 'en_service',
                 'statut_global' => 'en_stock_general',
-                'localisation' => 'Stock Central',
                 'agence_proprietaire_id' => $agenceGenerale->id,
                 'agence_actuelle_id' => $agenceGenerale->id,
-                'qr_code' => 'QR_PDA_001',
             ],
             [
                 'nom' => 'PDA Zebra MC3300 #2',
@@ -53,10 +61,8 @@ class EquipementSeeder extends Seeder
                 'garantie_date_fin' => '2026-01-15',
                 'etat' => 'en_service',
                 'statut_global' => 'en_stock_local',
-                'localisation' => 'Lomé - Stock',
                 'agence_proprietaire_id' => $agenceGenerale->id,
                 'agence_actuelle_id' => $sousAgences->first()->id,
-                'qr_code' => 'QR_PDA_002',
             ],
             [
                 'nom' => 'Smartphone Cat S62 Pro',
@@ -73,29 +79,8 @@ class EquipementSeeder extends Seeder
                 'garantie_date_fin' => '2026-02-10',
                 'etat' => 'en_service',
                 'statut_global' => 'affecte',
-                'localisation' => 'Agent - Jean Dupont',
                 'agence_proprietaire_id' => $agenceGenerale->id,
                 'agence_actuelle_id' => $sousAgences->first()->id,
-                'qr_code' => 'QR_SPH_001',
-            ],
-            [
-                'nom' => 'Scanner Zebra DS4608',
-                'reference' => 'SCN-001',
-                'numero_serie' => 'DS4608-001',
-                'code_inventaire' => 'INV-SCN-001',
-                'marque' => 'Zebra',
-                'modele' => 'DS4608',
-                'categorie_id' => $categories->where('nom', 'Scanner code-barres')->first()->id,
-                'fournisseur' => 'Zebra Technologies',
-                'date_acquisition' => '2024-03-05',
-                'prix_achat' => 250.00,
-                'garantie_date_fin' => '2026-03-05',
-                'etat' => 'neuf',
-                'statut_global' => 'en_stock_general',
-                'localisation' => 'Stock Central - Neuf',
-                'agence_proprietaire_id' => $agenceGenerale->id,
-                'agence_actuelle_id' => $agenceGenerale->id,
-                'qr_code' => 'QR_SCN_001',
             ],
             [
                 'nom' => 'Tablette Zebra ET51',
@@ -111,62 +96,53 @@ class EquipementSeeder extends Seeder
                 'garantie_date_fin' => '2026-01-20',
                 'etat' => 'en_panne',
                 'statut_global' => 'en_panne',
-                'localisation' => 'Kara - Maintenance',
                 'agence_proprietaire_id' => $agenceGenerale->id,
                 'agence_actuelle_id' => $sousAgences->where('ville', 'Kara')->first()->id,
-                'qr_code' => 'QR_TAB_001',
-            ],
-            [
-                'nom' => 'PC Portable Dell Latitude 5520',
-                'reference' => 'PC-001',
-                'numero_serie' => 'LAPTOP-001',
-                'code_inventaire' => 'INV-PC-001',
-                'marque' => 'Dell',
-                'modele' => 'Latitude 5520',
-                'categorie_id' => $categories->where('nom', 'Ordinateur portable')->first()->id,
-                'fournisseur' => 'Dell Technologies',
-                'date_acquisition' => '2024-02-01',
-                'prix_achat' => 1500.00,
-                'garantie_date_fin' => '2027-02-01',
-                'etat' => 'en_service',
-                'statut_global' => 'en_transit',
-                'localisation' => 'En transfert vers Sokodé',
-                'agence_proprietaire_id' => $agenceGenerale->id,
-                'agence_actuelle_id' => $agenceGenerale->id,
-                'qr_code' => 'QR_PC_001',
             ],
         ];
 
-        foreach ($equipements as $equipementData) {
-            // Utiliser updateOrCreate pour éviter les duplications
-            $equipement = Equipement::updateOrCreate(
-                ['reference' => $equipementData['reference']], // Clé unique
-                $equipementData // Données à créer ou mettre à jour
-            );
-            
-            // Créer le mouvement seulement s'il n'existe pas déjà
-            $mouvementExists = Mouvement::where('equipement_id', $equipement->id)
-                ->where('type_mouvement', 'creation')
-                ->exists();
-            
-            if (!$mouvementExists) {
-                Mouvement::create([
-                    'equipement_id' => $equipement->id,
-                    'type_mouvement' => 'creation',
-                    'agent_id' => null,
-                    'user_id' => 1,
-                    'date_mouvement' => $equipement->date_acquisition,
-                    'ancienne_valeur' => null,
-                    'nouvelle_valeur' => json_encode([
-                        'etat' => $equipement->etat,
-                        'statut_global' => $equipement->statut_global,
-                        'agence_actuelle' => $equipement->agence_actuelle_id,
-                    ]),
-                    'description' => 'Acquisition initiale - ' . $equipement->marque . ' ' . $equipement->modele,
-                ]);
-            }
+        foreach ($fixedEquipements as $data) {
+            $data['qr_code'] = 'QR_' . $data['reference'];
+            Equipement::updateOrCreate(['reference' => $data['reference']], $data);
         }
 
-        echo "✅ " . count($equipements) . " équipements de test créés avec mouvements initiaux !\n";
+        // 2. Création massive d'équipements aléatoires (30 de plus)
+        for ($i = 3; $i <= 33; $i++) {
+            $marque = $marques[array_rand($marques)];
+            $categorie = $categories->random();
+            $etat = $etats[array_rand($etats)];
+            
+            // Logique de statut cohérente avec l'état
+            if ($etat === 'en_panne') $statut_global = 'en_panne';
+            elseif ($etat === 'en_maintenance') $statut_global = 'en_maintenance';
+            elseif ($etat === 'reforme') $statut_global = 'reforme';
+            elseif ($etat === 'perdu') $statut_global = 'reforme';
+            else $statut_global = $statuts_globaux[array_rand(['en_stock_general', 'en_stock_local', 'affecte', 'en_transit'])];
+
+            $agence = ($statut_global === 'en_stock_general') ? $agenceGenerale : $sousAgences->random();
+
+            Equipement::create([
+                'nom' => $categorie->nom . ' ' . $marque . ' ' . Str::random(4),
+                'reference' => mb_strtoupper(mb_substr($categorie->nom, 0, 1)) . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'numero_serie' => strtoupper(Str::random(10)),
+                'imei' => ($categorie->nom === 'Smartphone' || $categorie->nom === 'PDA') ? '35' . rand(1000000000000, 9999999999999) : null,
+                'code_inventaire' => 'INV-' . strtoupper(Str::random(8)),
+                'marque' => $marque,
+                'modele' => 'Mod-' . rand(100, 999),
+                'categorie_id' => $categorie->id,
+                'fournisseur' => 'Fournisseur ' . rand(1, 5),
+                'date_acquisition' => now()->subMonths(rand(1, 24))->format('Y-m-d'),
+                'prix_achat' => rand(200, 2000),
+                'garantie_date_fin' => now()->addMonths(rand(-6, 24))->format('Y-m-d'),
+                'etat' => $etat,
+                'statut_global' => $statut_global,
+                'localisation' => 'Localisation ' . rand(1, 10),
+                'agence_proprietaire_id' => $agenceGenerale->id,
+                'agence_actuelle_id' => $agence->id,
+                'qr_code' => 'QR_' . Str::random(10),
+            ]);
+        }
+
+        echo "✅ " . (count($fixedEquipements) + 31) . " équipements créés pour peupler le dashboard !\n";
     }
 }

@@ -80,7 +80,7 @@
       </div>
 
       <Dialog v-model:visible="showModal" :header="isEdit ? 'Modifier la Maintenance' : 'Nouvelle Maintenance'"
-        :style="{ width: '600px' }" modal class="p-fluid dark-modal">
+        :style="{ width: '600px' }" modal class="p-fluid">
         <form @submit.prevent="submitMaintenance" class="maintenance-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Équipement</label>
@@ -134,7 +134,7 @@
       </Dialog>
 
       <Dialog v-model:visible="showCompleteModal" header="Terminer la Maintenance" :style="{ width: '500px' }" modal
-        class="p-fluid dark-modal">
+        class="p-fluid">
         <form @submit.prevent="submitComplete" class="maintenance-form">
           <div class="field mb-4">
             <label class="font-bold block mb-2">Date Fin</label>
@@ -160,7 +160,7 @@
       </Dialog>
 
       <Dialog v-model:visible="showDetailModal" header="Détails de la Maintenance" :style="{ width: '600px' }" modal
-        class="p-fluid dark-modal">
+        class="p-fluid">
         <div v-if="selectedMaintenance" class="detail-content">
           <div class="detail-row"><span class="label">Équipement:</span> <span class="value">{{
               selectedMaintenance.equipement?.nom }} ({{ selectedMaintenance.equipement?.reference }})</span></div>
@@ -388,7 +388,6 @@ onMounted(fetchData)
 <style scoped>
 .maintenances-container {
   padding: 24px;
-  color: #f8fafc;
 }
 
 .header-bar {
@@ -404,7 +403,7 @@ onMounted(fetchData)
 }
 
 .header-bar p {
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 4px 0 0 0;
 }
 
@@ -426,8 +425,8 @@ onMounted(fetchData)
 }
 
 .filters-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -450,14 +449,14 @@ onMounted(fetchData)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .search-box input,
 select {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #f8fafc;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 10px 12px 10px 40px;
   border-radius: 8px;
   width: 100%;
@@ -469,8 +468,8 @@ select {
 }
 
 .table-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -481,10 +480,10 @@ select {
 }
 
 .data-table th {
-  background: #0f172a;
+  background: var(--bg-input);
   padding: 14px 16px;
   text-align: left;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -492,7 +491,7 @@ select {
 
 .data-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .type-badge,
@@ -536,9 +535,9 @@ select {
 
 .detail-btn,
 .edit-btn {
-  background: #334155;
-  color: white;
-  border: none;
+  background: var(--border-color);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -575,7 +574,7 @@ select {
 .empty-state {
   padding: 60px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .loading-state i {
@@ -594,9 +593,9 @@ select {
 .maintenance-form select,
 .maintenance-form textarea,
 .maintenance-form input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #f8fafc;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 8px;
   border-radius: 6px;
   width: 100%;
@@ -614,19 +613,19 @@ select {
 
 .detail-row .label {
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-muted);
   min-width: 140px;
 }
 
 .detail-row .value {
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .detail-text {
   padding: 12px;
-  background: #0f172a;
+  background: var(--bg-input);
   border-radius: 8px;
-  color: #e2e8f0;
+  color: var(--text-main);
   line-height: 1.5;
 }
 
@@ -634,10 +633,5 @@ select {
   margin-top: 16px;
 }
 
-:deep(.dark-modal) .p-dialog-content,
-:deep(.dark-modal) .p-dialog-header {
-  background: #1e293b;
-  color: #f8fafc;
-  border-color: #334155;
-}
+
 </style>

@@ -488,12 +488,11 @@ onMounted(fetchDemandes)
 }
 
 .header-bar h2 {
-  color: #f8fafc;
   margin: 0;
 }
 
 .header-bar p {
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 4px 0 0 0;
 }
 
@@ -503,10 +502,10 @@ onMounted(fetchDemandes)
   gap: 16px;
   align-items: center;
   margin-bottom: 20px;
-  background: #1e293b;
+  background: var(--bg-card);
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #334155;
+  border: 1px solid var(--border-color);
 }
 
 .search-wrapper {
@@ -519,13 +518,13 @@ onMounted(fetchDemandes)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .filter-input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #e2e8f0;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -544,13 +543,13 @@ onMounted(fetchDemandes)
 
 .filter-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .results-count {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -572,8 +571,8 @@ onMounted(fetchDemandes)
 }
 
 .table-wrapper {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -585,9 +584,9 @@ onMounted(fetchDemandes)
 }
 
 .demandes-table th {
-  background: #0f172a;
+  background: var(--bg-input);
   padding: 16px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -595,8 +594,8 @@ onMounted(fetchDemandes)
 
 .demandes-table td {
   padding: 16px;
-  border-top: 1px solid #334155;
-  color: #e2e8f0;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-main);
 }
 
 .agence-name {
@@ -615,7 +614,7 @@ onMounted(fetchDemandes)
 
 .equip-info .detail {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .badge-urgence {
@@ -637,7 +636,7 @@ onMounted(fetchDemandes)
   text-transform: capitalize;
 }
 
-.badge-statut.pending { background: #334155; color: #94a3b8; }
+.badge-statut.pending { background: var(--border-color); color: var(--text-muted); }
 .badge-statut.approved { background: rgba(16, 185, 129, 0.2); color: #10b981; }
 .badge-statut.rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
@@ -699,11 +698,11 @@ onMounted(fetchDemandes)
 }
 
 .demande-summary {
-  background: #0f172a;
+  background: var(--bg-input);
   padding: 12px;
   border-radius: 8px;
   margin-top: 12px;
-  color: #e2e8f0;
+  color: var(--text-main);
   line-height: 1.6;
 }
 
@@ -727,7 +726,7 @@ onMounted(fetchDemandes)
 .loading-state, .empty-state {
   text-align: center;
   padding: 64px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .empty-state i {
@@ -755,8 +754,8 @@ onMounted(fetchDemandes)
 }
 
 .modal-content {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
@@ -770,17 +769,17 @@ onMounted(fetchDemandes)
   margin-bottom: 20px;
 }
 
-.modal-header h3 { margin: 0; color: #f8fafc; }
-.modal-header button { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
+.modal-header h3 { margin: 0; color: var(--text-main); }
+.modal-header button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
 
 .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
-.form-group label { color: #94a3b8; font-size: 0.9rem; }
+.form-group label { color: var(--text-muted); font-size: 0.9rem; }
 .form-group select, .form-group input, .form-group textarea {
-  background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px; border-radius: 8px;
+  background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 8px;
 }
 
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-.cancel-btn { background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+.cancel-btn { background: var(--border-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 .confirm-btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 .confirm-btn:disabled { opacity: 0.5; }
 
@@ -790,13 +789,13 @@ onMounted(fetchDemandes)
 
 .detail-row .label {
   display: block;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin-bottom: 4px;
 }
 
 .detail-row .value {
-  color: #e2e8f0;
+  color: var(--text-main);
   margin: 0;
   line-height: 1.5;
 }
