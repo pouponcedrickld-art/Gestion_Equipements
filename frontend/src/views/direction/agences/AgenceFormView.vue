@@ -2,82 +2,92 @@
   <div class="modal-form">
     <div class="form-header">
       <h2>{{ editData ? 'Modifier l\'agence' : 'Nouvelle agence' }}</h2>
-      <button @click="$emit('cancel')" class="close-btn"><i class="pi pi-times"></i></button>
+      <Button @click="$emit('cancel')" icon="pi pi-times" class="p-button-text p-button-rounded" />
     </div>
-    <form @submit.prevent="handleSubmit">
-      <div class="form-row">
-        <div class="form-group">
+    <form @submit.prevent="handleSubmit" class="p-fluid">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Type</label>
-          <select v-model="formData.type" required>
-            <option value="generale">Agence Générale</option>
-            <option value="sous_agence">Sous-Agence</option>
-          </select>
+          <Dropdown 
+            v-model="formData.type" 
+            :options="typeOptions" 
+            optionLabel="label" 
+            optionValue="value" 
+            required
+            class="w-full"
+          />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Nom</label>
-          <input v-model="formData.nom" required placeholder="Nom de l'agence" />
+          <InputText v-model="formData.nom" required placeholder="Nom de l'agence" />
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Ville</label>
-          <input v-model="formData.ville" placeholder="Ville" />
+          <InputText v-model="formData.ville" placeholder="Ville" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Code Postal</label>
-          <input v-model="formData.code_postal" placeholder="Code postal" />
+          <InputText v-model="formData.code_postal" placeholder="Code postal" />
         </div>
       </div>
-      <div class="form-row" v-if="formData.type === 'sous_agence'">
-        <div class="form-group">
+      <div class="grid" v-if="formData.type === 'sous_agence'">
+        <div class="col-12 field">
           <label>Agence parente</label>
-          <select v-model="formData.parent_id">
-            <option value="">-- Choisir --</option>
-            <option v-if="agenceStore.agenceGenerale" :value="agenceStore.agenceGenerale.id">
-              {{ agenceStore.agenceGenerale.nom }}
-            </option>
-          </select>
+          <Dropdown 
+            v-model="formData.parent_id" 
+            :options="agenceOptions" 
+            optionLabel="nom" 
+            optionValue="id" 
+            placeholder="-- Choisir --"
+            class="w-full"
+          />
         </div>
       </div>
-      <div class="form-group">
+      <div class="field">
         <label>Adresse</label>
-        <input v-model="formData.adresse" placeholder="Adresse complète" />
+        <InputText v-model="formData.adresse" placeholder="Adresse complète" />
       </div>
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Téléphone</label>
-          <input v-model="formData.telephone" placeholder="Numéro de téléphone" />
+          <InputText v-model="formData.telephone" placeholder="Numéro de téléphone" />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Email</label>
-          <input v-model="formData.email" type="email" placeholder="Email de l'agence" />
+          <InputText v-model="formData.email" type="email" placeholder="Email de l'agence" />
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
+      <div class="grid">
+        <div class="col-12 md:col-6 field">
           <label>Chef d'agence</label>
-          <select v-model="formData.responsable_id">
-            <option :value="null">-- Sélectionner --</option>
-            <option v-for="user in userStore.users" :key="user.id" :value="user.id">
-              {{ user.name }}
-            </option>
-          </select>
+          <Dropdown 
+            v-model="formData.responsable_id" 
+            :options="userOptions" 
+            optionLabel="name" 
+            optionValue="id" 
+            placeholder="-- Sélectionner --"
+            class="w-full"
+            filter
+          />
         </div>
-        <div class="form-group">
+        <div class="col-12 md:col-6 field">
           <label>Gestionnaire Stock</label>
-          <select v-model="formData.gestionnaire_stock_id">
-            <option :value="null">-- Sélectionner --</option>
-            <option v-for="user in userStore.users" :key="user.id" :value="user.id">
-              {{ user.name }}
-            </option>
-          </select>
+          <Dropdown 
+            v-model="formData.gestionnaire_stock_id" 
+            :options="userOptions" 
+            optionLabel="name" 
+            optionValue="id" 
+            placeholder="-- Sélectionner --"
+            class="w-full"
+            filter
+          />
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary" :disabled="saving">
-          {{ saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer') }}
-        </button>
+        <Button type="button" @click="$emit('cancel')" class="p-button-secondary" label="Annuler" />
+        <Button type="submit" :loading="saving" :label="saving ? 'Enregistrement...' : (editData ? 'Mettre à jour' : 'Créer')" />
       </div>
       <p v-if="error" class="error">{{ error }}</p>
     </form>
@@ -85,9 +95,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useAgenceStore } from '@/stores/agenceStore.js'
 import { useUserStore } from '@/stores/userStore.js'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dropdown from 'primevue/dropdown'
 
 const props = defineProps({
   editData: Object,
@@ -99,6 +112,19 @@ const agenceStore = useAgenceStore()
 const userStore = useUserStore()
 const saving = ref(false)
 const error = ref(null)
+
+const typeOptions = [
+  { label: 'Agence Générale', value: 'generale' },
+  { label: 'Sous-Agence', value: 'sous_agence' }
+]
+
+const agenceOptions = computed(() => {
+  return agenceStore.agences ? agenceStore.agences.filter(a => a.type === 'generale') : []
+})
+
+const userOptions = computed(() => {
+  return userStore.users || []
+})
 
 const formData = reactive({
   type: 'sous_agence',
@@ -114,8 +140,6 @@ const formData = reactive({
 })
 
 onMounted(() => userStore.fetchUsers())
-
-
 
 const resetForm = () => {
   Object.assign(formData, {
@@ -190,6 +214,8 @@ const handleSubmit = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
 }
 
 .form-header h2 {
@@ -267,8 +293,9 @@ const handleSubmit = async () => {
 }
 
 .error {
-  color: #ef4444;
+  color: var(--error);
   margin-top: 10px;
   text-align: center;
+  font-weight: 600;
 }
 </style>
