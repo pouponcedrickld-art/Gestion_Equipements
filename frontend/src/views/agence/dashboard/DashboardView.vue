@@ -325,7 +325,7 @@ onMounted(fetchStats)
   align-items: center;
   gap: 1.25rem;
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   border: 1px solid var(--border-color);

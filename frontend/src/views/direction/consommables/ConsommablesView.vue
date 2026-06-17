@@ -563,7 +563,7 @@ onMounted(() => {
 .consommables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
 .cons-card { 
   background: white; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); 
-  overflow: hidden; transition: transform 0.2s; cursor: pointer; border: 1px solid #f1f5f9;
+  overflow: clip; transition: transform 0.2s; cursor: pointer; border: 1px solid #f1f5f9;
   &:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.08); } 
   .card-body { padding: 0.75rem; } 
 }

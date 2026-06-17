@@ -275,7 +275,7 @@ onMounted(fetchData)
 .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 .search-box input, select { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px 10px 40px; border-radius: 8px; width: 100%; }
 select { padding-left: 12px; width: 180px; }
-.table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: clip; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table th { background: var(--bg-input); padding: 14px 16px; text-align: left; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
 .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }

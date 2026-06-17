@@ -246,7 +246,7 @@ const logout = async () => {
   max-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: clip;
   background-color: var(--bg-app);
 }
 

@@ -574,7 +574,7 @@ onMounted(fetchDemandes)
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .demandes-table {

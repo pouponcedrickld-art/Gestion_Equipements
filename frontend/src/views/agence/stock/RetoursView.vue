@@ -323,7 +323,7 @@ onMounted(async () => {
 }
 
 .table-container {
-  background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #f1f5f9;
+  background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: clip; border: 1px solid #f1f5f9;
   &.skeleton { padding: 1rem; .skeleton-row { height: 60px; background: #f8fafc; margin-bottom: 0.5rem; border-radius: 8px; animation: pulse 1.5s infinite; } }
 }
 

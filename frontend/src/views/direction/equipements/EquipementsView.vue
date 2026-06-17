@@ -432,7 +432,7 @@ onMounted(async () => {
 .equipement-card {
   background: white;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: clip;
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   transition: transform 0.2s ease;
   position: relative;

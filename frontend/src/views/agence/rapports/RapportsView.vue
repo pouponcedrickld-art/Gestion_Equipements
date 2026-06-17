@@ -361,7 +361,7 @@ onMounted(fetchDependencies)
   max-width: 1100px;
   background: #111827;
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  overflow: clip;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 

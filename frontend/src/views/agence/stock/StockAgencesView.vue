@@ -265,7 +265,7 @@ onMounted(fetchEquipements)
   border-radius: 16px;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .stock-item-card:hover {

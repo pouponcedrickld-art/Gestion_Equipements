@@ -1,94 +1,103 @@
 <template>
   <DirectionLayout>
     <div class="transfert-form-container" ref="pageContainer">
-      <div class="form-header animate-header">
-        <Button
-          icon="pi pi-arrow-left"
-          class="p-button-text p-button-rounded back-btn"
-          @click="$router.push('/transferts')"
-        />
-        <h1 class="page-title">Nouveau Transfert</h1>
-      </div>
-
-      <div class="form-card animate-card">
-        <div class="form-grid">
-          <div class="field">
-            <label class="font-bold text-sm">Équipement *</label>
-            <Dropdown
-              v-model="form.equipement_id"
-              :options="equipements"
-              optionLabel="label"
-              optionValue="id"
-              placeholder="Sélectionner un équipement"
-              class="w-full"
-              filter
-              :loading="loadingEquipements"
-              :filterPlaceholder="'Rechercher un équipement...'"
-            >
-              <template #value="slotProps">
-                <div v-if="slotProps.value" class="equip-option">
-                  {{ getEquipementLabel(slotProps.value) }}
-                </div>
-                <span v-else>{{ slotProps.placeholder }}</span>
-              </template>
-              <template #option="slotProps">
-                <div class="equip-option">
-                  <span class="font-semibold">{{ slotProps.option.nom || slotProps.option.marque + ' ' + slotProps.option.modele }}</span>
-                  <small class="text-muted ml-2">SN: {{ slotProps.option.numero_serie }}</small>
-                </div>
-              </template>
-            </Dropdown>
+      <div class="page-header animate-in">
+        <div class="title-container">
+          <div class="flex align-items-center gap-2">
+            <Button icon="pi pi-arrow-left" class="p-button-text p-button-rounded p-button-sm" @click="$router.push('/transferts')" />
+            <h1>Nouveau Transfert</h1>
           </div>
-
-          <div class="field">
-            <label class="font-bold text-sm">Agence de destination *</label>
-            <Dropdown
-              v-model="form.agence_destination_id"
-              :options="agences"
-              optionLabel="nom"
-              optionValue="id"
-              placeholder="Sélectionner une agence"
-              class="w-full"
-              filter
-              :loading="loadingAgences"
-            />
-          </div>
-
-          <div class="field">
-            <label class="font-bold text-sm">Type de transfert *</label>
-            <SelectButton
-              v-model="form.type_transfert"
-              :options="typesTransfert"
-              optionLabel="label"
-              optionValue="value"
-              class="w-full"
-            />
-          </div>
-
-          <div class="field full-width">
-            <label class="font-bold text-sm">Observations</label>
-            <Textarea
-              v-model="form.observations"
-              rows="4"
-              class="w-full"
-              placeholder="Observations éventuelles..."
-              :maxlength="1000"
-            />
-            <small class="text-muted">{{ form.observations.length }}/1000</small>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <Button label="Annuler" icon="pi pi-times" class="p-button-text" @click="$router.push('/transferts')" />
-          <Button
-            label="Créer le transfert"
-            icon="pi pi-send"
-            class="p-button-success"
-            :loading="submitting"
-            @click="submitForm"
-          />
+          <p class="subtitle">Transférer un équipement vers une autre agence</p>
         </div>
       </div>
+
+      <Card class="form-card animate-card">
+        <template #title>
+          <div class="flex align-items-center gap-2 text-primary">
+            <i class="pi pi-send"></i>
+            <span class="text-lg">Détails du transfert</span>
+          </div>
+        </template>
+        <template #content>
+          <form @submit.prevent="submitForm">
+            <div class="form-grid">
+              <div class="field full-width">
+                <label for="equipement_id">Équipement <span class="required">*</span></label>
+                <Dropdown
+                  id="equipement_id"
+                  v-model="form.equipement_id"
+                  :options="equipements"
+                  optionLabel="label"
+                  optionValue="id"
+                  placeholder="Sélectionner un équipement"
+                  filter
+                  :loading="loadingEquipements"
+                  :filterPlaceholder="'Rechercher un équipement...'"
+                  class="w-full"
+                >
+                  <template #option="slotProps">
+                    <div class="flex flex-column">
+                      <span class="font-bold">{{ slotProps.option.nom || slotProps.option.marque + ' ' + slotProps.option.modele }}</span>
+                      <small>SN: {{ slotProps.option.numero_serie }}</small>
+                    </div>
+                  </template>
+                </Dropdown>
+              </div>
+
+              <div class="field">
+                <label for="agence_destination_id">Agence de destination <span class="required">*</span></label>
+                <Dropdown
+                  id="agence_destination_id"
+                  v-model="form.agence_destination_id"
+                  :options="agences"
+                  optionLabel="nom"
+                  optionValue="id"
+                  placeholder="Sélectionner une agence"
+                  filter
+                  :loading="loadingAgences"
+                  class="w-full"
+                />
+              </div>
+
+              <div class="field">
+                <label for="type_transfert">Type de transfert <span class="required">*</span></label>
+                <SelectButton
+                  id="type_transfert"
+                  v-model="form.type_transfert"
+                  :options="typesTransfert"
+                  optionLabel="label"
+                  optionValue="value"
+                  class="w-full"
+                />
+              </div>
+
+              <div class="field full-width">
+                <label for="observations">Observations</label>
+                <Textarea
+                  id="observations"
+                  v-model="form.observations"
+                  rows="4"
+                  placeholder="Observations éventuelles..."
+                  :maxlength="1000"
+                  class="w-full"
+                />
+                <small class="text-muted">{{ form.observations.length }}/1000</small>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary" @click="$router.push('/transferts')" />
+              <Button
+                label="Créer le transfert"
+                icon="pi pi-send"
+                class="p-button-primary"
+                :loading="submitting"
+                type="submit"
+              />
+            </div>
+          </form>
+        </template>
+      </Card>
     </div>
   </DirectionLayout>
 </template>
@@ -103,6 +112,7 @@ import equipementApi from '@/api/equipementApi'
 import agenceApi from '@/api/agenceApi'
 import gsap from 'gsap'
 
+import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
@@ -130,17 +140,16 @@ const typesTransfert = [
   { label: 'Transfert interne', value: 'transfert_interne' }
 ]
 
-const getEquipementLabel = (id) => {
-  const eq = equipements.value.find(e => e.id === id)
-  if (!eq) return ''
-  return `${eq.nom || eq.marque + ' ' + eq.modele} (SN: ${eq.numero_serie})`
-}
-
 const submitForm = async () => {
-  if (!form.equipement_id || !form.agence_destination_id || !form.type_transfert) {
-    toast.add({ severity: 'warn', summary: 'Champs requis', detail: 'Veuillez remplir tous les champs obligatoires', life: 3000 })
+  if (!form.equipement_id) {
+    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez sélectionner un équipement.', life: 3000 })
     return
   }
+  if (!form.agence_destination_id) {
+    toast.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez sélectionner une agence de destination.', life: 3000 })
+    return
+  }
+
   submitting.value = true
   try {
     const res = await transfertApi.store(form)
@@ -166,7 +175,8 @@ onMounted(async () => {
       agenceApi.index()
     ])
     if (eqRes.data.success) {
-      equipements.value = eqRes.data.data.map(e => ({
+      const rawData = eqRes.data.data.data || eqRes.data.data
+      equipements.value = rawData.map(e => ({
         ...e,
         label: `${e.nom || e.marque + ' ' + e.modele} (SN: ${e.numero_serie})`
       }))
@@ -181,68 +191,177 @@ onMounted(async () => {
     loadingAgences.value = false
   }
 
-  gsap.from('.animate-header', { opacity: 0, y: -20, duration: 0.5, ease: 'power3.out' })
-  gsap.from('.animate-card', { opacity: 0, y: 20, duration: 0.6, delay: 0.2, ease: 'power3.out' })
+  gsap.from('.animate-in', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power3.out' })
+  gsap.from('.animate-card', { opacity: 0, y: 30, duration: 0.8, delay: 0.2, ease: 'power2.out' })
 })
 </script>
 
 <style scoped lang="scss">
 .transfert-form-container {
   padding: 2rem;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.form-header {
+.page-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
   margin-bottom: 2rem;
 
-  .page-title {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0;
+  .title-container {
+    h1 {
+      margin: 0;
+      color: #1e293b;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+  }
+
+  .subtitle {
+    color: #64748b;
+    margin: 0.25rem 0 0 0;
+    font-size: 0.85rem;
   }
 }
 
 .form-card {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: none;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+}
 
-  .full-width {
-    grid-column: 1 / -1;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &.full-width {
+    grid-column: span 2;
   }
 
-  .field label {
-    display: block;
-    margin-bottom: 0.5rem;
+  label {
     color: #475569;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .required {
+    color: #ef4444;
+  }
+
+  .text-muted {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-align: right;
   }
 }
 
 .form-actions {
+  margin-top: 2rem;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #e2e8f0;
 }
 
-.equip-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+// PrimeVue Component Overrides
+:deep(.p-select),
+:deep(.p-textarea) {
+  width: 100% !important;
+}
+
+:deep(.p-select),
+:deep(.p-textarea) {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  color: #1e293b !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+}
+
+:deep(.p-select-label) {
+  color: #1e293b !important;
+}
+
+:deep(.p-select).p-focus,
+:deep(.p-textarea):focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+:deep(.p-select-overlay) {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.p-select-option) {
+  color: #1e293b;
+  padding: 0.75rem 1rem;
+}
+
+:deep(.p-select-option:hover) {
+  background: #f1f5f9;
+}
+
+:deep(.p-select-option.p-select-option-selected) {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+:deep(.p-select-filter) {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}
+
+:deep(.p-selectbutton) {
+  .p-button {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+
+    &.p-highlight {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .transfert-form-container {
+    padding: 1.25rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field.full-width {
+    grid-column: span 1;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    :deep(.p-button) {
+      width: 100%;
+    }
+  }
 }
 </style>

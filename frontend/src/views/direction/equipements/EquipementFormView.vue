@@ -621,21 +621,21 @@ onMounted(async () => {
 }
 
 .category-dropdown {
-  :deep(.p-dropdown-label) {
+  :deep(.p-select-label) {
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
   }
 }
 
-:deep(.p-dropdown),
+:deep(.p-select),
 :deep(.p-inputnumber),
-:deep(.p-calendar) {
+:deep(.p-datepicker) {
   width: 100%;
 }
 
-:deep(.p-dropdown),
+:deep(.p-select),
 :deep(.p-inputnumber-input),
-:deep(.p-calendar .p-inputtext) {
+:deep(.p-datepicker-input) {
   border: 1.5px solid var(--border-color);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
@@ -646,11 +646,11 @@ onMounted(async () => {
   }
 }
 
-:deep(.p-calendar .p-inputtext) {
+:deep(.p-datepicker-input) {
   padding: 0.5rem 0.75rem;
 }
 
-:deep(.p-calendar .p-datepicker-trigger) {
+:deep(.p-datepicker-dropdown) {
   background: transparent;
   color: var(--text-muted);
   border: none;

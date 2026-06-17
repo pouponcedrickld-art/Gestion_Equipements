@@ -183,7 +183,7 @@ onMounted(() => {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .card-header {

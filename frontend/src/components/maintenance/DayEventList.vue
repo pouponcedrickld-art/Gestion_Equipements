@@ -299,12 +299,12 @@ function onLeave(el, done) {
 
 <style scoped>
 :deep(.p-inputtext),
-:deep(.p-dropdown) {
+:deep(.p-select) {
   @apply bg-slate-800/50 border-gray-700 text-gray-200;
 }
 
 :deep(.p-inputtext:focus),
-:deep(.p-dropdown:focus) {
+:deep(.p-select.p-focus) {
   @apply border-pink-500 ring-2 ring-pink-500/20;
 }
 

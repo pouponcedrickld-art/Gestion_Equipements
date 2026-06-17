@@ -221,7 +221,7 @@ onMounted(async () => {
 .item-bulletin-card {
   background: var(--bg-app);
   border-radius: 20px;
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }

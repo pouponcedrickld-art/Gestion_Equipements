@@ -346,7 +346,7 @@ tr:hover td {
   margin-bottom: 1.5rem;
 }
 
-.p-inputtext, .p-dropdown, .p-inputnumber-input, .p-calendar .p-inputtext {
+.p-inputtext, .p-select, .p-inputnumber-input, .p-datepicker-input {
   background: var(--bg-input) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--radius-md) !important;
@@ -354,7 +354,7 @@ tr:hover td {
   transition: all 0.2s !important;
 }
 
-.p-inputtext:focus, .p-dropdown:focus, .p-inputnumber-input:focus, .p-calendar .p-inputtext:focus {
+.p-inputtext:focus, .p-select.p-focus, .p-inputnumber-input:focus, .p-datepicker-input:focus {
   border-color: var(--primary) !important;
   background: var(--bg-card) !important;
   box-shadow: 0 0 0 3px var(--primary-light) !important;
