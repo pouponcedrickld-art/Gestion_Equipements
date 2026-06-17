@@ -36,19 +36,19 @@ export const useTransfertStore = defineStore('transfert', () => {
     sort_order: 'desc'
   })
 
-  // Getters calculés
+  // --- Statistiques des transferts par statut et type ---
   const transfertsEnAttente = computed(() => 
     transferts.value.filter(t => t.statut === 'demande')
   )
-
+// --- Transferts en transit ---
   const transfertsEnTransit = computed(() => 
     transferts.value.filter(t => t.statut === 'expedie')
   )
-
+// --- Transferts terminés ---
   const transfertsTermines = computed(() => 
     transferts.value.filter(t => ['recu', 'refuse'].includes(t.statut))
   )
-
+// --- Transferts par statut ---
   const transfertsParStatut = computed(() => {
     const stats = {}
     transferts.value.forEach(t => {
@@ -57,7 +57,7 @@ export const useTransfertStore = defineStore('transfert', () => {
     })
     return stats
   })
-
+// --- Transferts par type ---
   const transfertsParType = computed(() => {
     const stats = {}
     transferts.value.forEach(t => {

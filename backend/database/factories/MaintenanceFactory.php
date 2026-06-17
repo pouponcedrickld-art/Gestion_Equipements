@@ -21,14 +21,13 @@ class MaintenanceFactory extends Factory
             'date_prevue' => $datePrevue,
             'date_debut' => null,
             'date_fin' => null,
-            'duree_estimee' => $this->faker->numberBetween(1, 8),
             'responsable' => $this->faker->name(),
+            'technicien' => $this->faker->name(),
             'technicien_id' => User::factory(),
+            'diagnostic' => null,
             'statut' => 'planifiee',
             'cout' => $this->faker->optional(0.7)->randomFloat(2, 50, 2000),
             'observations' => $this->faker->optional()->sentence(),
-            'pieces_changees' => null,
-            'rapport' => null,
         ];
     }
 

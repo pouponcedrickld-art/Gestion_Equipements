@@ -12,100 +12,102 @@ class TransfertSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer les données nécessaires
+        Transfert::truncate();
+
         $agenceGenerale = Agence::where('type', 'generale')->first();
         $sousAgences = Agence::where('type', 'sous_agence')->get();
-        $equipements = Equipement::all();
         $gestionnaireGeneral = User::role('gestionnaire_stock_general')->first();
         $chefAgence = User::role('chef_agence')->first();
-        
-        if (!$agenceGenerale || $sousAgences->isEmpty() || $equipements->isEmpty()) {
-            echo "⚠️ Données manquantes. Exécutez d'abord AgenceSeeder, EquipementSeeder et UserSeeder.\n";
+
+        if (!$agenceGenerale || $sousAgences->isEmpty()) {
+            echo "⚠️ Agences manquantes. Exécutez d'abord AgenceSeeder.\n";
             return;
         }
 
-        $transferts = [
-            // Transfert approuvé et expédié (prêt à être reçu)
+        $livraisons = [
             [
-                'equipement_id' => $equipements->where('reference', 'PC-001')->first()->id ?? $equipements->first()->id,
-                'agence_source_id' => $agenceGenerale->id,
-                'agence_destination_id' => $sousAgences->where('ville', 'Sokodé')->first()->id ?? $sousAgences->first()->id,
-                'type_transfert' => 'livraison_generale',
-                'demande_par_id' => $chefAgence->id ?? 1,
-                'valide_par_id' => $gestionnaireGeneral->id ?? 1,
+                'ref' => 'PDA-001',
+                'destination' => 'Sokodé',
+                'type' => 'livraison_generale',
+                'statut' => 'expedie',
                 'date_demande' => now()->subDays(3),
                 'date_expedition' => now()->subDays(1),
                 'date_reception' => null,
-                'statut' => 'expedie',
-                'quantite' => 1,
-                'observations' => 'Ordinateur portable pour le responsable IT de Sokodé',
+                'valide_par' => $gestionnaireGeneral->id ?? 1,
+                'obs' => 'PDA Zebra MC3300 pour le responsable IT de Sokodé',
             ],
-            // Transfert en attente d'approbation
             [
-                'equipement_id' => $equipements->where('reference', 'SCN-001')->first()->id ?? $equipements->skip(1)->first()->id,
-                'agence_source_id' => $agenceGenerale->id,
-                'agence_destination_id' => $sousAgences->where('ville', 'Lomé')->first()->id ?? $sousAgences->first()->id,
-                'type_transfert' => 'livraison_generale',
-                'demande_par_id' => $chefAgence->id ?? 1,
-                'valide_par_id' => null,
+                'ref' => 'SPH-001',
+                'destination' => 'Lomé',
+                'type' => 'livraison_generale',
+                'statut' => 'demande',
                 'date_demande' => now()->subDays(1),
                 'date_expedition' => null,
                 'date_reception' => null,
-                'statut' => 'demande',
-                'quantite' => 1,
-                'observations' => 'Scanner pour renforcer l\'équipement de l\'agence de Lomé',
+                'valide_par' => null,
+                'obs' => 'Smartphone Cat S62 Pro pour renforcer l\'agence de Lomé',
             ],
-            // Transfert terminé (historique)
             [
-                'equipement_id' => $equipements->where('reference', 'PDA-002')->first()->id ?? $equipements->skip(2)->first()->id,
-                'agence_source_id' => $agenceGenerale->id,
-                'agence_destination_id' => $sousAgences->where('ville', 'Lomé')->first()->id ?? $sousAgences->first()->id,
-                'type_transfert' => 'livraison_generale',
-                'demande_par_id' => $chefAgence->id ?? 1,
-                'valide_par_id' => $gestionnaireGeneral->id ?? 1,
+                'ref' => 'PDA-002',
+                'destination' => 'Lomé',
+                'type' => 'livraison_generale',
+                'statut' => 'recu',
                 'date_demande' => now()->subDays(10),
                 'date_expedition' => now()->subDays(8),
                 'date_reception' => now()->subDays(7),
-                'statut' => 'recu',
-                'quantite' => 1,
-                'observations' => 'PDA pour agent terrain - Transfert effectué avec succès',
+                'valide_par' => $gestionnaireGeneral->id ?? 1,
+                'obs' => 'PDA Zebra MC3300 #2 livré avec succès à Lomé',
             ],
-            // Transfert interne entre sous-agences
             [
-                'equipement_id' => $equipements->where('reference', 'TAB-001')->first()->id ?? $equipements->skip(3)->first()->id,
-                'agence_source_id' => $sousAgences->where('ville', 'Lomé')->first()->id ?? $sousAgences->first()->id,
-                'agence_destination_id' => $sousAgences->where('ville', 'Kara')->first()->id ?? $sousAgences->skip(1)->first()->id,
-                'type_transfert' => 'transfert_interne',
-                'demande_par_id' => $chefAgence->id ?? 1,
-                'valide_par_id' => $gestionnaireGeneral->id ?? 1,
+                'ref' => 'PDA-001',
+                'destination' => 'Kara',
+                'type' => 'transfert_interne',
+                'statut' => 'recu',
                 'date_demande' => now()->subDays(5),
                 'date_expedition' => now()->subDays(4),
                 'date_reception' => now()->subDays(3),
-                'statut' => 'recu',
-                'quantite' => 1,
-                'observations' => 'Tablette transférée pour maintenance spécialisée à Kara',
+                'valide_par' => $gestionnaireGeneral->id ?? 1,
+                'obs' => 'Transfert interne de Sokodé vers Kara pour maintenance',
             ],
-            // Transfert refusé (exemple de workflow)
             [
-                'equipement_id' => $equipements->first()->id,
-                'agence_source_id' => $agenceGenerale->id,
-                'agence_destination_id' => $sousAgences->last()->id,
-                'type_transfert' => 'livraison_generale',
-                'demande_par_id' => $chefAgence->id ?? 1,
-                'valide_par_id' => $gestionnaireGeneral->id ?? 1,
+                'ref' => 'PDA-001',
+                'destination' => 'Kara',
+                'type' => 'livraison_generale',
+                'statut' => 'refuse',
                 'date_demande' => now()->subDays(2),
                 'date_expedition' => null,
                 'date_reception' => null,
-                'statut' => 'refuse',
-                'quantite' => 1,
-                'observations' => 'Équipement non disponible - Stock insuffisant',
+                'valide_par' => $gestionnaireGeneral->id ?? 1,
+                'obs' => 'Équipement non disponible - Stock insuffisant',
             ],
         ];
 
-        foreach ($transferts as $transfertData) {
-            Transfert::create($transfertData);
+        $count = 0;
+        foreach ($livraisons as $item) {
+            $equipement = Equipement::where('reference', $item['ref'])->first();
+            if (!$equipement) continue;
+
+            $sourceId = $agenceGenerale->id;
+            $destAgence = $sousAgences->where('ville', $item['destination'])->first();
+            if (!$destAgence) $destAgence = $sousAgences->first();
+
+            Transfert::create([
+                'equipement_id' => $equipement->id,
+                'agence_source_id' => $sourceId,
+                'agence_destination_id' => $destAgence->id,
+                'type_transfert' => $item['type'],
+                'statut' => $item['statut'],
+                'date_demande' => $item['date_demande'],
+                'date_expedition' => $item['date_expedition'],
+                'date_reception' => $item['date_reception'],
+                'demande_par_id' => $chefAgence->id ?? 1,
+                'valide_par_id' => $item['valide_par'],
+                'quantite' => 1,
+                'observations' => $item['obs'],
+            ]);
+            $count++;
         }
 
-        echo "✅ " . count($transferts) . " transferts de test créés avec différents statuts !\n";
+        echo "✅ {$count} transferts (livraisons + interne) créés avec différents statuts !\n";
     }
 }

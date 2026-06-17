@@ -22,7 +22,7 @@ class CategorieSeeder extends Seeder
         ];
 
         foreach ($categories as $categorie) {
-            Categorie::create($categorie);
+            Categorie::updateOrCreate(['nom' => $categorie['nom']], $categorie);
         }
 
         echo "✅ " . count($categories) . " catégories d'équipements créées !\n";

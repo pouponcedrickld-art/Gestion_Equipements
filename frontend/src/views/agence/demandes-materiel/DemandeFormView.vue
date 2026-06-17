@@ -354,16 +354,16 @@ label {
 }
 
 /* PrimeVue Component Styling */
-:deep(.p-dropdown),
+:deep(.p-select),
 :deep(.p-inputnumber),
-:deep(.p-calendar),
+:deep(.p-datepicker),
 :deep(.p-textarea) {
   width: 100% !important;
 }
 
-:deep(.p-dropdown),
+:deep(.p-select),
 :deep(.p-inputnumber-input),
-:deep(.p-calendar-input),
+:deep(.p-datepicker-input),
 :deep(.p-textarea) {
   background: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
@@ -373,7 +373,7 @@ label {
   font-size: 0.95rem !important;
 }
 
-:deep(.p-dropdown-label) {
+:deep(.p-select-label) {
   color: #1e293b !important;
 }
 
@@ -386,48 +386,48 @@ label {
   background: #e2e8f0 !important;
 }
 
-:deep(.p-calendar-button) {
+:deep(.p-datepicker-dropdown) {
   background: #3b82f6 !important;
   border: 1px solid #3b82f6 !important;
   color: white !important;
 }
 
-:deep(.p-calendar-button:hover) {
+:deep(.p-datepicker-dropdown:hover) {
   background: #2563eb !important;
 }
 
 :deep(.p-focus),
-:deep(.p-dropdown:focus),
+:deep(.p-select.p-focus),
 :deep(.p-inputnumber-input:focus),
-:deep(.p-calendar-input:focus),
+:deep(.p-datepicker-input:focus),
 :deep(.p-textarea:focus) {
   outline: none !important;
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
 }
 
-:deep(.p-dropdown-panel) {
+:deep(.p-select-overlay) {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.p-dropdown-item) {
+:deep(.p-select-option) {
   color: #1e293b;
   padding: 0.75rem 1rem;
 }
 
-:deep(.p-dropdown-item:hover) {
+:deep(.p-select-option:hover) {
   background: #f1f5f9;
 }
 
-:deep(.p-dropdown-item.p-highlight) {
+:deep(.p-select-option.p-select-option-selected) {
   background: #dbeafe;
   color: #1e40af;
 }
 
-:deep(.p-dropdown-filter) {
+:deep(.p-select-filter) {
   background: #ffffff;
   color: #1e293b;
   border: 1px solid #e2e8f0;

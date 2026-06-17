@@ -81,7 +81,7 @@
         :header="isEdit ? 'Modifier la Déclaration' : 'Nouvelle Déclaration'" 
         :style="{ width: '500px' }" 
         modal
-        class="p-fluid dark-modal"
+        class="p-fluid"
       >
         <form @submit.prevent="submitPerte" class="perte-form">
           <div class="field mb-4">
@@ -263,22 +263,22 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.pertes-container { padding: 24px; color: #f8fafc; }
+.pertes-container { padding: 24px; }
 .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .header-bar h2 { margin: 0; font-size: 1.5rem; }
-.header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
+.header-bar p { color: var(--text-muted); margin: 4px 0 0 0; }
 .add-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .add-btn:hover { background: #2563eb; }
-.filters-card { background: #1e293b; border: 1px solid #334155; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+.filters-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px; }
 .filters-row { display: flex; gap: 16px; flex-wrap: wrap; }
 .search-box { position: relative; flex: 1; min-width: 200px; }
-.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.search-box input, select { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px 12px 10px 40px; border-radius: 8px; width: 100%; }
+.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.search-box input, select { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 12px 10px 40px; border-radius: 8px; width: 100%; }
 select { padding-left: 12px; width: 180px; }
-.table-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: clip; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th { background: #0f172a; padding: 14px 16px; text-align: left; color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-.data-table td { padding: 14px 16px; border-bottom: 1px solid #334155; }
+.data-table th { background: var(--bg-input); padding: 14px 16px; text-align: left; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
 .type-badge, .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
 .type-badge.perte { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
 .type-badge.vol { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
@@ -288,11 +288,10 @@ select { padding-left: 12px; width: 180px; }
 .status-badge.cloturee { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .actions { display: flex; gap: 8px; }
 .validate-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.edit-btn { background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.edit-btn { background: var(--border-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 .delete-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-.loading-state, .empty-state { padding: 60px; text-align: center; color: #94a3b8; }
+.loading-state, .empty-state { padding: 60px; text-align: center; color: var(--text-muted); }
 .loading-state i { font-size: 2rem; margin-bottom: 12px; color: #3b82f6; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.perte-form select, .perte-form textarea { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px; border-radius: 6px; width: 100%; }
-:deep(.dark-modal) .p-dialog-content, :deep(.dark-modal) .p-dialog-header { background: #1e293b; color: #f8fafc; border-color: #334155; }
+.perte-form select, .perte-form textarea { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%; }
 </style>

@@ -1,6 +1,5 @@
 <?php
 
-// database/seeders/AffectationSeeder.php
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -13,60 +12,49 @@ class AffectationSeeder extends Seeder
 {
     public function run(): void
     {
-        $agent = Agent::where('matricule', 'AGT-001')->first();
-        $equipement = Equipement::where('reference', 'SPH-001')->first();
-        $gestionnaire = User::role('gestionnaire_stock')->first();
+        $agents = Agent::all();
+        $equipements = Equipement::where('etat', 'en_service')
+                                  ->whereIn('statut_global', ['en_stock_general', 'en_stock_local', 'affecte'])
+                                  ->get();
+        $gestionnaires = User::role(['gestionnaire_stock', 'gestionnaire_stock_general'])->get();
 
-        if (!$agent || !$equipement || !$gestionnaire) {
+        if ($agents->isEmpty() || $equipements->isEmpty()) {
             echo "⚠️ Données manquantes pour les affectations.\n";
             return;
         }
 
-        $affectations = [
-            [
+        // Créer 12 affectations
+        for ($i = 1; $i <= 12; $i++) {
+            $agent = $agents->random();
+            $equipement = $equipements->random();
+            
+            // Éviter d'affecter le même équipement plusieurs fois comme "actif"
+            $isAlreadyAffecte = Affectation::where('equipement_id', $equipement->id)
+                                          ->where('statut', 'active')
+                                          ->exists();
+            
+            $statut = ($i > 4 && !$isAlreadyAffecte) ? 'active' : 'retournee';
+            $date_affectation = now()->subDays(rand(10, 100));
+            $date_retour_prevu = (clone $date_affectation)->addDays(rand(30, 90));
+            $date_retour_effectif = ($statut === 'retournee') ? (clone $date_affectation)->addDays(rand(5, 25)) : null;
+
+            Affectation::create([
                 'agent_id' => $agent->id,
                 'equipement_id' => $equipement->id,
-                'date_affectation' => now()->subDays(30),
-                'date_retour_prevu' => now()->addDays(60),
-                'date_retour_effectif' => null,
-                'affecte_par' => $gestionnaire->id,
-                'etat_retour' => null,
-                'observations' => 'Affectation pour mission de collecte de données',
-                'pv_remise_path' => null,
-                'statut' => 'active',
-            ],
-            [
-                'agent_id' => Agent::where('matricule', 'AGT-002')->first()?->id,
-                'equipement_id' => Equipement::where('reference', 'PDA-002')->first()?->id,
-                'date_affectation' => now()->subDays(15),
-                'date_retour_prevu' => now()->addDays(45),
-                'date_retour_effectif' => null,
-                'affecte_par' => $gestionnaire->id,
-                'etat_retour' => null,
-                'observations' => 'Affectation temporaire pour formation',
-                'pv_remise_path' => null,
-                'statut' => 'active',
-            ],
-            [
-                'agent_id' => Agent::where('matricule', 'AGT-003')->first()?->id,
-                'equipement_id' => Equipement::where('reference', 'TAB-001')->first()?->id,
-                'date_affectation' => now()->subDays(60),
-                'date_retour_prevu' => now()->subDays(30),
-                'date_retour_effectif' => now()->subDays(25),
-                'affecte_par' => $gestionnaire->id,
-                'etat_retour' => 'bon',
-                'observations' => 'Retour effectué sans problème',
-                'pv_remise_path' => 'pv/pv_retour_001.pdf',
-                'statut' => 'retournee',
-            ],
-        ];
+                'date_affectation' => $date_affectation,
+                'date_retour_prevu' => $date_retour_prevu,
+                'date_retour_effectif' => $date_retour_effectif,
+                'affecte_par' => $gestionnaires->random()->id,
+                'etat_retour' => ($statut === 'retournee') ? 'bon' : null,
+                'observations' => 'Affectation de test ' . $i,
+                'statut' => $statut,
+            ]);
 
-        foreach ($affectations as $affectationData) {
-            if ($affectationData['agent_id'] && $affectationData['equipement_id']) {
-                Affectation::create($affectationData);
+            if ($statut === 'active') {
+                $equipement->update(['statut_global' => 'affecte']);
             }
         }
 
-        echo "✅ Affectations de test créées avec succès !\n";
+        echo "✅ 12 affectations créées avec succès !\n";
     }
 }

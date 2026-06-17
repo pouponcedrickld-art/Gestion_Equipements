@@ -276,7 +276,7 @@ onMounted(() => {
   
   .preview-card {
     border-radius: 20px;
-    overflow: hidden;
+    overflow: clip;
     border: none;
     box-shadow: 0 10px 25px rgba(0,0,0,0.05);
   }

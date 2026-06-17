@@ -155,8 +155,8 @@ const onSaved = () => {
 }
 
 .agent-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
 }
@@ -187,12 +187,11 @@ const onSaved = () => {
 
 .agent-info h3 {
   margin: 0;
-  color: #e2e8f0;
   font-size: 1rem;
 }
 
 .matricule {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -215,7 +214,7 @@ const onSaved = () => {
 
 .card-body p {
   margin: 8px 0;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -228,7 +227,7 @@ const onSaved = () => {
   align-items: center;
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--border-color);
 }
 
 .actions {
@@ -237,9 +236,9 @@ const onSaved = () => {
 }
 
 .btn-icon {
-  background: #334155;
+  background: var(--border-color);
   border: none;
-  color: #e2e8f0;
+  color: var(--text-main);
   padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -253,7 +252,7 @@ const onSaved = () => {
   grid-column: 1 / -1;
   text-align: center;
   padding: 60px 20px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .empty-state i {

@@ -43,7 +43,7 @@
         <p class="font-bold">Chargement des utilisateurs...</p>
       </div>
 
-      <div v-else class="card p-0 overflow-hidden">
+      <div v-else class="card p-0 overflow-clip">
         <table class="grid-table">
           <thead>
             <tr>

@@ -193,11 +193,12 @@ const handleSubmit = async () => {
 
 <style scoped>
 .modal-form {
-  background: #1e293b;
+  background: var(--bg-card);
   border-radius: 12px;
   width: 100%;
   max-width: 550px;
   padding: 25px;
+  border: 1px solid var(--border-color);
 }
 
 .form-header {
@@ -208,7 +209,6 @@ const handleSubmit = async () => {
 }
 
 .form-header h2 {
-  color: #e2e8f0;
   margin: 0;
   font-size: 1.3rem;
 }
@@ -216,7 +216,7 @@ const handleSubmit = async () => {
 .close-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 1.3rem;
   cursor: pointer;
 }
@@ -235,7 +235,7 @@ const handleSubmit = async () => {
 }
 
 .form-group label {
-  color: #cbd5e1;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -243,10 +243,10 @@ const handleSubmit = async () => {
 .form-group select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #334155;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--bg-input);
+  color: var(--text-main);
   box-sizing: border-box;
 }
 
@@ -255,8 +255,8 @@ const handleSubmit = async () => {
 }
 
 .disabled-input {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
+  background: var(--bg-input) !important;
+  color: var(--text-muted) !important;
   cursor: not-allowed;
 }
 
@@ -283,9 +283,9 @@ const handleSubmit = async () => {
 }
 
 .btn-secondary {
-  background: #334155;
-  color: #e2e8f0;
-  border: none;
+  background: var(--border-color);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   padding: 10px 25px;
   border-radius: 6px;
   cursor: pointer;

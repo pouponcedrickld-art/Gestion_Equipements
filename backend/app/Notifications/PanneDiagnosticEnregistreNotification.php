@@ -28,7 +28,7 @@ class PanneDiagnosticEnregistreNotification extends Notification
         return (new MailMessage)
             ->line('Diagnostic enregistré pour une panne.')
             ->line("Panne ID: {$this->panne->id}")
-            ->line("Technicien: {$this->technicien->name ?? $this->technicien->id}");
+            ->line('Technicien: '.($this->technicien->name ?? $this->technicien->id));
     }
 }
 

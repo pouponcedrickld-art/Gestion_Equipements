@@ -89,7 +89,7 @@
         header="Nouvelle Affectation" 
         :style="{ width: '50vw' }" 
         modal
-        class="p-fluid dark-modal"
+        class="p-fluid"
       >
         <form @submit.prevent="submitAffectation" class="affectation-form">
           <div class="form-grid">
@@ -173,7 +173,7 @@
         header="Enregistrer un Retour" 
         :style="{ width: '400px' }" 
         modal
-        class="p-fluid dark-modal"
+        class="p-fluid"
       >
         <form @submit.prevent="submitRetour" class="return-form">
           <div class="field mb-4">
@@ -261,7 +261,7 @@
         :header="'Traiter la demande #' + selectedDemande?.id" 
         :style="{ width: '450px' }" 
         modal
-        class="p-fluid dark-modal"
+        class="p-fluid"
       >
         <form @submit.prevent="submitTraitement" class="process-form">
           <div class="field mb-4">
@@ -533,38 +533,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.affectations-container { padding: 24px; color: #f8fafc; }
+.affectations-container { padding: 24px; }
 .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .header-bar h2 { margin: 0; font-size: 1.5rem; }
-.header-bar p { color: #94a3b8; margin: 4px 0 0 0; }
+.header-bar p { color: var(--text-muted); margin: 4px 0 0 0; }
 
 .filters-card {
-  background: #1e293b; border: 1px solid #334155; padding: 16px;
+  background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px;
   border-radius: 12px; margin-bottom: 20px;
 }
 
 .search-box { position: relative; max-width: 400px; }
-.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 .search-box input {
-  width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc;
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);
   padding: 10px 12px 10px 40px; border-radius: 8px; outline: none;
 }
 
-.table-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: clip; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th { background: #0f172a; padding: 14px 16px; text-align: left; color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-.data-table td { padding: 14px 16px; border-bottom: 1px solid #334155; }
+.data-table th { background: var(--bg-input); padding: 14px 16px; text-align: left; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
 
 .agent-info, .eq-info { display: flex; flex-direction: column; }
-.agent-name, .eq-name { font-weight: 600; color: #e2e8f0; }
-.agent-info small, .eq-info small { color: #64748b; font-size: 0.8rem; }
+.agent-name, .eq-name { font-weight: 600; color: var(--text-main); }
+.agent-info small, .eq-info small { color: var(--text-muted); font-size: 0.8rem; }
 
 .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
 .status-badge.active { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 .status-badge.retournee { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
-.section-divider { height: 1px; background: #334155; margin: 40px 0; }
-.section-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+.section-divider { height: 1px; background: var(--border-color); margin: 40px 0; }
+.section-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
 .section-header h3 { margin: 0; display: flex; align-items: center; gap: 10px; color: #f59e0b; }
 
 .badge-urgence { padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
@@ -572,13 +572,9 @@ onMounted(() => {
 .badge-urgence.moyenne { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
 .badge-urgence.haute { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
-.loading-state, .empty-state { padding: 60px; text-align: center; color: #94a3b8; }
+.loading-state, .empty-state { padding: 60px; text-align: center; color: var(--text-muted); }
 .loading-state i { font-size: 2rem; margin-bottom: 12px; color: #3b82f6; }
 .empty-state i { font-size: 3rem; margin-bottom: 12px; opacity: 0.2; }
 
-:deep(.dark-modal) .p-dialog-content { background: #1e293b; color: #f8fafc; }
-:deep(.dark-modal) .p-dialog-header { background: #1e293b; color: #f8fafc; border-bottom: 1px solid #334155; }
-:deep(.dark-modal) .p-inputtext, :deep(.dark-modal) .p-dropdown, :deep(.dark-modal) .p-multiselect {
-  background: #0f172a; border-color: #334155; color: #f8fafc;
-}
+
 </style>

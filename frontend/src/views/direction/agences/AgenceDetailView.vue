@@ -62,11 +62,12 @@ const emit = defineEmits(['close'])
 
 <style scoped>
 .agence-detail {
-  background: #1e293b;
+  background: var(--bg-card);
   border-radius: 12px;
   width: 100%;
   max-width: 600px;
   padding: 25px;
+  border: 1px solid var(--border-color);
 }
 .detail-header {
   display: flex;
@@ -74,19 +75,18 @@ const emit = defineEmits(['close'])
   align-items: center;
   margin-bottom: 25px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--border-color);
 }
 .detail-header h3 {
-  color: #e2e8f0;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .close-btn {
-  background: #334155;
+  background: var(--border-color);
   border: none;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 1.2rem;
   padding: 6px 10px;
   border-radius: 6px;
@@ -94,7 +94,8 @@ const emit = defineEmits(['close'])
   transition: background 0.2s;
 }
 .close-btn:hover {
-  background: #475569;
+  background: var(--border-color);
+  opacity: 0.8;
 }
 .detail-body {
   display: flex;
@@ -105,15 +106,15 @@ const emit = defineEmits(['close'])
   display: flex;
   justify-content: space-between;
   padding: 10px 15px;
-  background: #0f172a;
+  background: var(--bg-input);
   border-radius: 8px;
 }
 .detail-row .label {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 600;
 }
 .detail-row .value {
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 .detail-row .value.active {
   color: #10b981;
@@ -124,14 +125,14 @@ const emit = defineEmits(['close'])
 .detail-footer {
   margin-top: 25px;
   padding-top: 15px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
 }
 .btn-secondary {
-  background: #334155;
-  color: #e2e8f0;
-  border: none;
+  background: var(--border-color);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   padding: 10px 25px;
   border-radius: 6px;
   cursor: pointer;
@@ -139,6 +140,7 @@ const emit = defineEmits(['close'])
   transition: background 0.2s;
 }
 .btn-secondary:hover {
-  background: #475569;
+  background: var(--border-color);
+  opacity: 0.8;
 }
 </style>

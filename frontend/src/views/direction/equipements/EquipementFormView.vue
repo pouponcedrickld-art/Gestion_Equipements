@@ -58,10 +58,10 @@
                 :options="categories"
                 optionLabel="nom"
                 optionValue="id"
-                placeholder="Sélectionner"
+                placeholder="Sélectionner une catégorie"
                 :class="{ 'p-invalid': errors.categorie_id }"
                 filter
-                class="w-full p-inputtext-sm"
+                class="w-full category-dropdown"
               />
               <small class="p-error" v-if="errors.categorie_id">{{ errors.categorie_id[0] }}</small>
             </div>
@@ -192,11 +192,12 @@
                       v-model="form.date_acquisition"
                       dateFormat="dd/mm/yy"
                       showIcon
-                      class="p-inputtext-sm"
+                      class="w-full"
+                      placeholder="JJ/MM/AAAA"
                     />
                   </div>
                 </div>
-                <div class="col-12">
+                <div class="col-12 md:col-6">
                   <div class="field">
                     <label class="font-bold text-sm">Prix d'achat</label>
                     <InputNumber
@@ -204,7 +205,7 @@
                       mode="currency"
                       currency="XOF"
                       locale="fr-FR"
-                      class="p-inputtext-sm"
+                      class="w-full"
                     />
                   </div>
                 </div>
@@ -619,20 +620,40 @@ onMounted(async () => {
   border-top: 1px solid var(--border-color);
 }
 
-:deep(.p-inputtext-sm) {
-  padding: 0.45rem 0.75rem;
+.category-dropdown {
+  :deep(.p-select-label) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
 }
 
-:deep(.p-dropdown),
+:deep(.p-select),
+:deep(.p-inputnumber),
+:deep(.p-datepicker) {
+  width: 100%;
+}
+
+:deep(.p-select),
 :deep(.p-inputnumber-input),
-:deep(.p-calendar .p-inputtext) {
+:deep(.p-datepicker-input) {
   border: 1.5px solid var(--border-color);
   border-radius: 8px;
+  padding: 0.5rem 0.75rem;
 
   &:enabled:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px var(--primary-light);
   }
+}
+
+:deep(.p-datepicker-input) {
+  padding: 0.5rem 0.75rem;
+}
+
+:deep(.p-datepicker-dropdown) {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
 }
 
 .hidden {
