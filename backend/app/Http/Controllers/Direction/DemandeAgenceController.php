@@ -46,13 +46,14 @@ class DemandeAgenceController extends Controller
             ],
             'observations' => 'required_if:decision,Refuser|string|nullable',
         ]);
-        
+        // Mappage des décisions aux statuts de la demande
         $statutMapping = [
             'Approuver' => 'approuvé',
             'Refuser' => 'rejeté',
             'Partiel' => 'approuvé', 
         ];
-
+        
+        // Met à jour la demande
         $demande->update([
             'statut' => $statutMapping[$request->decision],
             'quantite' => $request->decision === 'Partiel' ? $request->quantite_validee : $demande->quantite,

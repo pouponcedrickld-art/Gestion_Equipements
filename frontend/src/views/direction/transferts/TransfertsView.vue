@@ -234,7 +234,7 @@ const fetchApprovedDemandes = async () => {
   }
 }
 
-// Créer un transfert depuis une demande
+//  une demande approuvée prête pour transfert
 const createTransfertFromDemande = async (demande) => {
   try {
     const res = await transfertApi.creerDepuisDemande(demande.id)
@@ -254,7 +254,7 @@ const createTransfertFromDemande = async (demande) => {
 const transfertsEnAttente = computed(() => transfertStore.transfertsEnAttente)
 const transfertsEnTransit = computed(() => transfertStore.transfertsEnTransit)
 const transfertsTermines = computed(() => transfertStore.transfertsTermines)
-
+// --- Filtrage des transferts ---
 const filteredTransferts = computed(() => {
   let list = transfertStore.transferts
   if (searchQuery.value) {
@@ -272,7 +272,7 @@ const filteredTransferts = computed(() => {
   }
   return list
 })
-
+// --- Statuts des transferts ---
 const statutOptions = [
   { label: 'En attente', value: 'demande' },
   { label: 'Approuvé', value: 'approuve' },
@@ -291,11 +291,11 @@ const getStatutSeverity = (s) => {
     default: return 'secondary'
   }
 }
-
+// --- Formater la date ---
 const formatDate = (date) => date ? new Date(date).toLocaleDateString() : 'N/A'
-
+// --- Vue des détails du transfert ---
 const viewDetails = (trans) => router.push(`/transferts/${trans.id}`)
-
+// --- Approbation du transfert ---
 const approveTransfert = async (trans) => {
   try {
     await transfertStore.approuverTransfert(trans.id)

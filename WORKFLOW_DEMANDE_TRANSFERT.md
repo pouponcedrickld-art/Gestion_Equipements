@@ -14,9 +14,9 @@ Un chef d'agence ou gestionnaire de stock agence souhaite demander un équipemen
 ### 1.2 Fichiers Concernés
 
 #### Backend
-- **Modèle**: `backend/app/Models/DemandeMateriel.php`
-- **Contrôleur**: `backend/app/Http/Controllers/Agence/DemandeMaterielController.php`
-- **Requête de validation**: `backend/app/Http/Requests/Agence/StoreDemandeMaterielRequest.php`
+- **Modèle**: `backend/app/Models/DemandeMateriel.php` // Modèle représentant une demande de matériel
+- **Contrôleur**: `backend/app/Http/Controllers/Agence/DemandeMaterielController.php` // Contrôleur gérant les demandes de matériel
+- **Requête de validation**: `backend/app/Http/Requests/Agence/StoreDemandeMaterielRequest.php` // Requête de validation pour la création d'une demande de matériel
 - **Routes**: `backend/routes/api.php`
 
 #### Frontend

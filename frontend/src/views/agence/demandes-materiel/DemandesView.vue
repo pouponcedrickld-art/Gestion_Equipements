@@ -290,7 +290,7 @@ import { ref, onMounted, computed } from 'vue' // Ajout de computed pour le filt
 import { useAuthStore } from '@/stores/authStore'
 import { useToast } from 'primevue/usetoast'
 import AgenceLayout from '@/layouts/AgenceLayout.vue'
-import demandeAgenceApi from '@/api/demandeAgenceApi'
+import demandeAgenceApi from '@/api/demandeAgenceApi' // Importation de l'API de la demande d'agence
 
 // --- États de filtrage (Ajoutés pour la recherche et le statut) ---
 const searchQuery = ref('') 
@@ -373,6 +373,7 @@ const fetchDemandes = async () => {
   }
 }
 
+// --- Formattage de dates ---
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleDateString('fr-FR')
@@ -411,7 +412,7 @@ const openProcessModal = (demande) => {
   }
   showProcessModal.value = true
 }
-
+// soumet le traitement de la demande de matériel
 const submitTraitement = async () => {
   submittingTraitement.value = true
   try {
@@ -438,7 +439,7 @@ const openEditModal = (demande) => {
   }
   showEditModal.value = true
 }
-
+// soumet l'édition de la demande de matériel
 const submitEdit = async () => {
   submittingEdit.value = true
   try {
@@ -452,12 +453,12 @@ const submitEdit = async () => {
     submittingEdit.value = false
   }
 }
-
+// soumet la suppression de la demande de matériel
 const confirmDelete = (demande) => {
   deletingDemande.value = demande
   showDeleteModal.value = true
 }
-
+// execute la suppression de la demande de matériel
 const executeDelete = async () => {
   submittingDelete.value = true
   try {
@@ -472,7 +473,7 @@ const executeDelete = async () => {
   }
 }
 
-onMounted(fetchDemandes)
+onMounted(fetchDemandes) // Chargement des demandes au chargement de la vue
 </script>
 
 <style scoped>

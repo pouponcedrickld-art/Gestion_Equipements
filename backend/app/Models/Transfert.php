@@ -136,7 +136,7 @@ class Transfert extends Model
             $stockService->decrementerStock($this, 'rejet');
         }
     }
-
+// --- Expédition du transfert --- 
     public function expedier($userId)
     {
         $this->update([
@@ -162,7 +162,7 @@ class Transfert extends Model
             );
         }
     }
-
+// --- Réception du transfert --- 
     public function recevoir($userId)
     {
         $this->update([
